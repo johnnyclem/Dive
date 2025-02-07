@@ -47,7 +47,7 @@
     "package:linux-appImage": "npm run build:electron && electron-builder --linux appimage --x64 --publish=never"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.35.0",
+    "@anthropic-ai/sdk": "^0.36.3",
     "@langchain/anthropic": "^0.3.12",
     "@langchain/community": "^0.3.0",
     "@langchain/core": "^0.3.0",
