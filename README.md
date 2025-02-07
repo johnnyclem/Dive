@@ -64,7 +64,7 @@ While the system comes with a default echo MCP Server, your LLM can access more 
 Add this JSON configuration to your Dive MCP settings to enable both tools:
 
 ```json
-{
+ "mcpServers":{
     "fetch": {
       "command": "uvx",
       "args": [
@@ -80,6 +80,7 @@ Add this JSON configuration to your Dive MCP settings to enable both tools:
       ],
       "enabled": true
     }
+  }
 ```
 
 ### Additional Setup for Youtube-dl
