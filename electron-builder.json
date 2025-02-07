@@ -110,7 +110,8 @@
   "linux": {
     "target": ["AppImage"],
     "asarUnpack": ["**/*.node"],
-    "executableName": "dive"
+    "executableName": "dive",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
   },
   "nsis": {
     "oneClick": false,
