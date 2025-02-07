@@ -46,8 +46,8 @@ jobs:
         if: matrix.platform == 'windows'
         run: |
           npm run download-node:win-${{ matrix.arch }}
-          npm run download-python:win-64
-          npm run download-uv:win-64
+          npm run download-python:win-${{ matrix.arch }}
+          npm run download-uv:win-${{ matrix.arch }}
 
       
       - name: Create release directory
