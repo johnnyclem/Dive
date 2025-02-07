@@ -14,18 +14,21 @@
 
 Dive is an open-source AI Agent desktop application that seamlessly integrates any Tools Call-supported LLM with frontend MCP Server—part of the Open Agent Platform initiative. ✨
 
+![Dive Demo](./docs/DiveAI.gif)
+
+
 ## Features 🎯
 
-- 🌐 Universal LLM Support: Compatible with ChatGPT, Anthropic, Ollama and OpenAI-compatible models
-- 💻 Cross-Platform: Available for Windows, MacOS, and Linux
-- 🔄 Model Context Protocol: Enabling seamless AI agent integration
-- 🔌 MCP Server Integration: External data access and processing capabilities
-- 🌍 Multi-Language Support: Traditional Chinese, English, with more coming soon
-- ⚙️ Advanced API Management: Multiple API keys and model switching support
-- 💡 Custom Instructions: Personalized system prompts for tailored AI behavior
-- 💬 Intuitive Chat Interface: Real-time context management and user-friendly design
+- 🌐 **Universal LLM Support**: Compatible with ChatGPT, Anthropic, Ollama and OpenAI-compatible models
+- 💻 **Cross-Platform**: Available for Windows, MacOS, and Linux
+- 🔄 **Model Context Protocol**: Enabling seamless AI agent integration
+- 🔌 **MCP Server Integration**: External data access and processing capabilities
+- 🌍 **Multi-Language Support**: Traditional Chinese, English, with more coming soon
+- ⚙️ **Advanced API Management**: Multiple API keys and model switching support
+- 💡 **Custom Instructions**: Personalized system prompts for tailored AI behavior
+- 💬 **Intuitive Chat Interface**: Real-time context management and user-friendly design
 
-- 🚀 Upcoming Features: Prompt Schedule and OpenAgentPlatform MarketPlace
+- 🚀 **Upcoming Features**: Prompt Schedule and OpenAgentPlatform MarketPlace
 
 ## Download and Install ⬇️
 
@@ -49,7 +52,54 @@ For Linux users: 🐧
   - Or modify system settings to allow sandbox
   - Run `chmod +x` to make the AppImage executable
 
+## MCP Tips
 
+While the system comes with a default echo MCP Server, your LLM can access more powerful tools through MCP. Here's how to get started with two beginner-friendly tools: Fetch and Youtube-dl.
+
+![Set MCP](./docs/MCP_Screenshot.png)
+
+
+### Quick Setup
+
+Add this JSON configuration to your Dive MCP settings to enable both tools:
+
+```json
+{
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch",
+        "--ignore-robots-txt"
+      ],
+      "enabled": true
+    },
+    "youtubedl": {
+      "command": "npx",
+      "args": [
+        "@anaisbetts/mcp-youtube"
+      ],
+      "enabled": true
+    }
+```
+
+### Additional Setup for Youtube-dl
+
+Youtube-dl requires the yt-dlp package. Install it based on your operating system:
+
+#### Windows
+```bash
+winget install yt-dlp
+```
+
+#### MacOS
+```bash
+brew install yt-dlp
+```
+
+#### Linux
+```bash
+pip install yt-dlp
+```
 
 ## Build 🛠️
 
