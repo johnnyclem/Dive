@@ -24,7 +24,9 @@ Dive is an open-source AI Agent desktop application that seamlessly integrates a
 Get the latest version of Dive:
 [![Download](https://img.shields.io/badge/Download-Latest%20Release-blue.svg)](https://github.com/OpenAgentPlatform/Dive/releases/latest)
 
-## Table of Contents
+
+
+## Table of Contents Build Dive
 
 - [Development Requirements](#development-requirements)
 - [Development](#development)
