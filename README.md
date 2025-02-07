@@ -1,6 +1,14 @@
 # Dive AI Agent
 
-A desktop AI chat application built with Electron and React.
+Dive is an open-source AI Agent desktop application that seamlessly integrates any Tools Call-supported LLM with frontend MCP Server—part of the Open Agent Platform initiative.
+
+## Features
+
+- Universal LLM Support: Compatible with ChatGPT O3-mini, Deepseek V3, Sonnet3.5v2, and local Ollama models
+- Cross-Platform: Available for Windows, MacOS, and Linux
+- Model Context Protocol: Enabling seamless AI agent integration
+- Upcoming Features: Prompt Schedule and OpenAgentPlatform MarketPlace
+
 
 ## Table of Contents
 
