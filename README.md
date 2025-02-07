@@ -9,6 +9,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/OpenAgentPlatform/Dive?color=red)
 ![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FOpenAgentPlatform%2FDive&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)
 [![Discord](https://img.shields.io/badge/Discord-Dive-blue?logo=discord&logoColor=white)](https://discord.gg/jact84GwGh)
+[![Twitter Follow](https://img.shields.io/twitter/follow/Dive_ai_agent?style=social)](https://twitter.com/Dive_ai_agent)
 
 
 Dive is an open-source AI Agent desktop application that seamlessly integrates any Tools Call-supported LLM with frontend MCP Server—part of the Open Agent Platform initiative. ✨
@@ -47,5 +48,11 @@ For Linux users: 🐧
 ## Build 🛠️
 
 See [BUILD.md](BUILD.md) for more details.
+
+## Connect With Us 🌐
+- 💬 Join our [Discord](https://discord.gg/jact84GwGh)
+- 🐦 Follow us on [Twitter/X](https://x.com/Dive_ai_agent)
+- ⭐ Star us on GitHub
+- 🐛 Report issues on our [Issue Tracker](https://github.com/OpenAgentPlatform/Dive/issues)
 
 
