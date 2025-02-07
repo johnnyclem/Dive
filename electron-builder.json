@@ -4,7 +4,7 @@
   "productName": "Dive",
   "copyright": "Copyright © 2025 Open Agent Platform",
   "asar": true,
-  "artifactName": "${productName}-${version}-${os}-${platform}-${arch}.${ext}",
+  "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
   "asarUnpack": [
     "**/node_modules/sharp/**/*",
     "**/node_modules/@img/**/*",
