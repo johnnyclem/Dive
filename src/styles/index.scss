@@ -5,6 +5,8 @@
 @use "./components/HistorySidebar";
 @use "./components/Sidebar";
 @use "./components/Toast";
+@use "./components/Tooltip";
+@use "./components/InfoTooltip";
 @use "./pages/Welcome";
 @use "./pages/Chat";
 @use "./pages/Tool";
