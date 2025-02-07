@@ -16,9 +16,15 @@ Dive is an open-source AI Agent desktop application that seamlessly integrates a
 
 ## Features 🎯
 
-- 🌐 Universal LLM Support: Compatible with ChatGPT O3-mini, Deepseek V3, Sonnet3.5v2, and local Ollama models
+- 🌐 Universal LLM Support: Compatible with ChatGPT, Anthropic, Ollama and OpenAI-compatible models
 - 💻 Cross-Platform: Available for Windows, MacOS, and Linux
 - 🔄 Model Context Protocol: Enabling seamless AI agent integration
+- 🔌 MCP Server Integration: External data access and processing capabilities
+- 🌍 Multi-Language Support: Traditional Chinese, English, with more coming soon
+- ⚙️ Advanced API Management: Multiple API keys and model switching support
+- 💡 Custom Instructions: Personalized system prompts for tailored AI behavior
+- 💬 Intuitive Chat Interface: Real-time context management and user-friendly design
+
 - 🚀 Upcoming Features: Prompt Schedule and OpenAgentPlatform MarketPlace
 
 ## Download and Install ⬇️
