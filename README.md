@@ -24,11 +24,22 @@ Dive is an open-source AI Agent desktop application that seamlessly integrates a
 Get the latest version of Dive:
 [![Download](https://img.shields.io/badge/Download-Latest%20Release-blue.svg)](https://github.com/OpenAgentPlatform/Dive/releases/latest)
 
-For Windows users, you need to download the .exe version.
+For Windows users:
+- Download the .exe version
+- Python and Node.js environments are pre-installed
 
-For MacOS users, you can download the .dmg version. you have to install the python and npx uv env your self.
+For MacOS users:
+- Download the .dmg version
+- You need to install Python and Node.js (with npx uvx) environments yourself
+- Follow the installation prompts to complete setup
 
-For Linux users, you can download the .AppImage version. you have to install the python and npx uv env your self.
+For Linux users:
+- Download the .AppImage version
+- You need to install Python and Node.js (with npx uvx) environments yourself
+- For Ubuntu/Debian users:
+  - You may need to add `--no-sandbox` parameter
+  - Or modify system settings to allow sandbox
+  - Run `chmod +x` to make the AppImage executable
 
 
 
