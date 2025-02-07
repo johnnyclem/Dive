@@ -20,8 +20,7 @@ Dive is an open-source AI Agent desktop application that seamlessly integrates a
 - 🔄 Model Context Protocol: Enabling seamless AI agent integration
 - 🚀 Upcoming Features: Prompt Schedule and OpenAgentPlatform MarketPlace
 
-
-## Download ⬇️
+## Download and Install ⬇️
 
 Get the latest version of Dive:
 [![Download](https://img.shields.io/badge/Download-Latest%20Release-blue.svg)](https://github.com/OpenAgentPlatform/Dive/releases/latest)
@@ -42,8 +41,6 @@ For Linux users: 🐧
   - You may need to add `--no-sandbox` parameter
   - Or modify system settings to allow sandbox
   - Run `chmod +x` to make the AppImage executable
-
-
 
 
 
