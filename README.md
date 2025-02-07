@@ -1,4 +1,15 @@
-# Dive AI Agent
+# Dive AI Agent 🤿
+
+![GitHub stars](https://img.shields.io/github/stars/OpenAgentPlatform/Dive?style=social)
+![GitHub forks](https://img.shields.io/github/forks/OpenAgentPlatform/Dive?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/OpenAgentPlatform/Dive?style=social)
+![GitHub repo size](https://img.shields.io/github/repo-size/OpenAgentPlatform/Dive)
+![GitHub language count](https://img.shields.io/github/languages/count/OpenAgentPlatform/Dive)
+![GitHub top language](https://img.shields.io/github/languages/top/OpenAgentPlatform/Dive)
+![GitHub last commit](https://img.shields.io/github/last-commit/OpenAgentPlatform/Dive?color=red)
+![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FOpenAgentPlatform%2FDive&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)
+[![Discord](https://img.shields.io/badge/Discord-Dive-blue?logo=discord&logoColor=white)](https://discord.gg/5rJgQTnV4s)
+[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/tjbck)
 
 Dive is an open-source AI Agent desktop application that seamlessly integrates any Tools Call-supported LLM with frontend MCP Server—part of the Open Agent Platform initiative.
 
