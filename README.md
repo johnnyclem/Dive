@@ -1,4 +1,4 @@
-# Dive AI Agent 🤿
+# Dive AI Agent 🤿 🤖
 
 ![GitHub stars](https://img.shields.io/github/stars/OpenAgentPlatform/Dive?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/OpenAgentPlatform/Dive?style=social)
@@ -11,31 +11,31 @@
 [![Discord](https://img.shields.io/badge/Discord-Dive-blue?logo=discord&logoColor=white)](https://discord.gg/jact84GwGh)
 
 
-Dive is an open-source AI Agent desktop application that seamlessly integrates any Tools Call-supported LLM with frontend MCP Server—part of the Open Agent Platform initiative.
+Dive is an open-source AI Agent desktop application that seamlessly integrates any Tools Call-supported LLM with frontend MCP Server—part of the Open Agent Platform initiative. ✨
 
-## Features
+## Features 🎯
 
-- Universal LLM Support: Compatible with ChatGPT O3-mini, Deepseek V3, Sonnet3.5v2, and local Ollama models
-- Cross-Platform: Available for Windows, MacOS, and Linux
-- Model Context Protocol: Enabling seamless AI agent integration
-- Upcoming Features: Prompt Schedule and OpenAgentPlatform MarketPlace
+- 🌐 Universal LLM Support: Compatible with ChatGPT O3-mini, Deepseek V3, Sonnet3.5v2, and local Ollama models
+- 💻 Cross-Platform: Available for Windows, MacOS, and Linux
+- 🔄 Model Context Protocol: Enabling seamless AI agent integration
+- 🚀 Upcoming Features: Prompt Schedule and OpenAgentPlatform MarketPlace
 
 
-## Download
+## Download ⬇️
 
 Get the latest version of Dive:
 [![Download](https://img.shields.io/badge/Download-Latest%20Release-blue.svg)](https://github.com/OpenAgentPlatform/Dive/releases/latest)
 
-For Windows users:
+For Windows users: 🪟
 - Download the .exe version
 - Python and Node.js environments are pre-installed
 
-For MacOS users:
+For MacOS users: 🍎
 - Download the .dmg version
 - You need to install Python and Node.js (with npx uvx) environments yourself
 - Follow the installation prompts to complete setup
 
-For Linux users:
+For Linux users: 🐧
 - Download the .AppImage version
 - You need to install Python and Node.js (with npx uvx) environments yourself
 - For Ubuntu/Debian users:
@@ -47,7 +47,7 @@ For Linux users:
 
 
 
-## Build
+## Build 🛠️
 
 See [BUILD.md](BUILD.md) for more details.
 
