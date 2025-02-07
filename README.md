@@ -83,9 +83,9 @@ Add this JSON configuration to your Dive MCP settings to enable both tools:
   }
 ```
 
-### Additional Setup for Youtube-dl
+### Additional Setup for mcp-youtube
 
-Youtube-dl requires the yt-dlp package. Install it based on your operating system:
+mcp-youtube requires the yt-dlp package. Install it based on your operating system:
 
 #### Windows
 ```bash
