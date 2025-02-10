@@ -41,7 +41,7 @@ const Setup = () => {
         })
         
         if (isInitialSetup) {
-          setTimeout(() => window.location.reload(), 1500)
+          setTimeout(() => window.location.reload(), 300)
         }
       }
     } catch (error) {
