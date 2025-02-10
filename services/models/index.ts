@@ -101,7 +101,11 @@ export class ModelManager {
       baseUrl,
     });
 
-    this.cleanModel = this.model;
+    // a clean model
+    this.cleanModel = await initChatModel(modelName, {
+      ...modelSettings,
+      baseUrl,
+    });
 
     logger.info("Model initialized");
 
@@ -144,7 +148,12 @@ export class ModelManager {
       new HumanMessage(`<user_input_query>${content}</user_input_query>`)
     ]);
 
-    return (response?.content as string) || "New Chat";
+    const resContent = response?.content;
+    // avoid error
+    if (typeof resContent === 'object') {
+      return "New Chat";
+    }
+    return (resContent as string) || "New Chat";
   }
 
   getModel(): BaseChatModel | null {
@@ -159,7 +168,6 @@ export class ModelManager {
     logger.info("Reloading model...");
     try {
       this.model = await this.initializeModel();
-      this.cleanModel = this.model;
       logger.info("Model reloaded");
     } catch (error) {
       logger.error("Error reloading model:", error);
