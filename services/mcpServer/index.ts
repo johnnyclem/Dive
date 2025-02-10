@@ -52,9 +52,13 @@ export class MCPServerManager implements IMCPServerManager {
     const { config, servers } = await loadConfigAndServers(this.configPath);
     logger.info(`Connect to ${servers.length} enabled servers...`);
 
+    const allSpecificEnv = Object.values(config.mcpServers).reduce((acc, server) => {
+      return { ...acc, ...server.env };
+    }, {});
+
     // async connect all servers
     const connectionResults = await Promise.allSettled(
-      servers.map((serverName) => this.connectSingleServer(serverName, config.mcpServers[serverName]))
+      servers.map((serverName) => this.connectSingleServer(serverName, config.mcpServers[serverName], allSpecificEnv))
     );
 
     // collect error
@@ -89,10 +93,11 @@ export class MCPServerManager implements IMCPServerManager {
 
   async connectSingleServer(
     serverName: string,
-    config: iServerConfig
+    config: iServerConfig,
+    allSpecificEnv: any
   ): Promise<{ success: boolean; serverName: string; error?: unknown }> {
     try {
-      const { client, transport } = await handleConnectToServer(serverName, config);
+      const { client, transport } = await handleConnectToServer(serverName, config, allSpecificEnv);
       this.servers.set(serverName, client);
       this.transports.set(serverName, transport);
 
