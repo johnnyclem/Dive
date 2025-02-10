@@ -2,10 +2,10 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { initChatModel } from "langchain/chat_models/universal";
 import logger from "../utils/logger.js";
 import { loadModelConfig } from "../utils/modelHandler.js";
-import { iModelConfig } from "../utils/types.js";
+import { iModelConfig, iOldModelConfig, ModelSettings } from "../utils/types.js";
 import path from "path";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
+import fs from "fs/promises";
 const LANGCHAIN_SUPPORTED_PROVIDERS = [
   "openai",
   "anthropic",
@@ -53,13 +53,13 @@ export class ModelManager {
     return ModelManager.instance;
   }
 
-  async getModelConfig(): Promise<iModelConfig | null> {
+  async getModelConfig(): Promise<iModelConfig | iOldModelConfig | null> {
     return await loadModelConfig(this.configPath);
   }
 
   async initializeModel(): Promise<BaseChatModel | null> {
     logger.info("Initializing model...");
-    const config = await this.getModelConfig();
+    let config = await this.getModelConfig();
 
     if (!config) {
       logger.error("Model configuration not found");
@@ -68,13 +68,36 @@ export class ModelManager {
       return null;
     }
 
-    const modelName = config.model_settings.model;
+    // check is old version or not
+    if (!(config as iModelConfig).activeProvider || !(config as iModelConfig).configs) {
+      // transform to new version
+      const newConfig: iModelConfig = {
+        activeProvider: (config as iOldModelConfig).model_settings.modelProvider || "",
+        configs: {
+          [(config as iOldModelConfig).model_settings.modelProvider]: (config as iOldModelConfig).model_settings,
+        },
+      };
+      config = newConfig as iModelConfig;
+      // replace old config with new config
+      await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), "utf-8");
+    }
+
+    const activeProvider = (config as iModelConfig).activeProvider;
+    const modelSettings = (config as iModelConfig).configs[activeProvider];
+
+    if (!modelSettings) {
+      logger.error(`Model settings not found for provider: ${activeProvider}`);
+      this.model = null;
+      return null;
+    }
+
+    const modelName = modelSettings.model;
     const baseUrl =
-          config.model_settings.configuration?.baseURL ||
-          config.model_settings.baseURL ||
-          "";
+      modelSettings.configuration?.baseURL ||
+      modelSettings.baseURL ||
+      "";
     this.model = await initChatModel(modelName, {
-      ...config.model_settings,
+      ...modelSettings,
       baseUrl,
     });
 
@@ -83,6 +106,21 @@ export class ModelManager {
     logger.info("Model initialized");
 
     return this.model;
+  }
+
+  async saveModelConfig(provider: string, uploadModelSettings: ModelSettings) {
+    let config = (await this.getModelConfig()) as iModelConfig;
+    if (!config) {
+      config = {
+        activeProvider: provider,
+        configs: {
+          [provider]: uploadModelSettings,
+        },
+      };
+    }
+    config.activeProvider = provider;
+    config.configs[provider] = uploadModelSettings;
+    await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), "utf-8");
   }
 
   public async generateTitle(content: string) {

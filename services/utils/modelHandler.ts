@@ -7,7 +7,7 @@ import { iModelConfig, ModelSettings } from "./types.js";
 // Validate if configuration matches interface definition
 function validateModelConfig(config: iModelConfig): boolean {
   try {
-    const settings = config.model_settings;
+    const settings = config.configs?.[config.activeProvider];
     const interfaceDefinition = ModelInterface.model_settings;
 
     // Check required fields and types
@@ -49,11 +49,11 @@ export async function loadModelConfig(customPath?: string): Promise<iModelConfig
     const configContent = await fs.readFile(configPath, "utf-8");
     const config = JSON.parse(configContent) as iModelConfig;
 
-    // Validate configuration
-    if (!validateModelConfig(config)) {
-      logger.error("Invalid model configuration");
-      return null;
-    }
+    // // Validate configuration
+    // if (!validateModelConfig(config)) {
+    //   logger.error("Invalid model configuration");
+    //   return null;
+    // }
 
     return config;
   } catch (error) {

@@ -10,7 +10,7 @@ import { PromptManager } from "./prompt/index.js";
 import { createRouter } from "./routes/index.js";
 import { handleUploadFiles } from "./utils/fileHandler.js";
 import logger from "./utils/logger.js";
-import { iModelConfig, iQueryInput, iStreamMessage } from "./utils/types.js";
+import { iModelConfig, iQueryInput, iStreamMessage, ModelSettings } from "./utils/types.js";
 import envPaths from "env-paths";
 
 const envPath = envPaths("dive", {suffix: ""})
@@ -220,21 +220,21 @@ export class WebServer {
 
     this.app.post("/api/modelVerify", async (req, res) => {
       try {
-        const { config } = req.body;
-        if (!config) {
+        const { modelSettings } = req.body;
+        if (!modelSettings) {
           res.json({
             success: false,
             message: "Config is required",
           });
           return;
         }
-        const modelName = (config as unknown as iModelConfig).model_settings.model;
+        const modelName = (modelSettings as ModelSettings).model;
         const baseUrl =
-          (config as unknown as iModelConfig).model_settings?.configuration?.baseURL ||
-          (config as unknown as iModelConfig).model_settings.baseURL ||
+          (modelSettings as ModelSettings).configuration?.baseURL ||
+          (modelSettings as ModelSettings).baseURL ||
           "";
         const model = await initChatModel(modelName, {
-          ...(config as unknown as iModelConfig).model_settings,
+          ...(modelSettings as ModelSettings),
           baseUrl,
           max_tokens: 5,
         });
@@ -244,6 +244,7 @@ export class WebServer {
           data: result.lc_kwargs,
         });
       } catch (error) {
+        logger.error(`Model verification error: ${(error as Error).message}`);
         res.json({
           success: false,
           message: (error as Error).message,
