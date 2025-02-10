@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import Toast from "../components/Toast"
+import { useAtom } from "jotai"
+import { showToastAtom } from "../atoms/toastState"
 
 interface SubTool {
   name: string
@@ -34,7 +36,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   const { t } = useTranslation()
   const [jsonString, setJsonString] = useState(JSON.stringify(config, null, 2))
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
+  const [, showToast] = useAtom(showToastAtom)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,7 +52,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
       await onSubmit(parsedConfig)
     } catch (err) {
       if (err instanceof SyntaxError) {
-        setToast({
+        showToast({
           message: t("tools.invalidJson"),
           type: "error"
         })
@@ -100,13 +102,6 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
             </button>
           </div>
         </form>
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
       </div>
     </div>
   )
@@ -118,8 +113,8 @@ const Tools = () => {
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [mcpConfig, setMcpConfig] = useState<Record<string, any>>({})
   const [isLoading, setIsLoading] = useState(false)
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [, showToast] = useAtom(showToastAtom)
 
   useEffect(() => {
     fetchTools()
@@ -134,13 +129,13 @@ const Tools = () => {
       if (data.success) {
         setTools(data.tools)
       } else {
-        setToast({
+        showToast({
           message: data.message || t("tools.fetchFailed"),
           type: "error"
         })
       }
     } catch (error) {
-      setToast({
+      showToast({
         message: error instanceof Error ? error.message : t("tools.fetchFailed"),
         type: "error"
       })
@@ -154,13 +149,13 @@ const Tools = () => {
       if (data.success) {
         setMcpConfig(data.config || {})
       } else {
-        setToast({
+        showToast({
           message: data.message || t("tools.configFetchFailed"),
           type: "error"
         })
       }
     } catch (error) {
-      setToast({
+      showToast({
         message: error instanceof Error ? error.message : t("tools.configFetchFailed"),
         type: "error"
       })
@@ -182,14 +177,14 @@ const Tools = () => {
         setMcpConfig(newConfig)
         setShowConfigModal(false)
         fetchTools()
-        setToast({
+        showToast({
           message: t("tools.saveSuccess"),
           type: "success"
         })
       }
     } catch (error) {
       console.error("Failed to update MCP config:", error)
-      setToast({
+      showToast({
         message: t("tools.saveFailed"),
         type: "error"
       })
@@ -367,14 +362,6 @@ const Tools = () => {
           config={{}}
           onSubmit={handleAddSubmit}
           onCancel={() => setShowAddModal(false)}
-        />
-      )}
-
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
         />
       )}
     </div>

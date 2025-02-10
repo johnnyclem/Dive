@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { useAtom } from "jotai"
 import { FieldDefinition, ModelProvider, PROVIDER_LABELS } from "../atoms/interfaceState"
-import { ModelConfig, configAtom } from "../atoms/configState"
-import Toast from "./Toast"
+import { configAtom, ModelConfig, saveConfigAtom } from "../atoms/configState"
+import { useAtom } from "jotai"
+import { loadConfigAtom } from "../atoms/configState"
+import { showToastAtom } from "../atoms/toastState"
 
 const PROVIDERS: ModelProvider[] = ["openai", "openai_compatible", "ollama", "anthropic"]
 
@@ -11,8 +12,8 @@ interface ModelConfigFormProps {
   provider: ModelProvider
   fields: Record<string, FieldDefinition>
   initialData?: ModelConfig|null
-  onProviderChange: (provider: ModelProvider) => void
-  onSubmit: (data: ModelConfig) => void
+  onProviderChange?: (provider: ModelProvider) => void
+  onSubmit: (data: any) => void
   submitLabel?: string
   showVerify?: boolean
 }
@@ -27,22 +28,24 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   showVerify = true
 }) => {
   const { t } = useTranslation()
-  const [formData, setFormData] = useState<ModelConfig>(initialData || {})
+  const [formData, setFormData] = useState<ModelConfig>(initialData || {} as ModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isVerifying, setIsVerifying] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [listOptions, setListOptions] = useState<Record<string, string[]>>({})
   const initProvider = useRef(provider)
-  const [, setConfig] = useAtom(configAtom)
-  
+  const [, loadConfig] = useAtom(loadConfigAtom)
+  const [config] = useAtom(configAtom)
+  const [, saveConfig] = useAtom(saveConfigAtom)
+  const [, showToast] = useAtom(showToastAtom)
+
   useEffect(() => {
     setListOptions({})
     if (initProvider.current !== provider) {
-      setFormData(getFieldDefaultValue() || {})
+      setFormData(Object.assign(getFieldDefaultValue(), config?.configs[provider] || {} as ModelConfig))
     } else {
-      setFormData(initialData || {})
+      setFormData(initialData || {} as ModelConfig)
     }
   }, [provider])
 
@@ -51,10 +54,10 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       if (field.type === "list" && field.listCallback && field.listDependencies) {
         const deps = field.listDependencies.reduce((acc, dep) => ({
           ...acc,
-          [dep]: formData[dep] || ""
+          [dep]: formData[dep as keyof ModelConfig] || ""
         }), {})
 
-        const allDepsHaveValue = field.listDependencies.every(dep => !!formData[dep])
+        const allDepsHaveValue = field.listDependencies.every(dep => !!formData[dep as keyof ModelConfig])
         
         if (allDepsHaveValue) {
           field.listCallback(deps).then(options => {
@@ -63,7 +66,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
               [key]: options
             }))
             
-            if (options.length > 0 && !options.includes(formData[key])) {
+            if (options.length > 0 && !options.includes(formData[key as keyof ModelConfig] as string)) {
               handleChange(key, options[0])
             }
           })
@@ -78,44 +81,44 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         ...acc,
         [key]: fields[key].default
       }
-    }, {} as Record<string, any>)
+    }, {} as ModelConfig)
   }
 
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newProvider = e.target.value as ModelProvider
-    onProviderChange(newProvider)
+    onProviderChange?.(newProvider)
     setIsVerified(false)
   }
 
   const verifyModel = async () => {
     try {
       setIsVerifying(true)
+      const _provider = provider.startsWith("openai") ? "openai" : provider
       const response = await fetch("/api/modelVerify", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          config: {
-            model_settings: {
-              ...formData,
-              modelProvider: provider.startsWith("openai") ? "openai" : provider,
-              configuration: formData,
-            }
-          }
+          provider: _provider,
+          modelSettings: {
+            ...formData,
+            modelProvider: _provider,
+            configuration: formData,
+          },
         }),
       })
 
       const data = await response.json()
       if (data.success) {
         setIsVerified(true)
-        setToast({
+        showToast({
           message: t("setup.verifySuccess"),
           type: "success"
         })
       } else {
         setIsVerified(false)
-        setToast({
+        showToast({
           message: t("setup.verifyFailed"),
           type: "error"
         })
@@ -123,7 +126,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     } catch (error) {
       console.error("Failed to verify model:", error)
       setIsVerified(false)
-      setToast({
+      showToast({
         message: t("setup.verifyError"),
         type: "error"
       })
@@ -140,8 +143,9 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     
     try {
       setIsSubmitting(true)
-      await onSubmit(formData)
-      setConfig(formData)
+      const data = await saveConfig({ formData, provider })
+      await onSubmit(data)
+      loadConfig()
     } finally {
       setIsSubmitting(false)
     }
@@ -162,7 +166,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
     Object.entries(fields).forEach(([key, field]) => {
-      if (field.required && !formData[key]) {
+      if (field.required && !formData[key as keyof ModelConfig]) {
         newErrors[key] = t("setup.required")
       }
     })
@@ -198,7 +202,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
           <div className="field-description">{field.description}</div>
           {field.type === "list" ? (
             <select
-              value={formData[key] || ""}
+              value={formData[key as keyof ModelConfig] as string || ""}
               onChange={e => handleChange(key, e.target.value)}
               className={errors[key] ? "error" : ""}
             >
@@ -211,8 +215,8 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
             </select>
           ) : (
             <input
-              type="text"
-              value={formData[key] || ""}
+              type={"text"}
+              value={formData[key as keyof ModelConfig] as string || ""}
               onChange={e => handleChange(key, e.target.value)}
               placeholder={field.placeholder?.toString()}
               className={errors[key] ? "error" : ""}
@@ -245,13 +249,6 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
           ) : t(submitLabel)}
         </button>
       </div>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </form>
   )
 }

@@ -1,48 +1,32 @@
 import React, { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { configSidebarVisibleAtom } from "../atoms/sidebarState"
 import ModelConfigForm from "./ModelConfigForm"
-import { defaultInterface, interfaceAtom, ModelProvider, updateProviderAtom } from "../atoms/interfaceState"
-import { configAtom } from "../atoms/configState"
+import { defaultInterface, interfaceAtom, ModelProvider } from "../atoms/interfaceState"
+import { activeProviderAtom, configAtom } from "../atoms/configState"
 import CustomInstructions from "./CustomInstructions"
-import Toast from "./Toast"
+import { showToastAtom } from "../atoms/toastState"
 
 const ConfigSidebar = () => {
   const { t } = useTranslation()
   const [isVisible, setIsVisible] = useAtom(configSidebarVisibleAtom)
-  const [{ provider, fields }] = useAtom(interfaceAtom)
-  const [localProvider, setLocalProvider] = useState<ModelProvider>(provider)
-  const [, updateProvider] = useAtom(updateProviderAtom)
+  const activeProvider = useAtomValue(activeProviderAtom)
+  const [{ fields }] = useAtom(interfaceAtom)
+  const [localProvider, setLocalProvider] = useState<ModelProvider>(activeProvider || "openai")
   const [config] = useAtom(configAtom)
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
+  const [, showToast] = useAtom(showToastAtom)
   
   useEffect(() => {
     if (!isVisible) {
-      setLocalProvider(provider)
+      setLocalProvider(activeProvider || "openai")
     }
-  }, [isVisible, provider, fields])
+  }, [isVisible, activeProvider, fields])
 
-  const handleSubmit = async (formData: Record<string, any>) => {
+  const handleSubmit = async (data: any) => {
     try {
-      const response = await fetch("/api/config/model", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model_settings: {
-            ...formData,
-            modelProvider: localProvider.startsWith("openai") ? "openai" : localProvider,
-            configuration: formData,
-          }
-        }),
-      })
-
-      const data = await response.json()
       if (data.success) {
-        updateProvider(localProvider)
-        setToast({
+        showToast({
           message: t("setup.saveSuccess"),
           type: "success"
         })
@@ -50,13 +34,13 @@ const ConfigSidebar = () => {
       }
     } catch (error) {
       console.error("Failed to save config:", error)
-      setToast({
+      showToast({
         message: t("setup.saveFailed"),
         type: "error"
       })
     }
   }
-
+  
   return (
     <>
       {isVisible && (
@@ -80,20 +64,13 @@ const ConfigSidebar = () => {
             <ModelConfigForm
               provider={localProvider}
               fields={defaultInterface[localProvider]}
-              initialData={config}
+              initialData={config?.configs[localProvider] || null}
               onProviderChange={setLocalProvider}
               onSubmit={handleSubmit}
             />
             <div className="divider" />
             <CustomInstructions />
           </div>
-        )}
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
         )}
       </div>
     </>
