@@ -5,6 +5,7 @@ import { configAtom, ModelConfig, saveConfigAtom } from "../atoms/configState"
 import { useAtom } from "jotai"
 import { loadConfigAtom } from "../atoms/configState"
 import { showToastAtom } from "../atoms/toastState"
+import useDebounce from "../hooks/useDebounce"
 
 const PROVIDERS: ModelProvider[] = ["openai", "openai_compatible", "ollama", "anthropic"]
 
@@ -33,18 +34,38 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const [isVerifying, setIsVerifying] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
-  const [listOptions, setListOptions] = useState<Record<string, string[]>>({})
+  const [listOptions, setListOptions] = useState<Record<string, string[]>>(initialData?.model ? { model: [initialData.model] } : {})
   const initProvider = useRef(provider)
   const [, loadConfig] = useAtom(loadConfigAtom)
   const [config] = useAtom(configAtom)
   const [, saveConfig] = useAtom(saveConfigAtom)
   const [, showToast] = useAtom(showToastAtom)
 
+  const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
+    try {
+      const options = await field.listCallback!(deps)
+      setListOptions(prev => ({
+        ...prev,
+        [key]: options
+      }))
+      
+      if (options.length > 0 && !options.includes(formData[key as keyof ModelConfig] as string)) {
+        handleChange(key, options[0])
+      }
+    } catch (error) {
+      showToast({
+        message: t("setup.verifyError"),
+        type: "error"
+      })
+    }
+  }, 100)
+
   useEffect(() => {
-    setListOptions({})
     if (initProvider.current !== provider) {
+      setListOptions({})
       setFormData(Object.assign(getFieldDefaultValue(), config?.configs[provider] || {} as ModelConfig))
     } else {
+      setListOptions(initialData?.model ? { model: [initialData.model] } : {})
       setFormData(initialData || {} as ModelConfig)
     }
   }, [provider])
@@ -60,19 +81,14 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         const allDepsHaveValue = field.listDependencies.every(dep => !!formData[dep as keyof ModelConfig])
         
         if (allDepsHaveValue) {
-          field.listCallback(deps).then(options => {
-            setListOptions(prev => ({
-              ...prev,
-              [key]: options
-            }))
-            
-            if (options.length > 0 && !options.includes(formData[key as keyof ModelConfig] as string)) {
-              handleChange(key, options[0])
-            }
-          })
+          fetchListOptions(key, field, deps)
         }
       }
     })
+
+    return () => {
+      cancelFetch()
+    }
   }, [fields, formData])
   
   const getFieldDefaultValue = () => {
