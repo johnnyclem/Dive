@@ -1,5 +1,5 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { getDefaultEnvironment, StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { SystemCommandManager } from "./syscmd/index.js";
 import logger from "./utils/logger.js";
 import { iServerConfig } from "./utils/types.js";
@@ -8,23 +8,21 @@ import { iServerConfig } from "./utils/types.js";
 export async function handleConnectToServer(
   serverName: string,
   serverConfig: iServerConfig,
+  allSpecificEnv: any
 ) {
   logger.debug(`============`);
   logger.debug(`Runtime Platform: ${process.platform}`);
   logger.debug(`Attempting to connect to server: ${serverName}`);
   // Check specific command 'node'
   serverConfig.command = SystemCommandManager.getInstance().getValue(serverConfig.command) || serverConfig.command;
-  serverConfig.env = process.platform === 'win32' ? { ...serverConfig.env, PYTHONIOENCODING: "utf-8" } : serverConfig.env;
-
-  if (serverConfig.env && !Object.keys(serverConfig.env).length) {
-    serverConfig.env = undefined;
-  }
+  const allSpecificEnv_ = process.platform === 'win32' ? { ...allSpecificEnv, PYTHONIOENCODING: "utf-8" } : allSpecificEnv;
+  const defaultEnv = getDefaultEnvironment();
 
   // Establish transport
   const transport = new StdioClientTransport({
     command: serverConfig.command,
     args: serverConfig.args,
-    env: serverConfig.env,
+    env: { ...defaultEnv, ...allSpecificEnv_ },
   });
 
   // Debug logs
