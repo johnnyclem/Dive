@@ -43,9 +43,9 @@ npm run package
 
 If you are on macOS or Linux and want to build for Windows:
 
-1. Download Windows Node.js binary
+1. Download Windows binaries
 ```bash
-npm run download-node:win-x64
+npm run download:windows-bin
 ```
 
 2. Build using Docker
@@ -59,7 +59,7 @@ npm run download-node:win-x64
 - `dev:electron` - Start Electron development server
 - `build` - Build web assets
 - `build:electron` - Build Electron application
-- `download-node:win-x64` - Download Windows Node.js binary for cross-platform build
+- `download:windows-bin` - Download Windows binaries for cross-platform build
 
 ## Package Scripts
 
