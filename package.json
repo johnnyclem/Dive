@@ -72,6 +72,7 @@
     "katex": "^0.16.21",
     "langchain": "^0.3.12",
     "marked": "^15.0.4",
+    "marked-katex-extension": "^5.1.4",
     "marked-react": "^3.0.0",
     "multer": "^1.4.5-lts.1",
     "ollama": "^0.5.12",
