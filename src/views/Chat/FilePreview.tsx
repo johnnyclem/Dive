@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react"
 
 interface FilePreviewProps {
   files: (File | string)[]
@@ -6,23 +6,24 @@ interface FilePreviewProps {
 
 const FilePreview: React.FC<FilePreviewProps> = ({ files }) => {
   const isImageFile = (file: File | string) => {
-    if (typeof file === 'string') {
+    if (typeof file === "string") {
       return /\.(jpg|jpeg|png|gif|webp)$/i.test(file)
     }
-    return file.type.startsWith('image/')
+    return file.type.startsWith("image/")
   }
 
   const getFileName = (file: File | string) => {
-    if (typeof file === 'string') {
-      return file.split('/').pop() || file
+    if (typeof file === "string") {
+      return file.split("/").pop() || file
     }
     return file.name
   }
 
   const getImageSrc = (file: File | string) => {
-    if (typeof file === 'string') {
-      if (!file.startsWith('http') && !file.startsWith('data:') && !file.startsWith('local-file://')) {
-        return `local-file://${file}`
+    if (typeof file === "string") {
+      if (!file.startsWith("http") && !file.startsWith("data:") && !file.startsWith("local-file:///")) {
+        const normalizedPath = file.replace(/\\/g, "/");
+        return `local-file:///${encodeURI(normalizedPath)}`;
       }
       return file
     }
