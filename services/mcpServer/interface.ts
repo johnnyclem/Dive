@@ -18,6 +18,7 @@ export interface IMCPServerManager {
   connectSingleServer(
     serverName: string,
     config: iServerConfig,
+    allSpecificEnv: any,
   ): Promise<{ success: boolean; serverName: string; error?: unknown }>;
   syncServersWithConfig(): Promise<{ serverName: string; error: unknown }[]>;
 
