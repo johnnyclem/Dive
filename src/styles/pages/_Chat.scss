@@ -186,14 +186,17 @@
   .file-previews {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
     margin-bottom: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
     
     .preview-item {
       position: relative;
       border-radius: 8px;
       display: flex;
       align-items: center;
+      width: 240px;
+      min-width: 240px;
       
       img {
         max-height: 50px;
@@ -208,7 +211,9 @@
         gap: 8px;
         padding: 8px;
         border-radius: 8px;
-        
+        width: 100%;
+        text-align: left;
+
         @media (prefers-color-scheme: light) {
           background: rgba(0, 0, 0, 0.05);
         }
@@ -247,8 +252,8 @@
 
       .remove-preview {
         position: absolute;
-        top: -6px;
-        right: -6px;
+        top: 0;
+        right: 0;
         width: 18px;
         height: 18px;
         border-radius: 50%;

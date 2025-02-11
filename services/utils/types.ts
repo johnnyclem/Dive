@@ -56,14 +56,21 @@ export interface iConfig {
   };
 }
 
-export interface iModelConfig {
+export interface iOldModelConfig {
   model_settings: ModelSettings;
+}
+
+export interface iModelConfig {
+  activeProvider: string;
+  configs: {
+    [key: string]: ModelSettings;
+  };
 }
 
 export interface ModelSettings {
   // Required parameters
   model: string; // e.g., "gpt-4", "claude-3-opus-20240229"
-  modelProvider?: string; // e.g., "openai", "anthropic", "google-vertexai" etc.
+  modelProvider: string; // e.g., "openai", "anthropic", "google-vertexai" etc.
   apiKey?: string; // API key
   configuration?: {
     baseURL: string;

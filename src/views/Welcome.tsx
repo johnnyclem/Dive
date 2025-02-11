@@ -1,12 +1,12 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import Toast from "../components/Toast"
 import { useSetAtom, useAtom } from "jotai"
 import { updateStreamingCodeAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
-import { configAtom } from "../atoms/configState"
+import { hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
+import { showToastAtom } from "../atoms/toastState"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -23,12 +23,12 @@ const Welcome = () => {
   const navigate = useNavigate()
   const [message, setMessage] = useState("")
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
-  const [toast, setToast] = useState<{ message: string; type: "info" | "warning" | "error" } | null>(null)
+  const [, showToast] = useAtom(showToastAtom)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
   const [histories] = useAtom(historiesAtom)
   const [, loadHistories] = useAtom(loadHistoriesAtom)
-  const [config] = useAtom(configAtom)
+  const [hasConfig] = useAtom(hasConfigAtom)
   const isComposing = useRef(false)
 
   useEffect(() => {
@@ -80,7 +80,7 @@ const Welcome = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length + uploadedFiles.length > 5) {
-      setToast({
+      showToast({
         message: t("chat.uploadLimit"),
         type: "warning"
       })
@@ -107,7 +107,7 @@ const Welcome = () => {
       return
 
     if (uploadedFiles.length + imageItems.length > 5) {
-      setToast({
+      showToast({
         message: t("chat.uploadLimit"),
         type: "warning"
       })
@@ -130,7 +130,7 @@ const Welcome = () => {
     setUploadedFiles(prev => [...prev, ...validFiles])
   }
 
-  if (!config?.model) {
+  if (!hasConfig) {
     return <Setup />
   }
 
@@ -188,15 +188,6 @@ const Welcome = () => {
                 {isImageFile(file) ? (
                   <div className="image-preview">
                     <img src={URL.createObjectURL(file)} alt={file.name} />
-                    <button 
-                      type="button" 
-                      className="remove-btn"
-                      onClick={() => removeFile(index)}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24">
-                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-                      </svg>
-                    </button>
                   </div>
                 ) : (
                   <div className="file-info">
@@ -209,17 +200,17 @@ const Welcome = () => {
                       <div className="file-name">{file.name}</div>
                       <div className="file-size">{formatFileSize(file.size)}</div>
                     </div>
-                    <button 
-                      type="button" 
-                      className="remove-btn"
-                      onClick={() => removeFile(index)}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24">
-                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-                      </svg>
-                    </button>
                   </div>
                 )}
+                <button 
+                  type="button" 
+                  className="remove-btn"
+                  onClick={() => removeFile(index)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+                  </svg>
+                </button>
               </div>
             ))}
           </div>
@@ -243,13 +234,6 @@ const Welcome = () => {
           ))}
         </div>
       </div>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   )
 }

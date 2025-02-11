@@ -1,52 +1,32 @@
 import React, { useState } from "react"
 import { useAtom } from "jotai"
-import { interfaceAtom, updateProviderAtom } from "../atoms/interfaceState"
+import { ModelProvider, defaultInterface } from "../atoms/interfaceState"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
 import { configAtom } from "../atoms/configState"
-import Toast from "../components/Toast"
 import ModelConfigForm from "../components/ModelConfigForm"
+import { showToastAtom } from "../atoms/toastState"
 
 const Setup = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const [{ provider, fields }, setInterface] = useAtom(interfaceAtom)
-  const [, updateProvider] = useAtom(updateProviderAtom)
   const [config] = useAtom(configAtom)
   const isInitialSetup = location.pathname !== '/setup'
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
+  const [localProvider, setLocalProvider] = useState<ModelProvider>("openai")
+  const [, showToast] = useAtom(showToastAtom)
 
-  const handleSubmit = async (formData: Record<string, any>) => {
+  const handleSubmit = async (data: any) => {
     try {
-      const response = await fetch("/api/config/model", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model_settings: {
-            ...formData,
-            modelProvider: provider.startsWith("openai") ? "openai" : provider,
-            configuration: formData,
-          }
-        }),
-      })
-
-      const data = await response.json()
       if (data.success) {
-        setToast({
+        showToast({
           message: t("setup.saveSuccess"),
           type: "success"
         })
-        
-        if (isInitialSetup) {
-          setTimeout(() => window.location.reload(), 300)
-        }
       }
     } catch (error) {
       console.error("Failed to save config:", error)
-      setToast({
+      showToast({
         message: t("setup.saveFailed"),
         type: "error"
       })
@@ -74,22 +54,15 @@ const Setup = () => {
         )}
 
         <ModelConfigForm
-          provider={provider}
-          fields={fields}
-          initialData={config}
-          onProviderChange={updateProvider}
+          provider={localProvider}
+          fields={defaultInterface[localProvider]}
+          initialData={config?.configs[localProvider] || null}
           onSubmit={handleSubmit}
+          onProviderChange={setLocalProvider}
           submitLabel="setup.submit"
           showVerify={true}
         />
       </div>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   )
 }

@@ -80,21 +80,3 @@ export function getNvmPath(): string {
 
   return ""
 }
-
-export function handleLocalFilePath(urlPath: string) {
-  let filePath = urlPath.replace("local-file://", "")
-
-  if (process.platform === "win32") {
-    filePath = decodeURIComponent(filePath)
-      .replace(/^\//, "")
-      .replace(/\//g, "\\")
-    
-    if (!/^[A-Za-z]:\\/.test(filePath)) {
-      filePath = path.resolve(filePath)
-    }
-  } else {
-    filePath = decodeURI(filePath)
-  }
-  
-  return path.normalize(filePath)
-}

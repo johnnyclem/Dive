@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import Toast from "./Toast"
+import { useAtom } from "jotai"
+import { showToastAtom } from "../atoms/toastState"
 
 const CustomInstructions = () => {
   const { t } = useTranslation()
   const [instructions, setInstructions] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [, showToast] = useAtom(showToastAtom)
 
   useEffect(() => {
     fetchInstructions()
@@ -33,16 +34,16 @@ const CustomInstructions = () => {
       })
       const data = await response.json()
       if (data.success) {
-        setToast({
+        showToast({
           message: t("modelConfig.customRulesSaved"),
-          type: 'success'
+          type: "success"
         })
       }
     } catch (error) {
       console.error("Failed to save custom rules:", error)
-      setToast({
+      showToast({
         message: t("modelConfig.customRulesFailed"),
-        type: 'error'
+        type: "error"
       })
     } finally {
       setIsSubmitting(false)
@@ -69,13 +70,6 @@ const CustomInstructions = () => {
           t("modelConfig.saveInstructions")
         )}
       </button>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   )
 }

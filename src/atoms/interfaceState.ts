@@ -9,8 +9,11 @@ export const PROVIDER_LABELS: Record<ModelProvider, string> = {
   anthropic: "Anthropic"
 }
 
+export type InputType = "text" | "password"
+
 export interface FieldDefinition {
   type: string | "list"
+  inputType?: InputType
   description: string
   required: boolean
   default: any
@@ -26,6 +29,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
   openai: {
     apiKey: {
       type: "string",
+      inputType: "password",
       label: "API Key",
       description: "OpenAI API Key",
       required: true,
@@ -53,6 +57,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
   openai_compatible: {
     baseURL: {
       type: "string",
+      inputType: "text",
       label: "Base URL",
       description: "Base URL for API calls",
       required: false,
@@ -61,6 +66,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
     },
     apiKey: {
       type: "string",
+      inputType: "password",
       label: "API Key",
       description: "API Key",
       required: false,
@@ -88,6 +94,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
   ollama: {
     baseURL: {
       type: "string",
+      inputType: "text",
       label: "Base URL",
       description: "Base URL for API calls",
       required: true,
@@ -115,6 +122,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
   anthropic: {
     apiKey: {
       type: "string",
+      inputType: "password",
       label: "API Key",
       description: "Anthropic API Key",
       required: false,
@@ -123,6 +131,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
     },
     baseURL: {
       type: "string",
+      inputType: "text",
       label: "Base URL",
       description: "Base URL for API calls",
       required: false,
@@ -156,13 +165,3 @@ export const interfaceAtom = atom<{
   provider: "openai",
   fields: defaultInterface["openai"]
 })
-
-export const updateProviderAtom = atom(
-  null,
-  (get, set, provider: ModelProvider) => {
-    set(interfaceAtom, {
-      provider,
-      fields: defaultInterface[provider]
-    })
-  }
-) 
