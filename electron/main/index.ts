@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain, protocol } from "electron"
+import { app, BrowserWindow, shell, ipcMain, protocol, net } from "electron"
 import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
@@ -9,10 +9,22 @@ import Anthropic from "@anthropic-ai/sdk"
 import fse from "fs-extra"
 import OpenAI from "openai"
 import { Ollama } from "ollama"
-import { getNvmPath, handleLocalFilePath, modifyPath, setNodePath } from "./util"
+import { getNvmPath, modifyPath } from "./util"
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "local-file",
+    privileges: {
+      secure: true,
+      supportFetchAPI: true,
+      bypassCSP: true,
+      stream: true,
+    }
+  }
+])
 
 // The built directory structure
 //
@@ -68,14 +80,9 @@ async function onReady() {
     }
   }
 
-  protocol.registerFileProtocol("local-file", (request, callback) => {
-    try {
-      const filePath = handleLocalFilePath(request.url)
-      callback({ path: filePath })
-    } catch (error) {
-      console.error('Protocol error:', error)
-      callback({ error: -2 })
-    }
+  protocol.handle("local-file", (req) => {
+    const url = req.url.replace("local-file:///", process.platform === "win32" ? "file:///" : "file://")
+    return net.fetch(url)
   })
 
   initMCPClient()
