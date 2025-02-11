@@ -1,11 +1,11 @@
 import React, { useState, useCallback, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import Toast from "./Toast"
 import { useAtom } from "jotai"
-import { sidebarVisibleAtom, toggleConfigSidebarAtom, toggleSidebarAtom } from "../atoms/sidebarState"
+import { sidebarVisibleAtom, toggleConfigSidebarAtom } from "../atoms/sidebarState"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
+import { showToastAtom } from "../atoms/toastState"
 
 interface Props {
   onNewChat?: () => void
@@ -44,9 +44,9 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [histories] = useAtom(historiesAtom)
   const [, loadHistories] = useAtom(loadHistoriesAtom)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [, toggleConfigSidebar] = useAtom(toggleConfigSidebarAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
+  const [, showToast] = useAtom(showToastAtom)
 
   useEffect(() => {
     if (isVisible) {
@@ -70,7 +70,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
       const data = await response.json()
 
       if (data.success) {
-        setToast({
+        showToast({
           message: t("chat.deleteSuccess"),
           type: "success"
         })
@@ -81,13 +81,13 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
         loadHistories()
       } else {
-        setToast({
+        showToast({
           message: t("chat.deleteFailed"),
           type: "error"
         })
       }
     } catch (error) {
-      setToast({
+      showToast({
         message: t("chat.deleteFailed"),
         type: "error"
       })
@@ -176,13 +176,6 @@ const HistorySidebar = ({ onNewChat }: Props) => {
             {t("sidebar.settings")}
           </button>
         </div>
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
       </div>
       {deletingChatId && (
         <DeleteConfirmModal

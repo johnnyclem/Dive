@@ -77,16 +77,15 @@ export function configRouter() {
 
   router.post("/model", async (req, res) => {
     try {
-      const modelConfigPath = ModelManager.getInstance().configPath;
-      const newModelConfig = req.body;
+      const { provider, modelSettings } = req.body;
 
       // Validate configuration format
-      if (!newModelConfig || typeof newModelConfig !== "object") {
+      if (!modelSettings || typeof modelSettings !== "object") {
         throw new Error("Invalid configuration format");
       }
 
       // Save configuration
-      await fs.writeFile(modelConfigPath, JSON.stringify(newModelConfig, null, 2), "utf-8");
+      await ModelManager.getInstance().saveModelConfig(provider, modelSettings);
 
       // Reinitialize MCP client
       await ModelManager.getInstance().reloadModel();

@@ -8,17 +8,18 @@ dotenv.config();
 
 // Main execution logic
 async function main() {
-  const systemCommandManager = SystemCommandManager.getInstance();
-  systemCommandManager.initialize({
-    node: process.execPath,
-  });
-
-  const client = new MCPCliClient();
-  await client.init();
-
-  initDatabase();
-
+  let client: MCPCliClient | null = null;
   try {
+    const systemCommandManager = SystemCommandManager.getInstance();
+    systemCommandManager.initialize({
+      node: process.execPath,
+    });
+
+    client = new MCPCliClient();
+    await client.init();
+
+    initDatabase();
+
     // Create and start Web server
     const { WebServer } = await import("./webServer.js");
     const webServer = new WebServer(client);
@@ -28,7 +29,7 @@ async function main() {
     await client.chatLoop();
   } catch (error) {
     logger.error("Error:", error);
-    await client.cleanup();
+    await client?.cleanup();
     process.exit(1);
   }
 }

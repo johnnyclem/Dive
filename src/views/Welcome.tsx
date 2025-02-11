@@ -1,12 +1,12 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import Toast from "../components/Toast"
 import { useSetAtom, useAtom } from "jotai"
 import { updateStreamingCodeAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
-import { configAtom } from "../atoms/configState"
+import { hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
+import { showToastAtom } from "../atoms/toastState"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -23,12 +23,12 @@ const Welcome = () => {
   const navigate = useNavigate()
   const [message, setMessage] = useState("")
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
-  const [toast, setToast] = useState<{ message: string; type: "info" | "warning" | "error" } | null>(null)
+  const [, showToast] = useAtom(showToastAtom)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
   const [histories] = useAtom(historiesAtom)
   const [, loadHistories] = useAtom(loadHistoriesAtom)
-  const [config] = useAtom(configAtom)
+  const [hasConfig] = useAtom(hasConfigAtom)
   const isComposing = useRef(false)
 
   useEffect(() => {
@@ -80,7 +80,7 @@ const Welcome = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length + uploadedFiles.length > 5) {
-      setToast({
+      showToast({
         message: t("chat.uploadLimit"),
         type: "warning"
       })
@@ -107,7 +107,7 @@ const Welcome = () => {
       return
 
     if (uploadedFiles.length + imageItems.length > 5) {
-      setToast({
+      showToast({
         message: t("chat.uploadLimit"),
         type: "warning"
       })
@@ -130,7 +130,7 @@ const Welcome = () => {
     setUploadedFiles(prev => [...prev, ...validFiles])
   }
 
-  if (!config?.model) {
+  if (!hasConfig) {
     return <Setup />
   }
 
@@ -234,13 +234,6 @@ const Welcome = () => {
           ))}
         </div>
       </div>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   )
 }

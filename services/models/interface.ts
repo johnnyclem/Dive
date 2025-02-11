@@ -25,8 +25,8 @@ export const ModelInterface: ModelInterfaceDefinition = {
   model_settings: {
     modelProvider: {
       type: "string",
-      description: "The provider of the model",
-      required: false,
+      description: "The provider sdk of the model",
+      required: true,
       default: "",
       placeholder: "openai",
     },
