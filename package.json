@@ -67,7 +67,7 @@
     "fs-extra": "^11.3.0",
     "i18next": "^24.2.2",
     "i18next-browser-languagedetector": "^8.0.2",
-    "i18next-http-backend": "^3.0.1",
+    "i18next-http-backend": "^3.0.2",
     "jotai": "^2.11.0",
     "katex": "^0.16.21",
     "langchain": "^0.3.12",
