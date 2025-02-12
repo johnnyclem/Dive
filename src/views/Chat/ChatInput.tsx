@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from "react"
 import { useTranslation } from 'react-i18next'
+import Tooltip from "../../components/Tooltip"
 
 interface Props {
   onSendMessage?: (message: string, files?: FileList) => void
   disabled?: boolean
+  onAbort: () => void
 }
 
 interface FilePreview {
@@ -26,7 +28,7 @@ const ACCEPTED_FILE_TYPES = [
   'application/epub+zip'
 ].join(',')
 
-const ChatInput: React.FC<Props> = ({ onSendMessage, disabled }) => {
+const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const { t } = useTranslation()
   const [message, setMessage] = useState("")
   const [previews, setPreviews] = useState<FilePreview[]>([])
@@ -35,6 +37,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled }) => {
   const prevDisabled = useRef(disabled)
   const uploadedFiles = useRef<File[]>([])
   const isComposing = useRef(false)
+  const [isAborting, setIsAborting] = useState(false)
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B'
@@ -153,6 +156,20 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled }) => {
       textareaRef.current?.focus()
     }
     prevDisabled.current = disabled
+    setIsAborting(false)
+  }, [disabled])
+
+  useEffect(() => {
+    function handleKeydown(e: KeyboardEvent) {
+      if (e.key === "Escape" && disabled) {
+        setIsAborting(true)
+        onAbort()
+      }
+    }
+    window.addEventListener("keydown", handleKeydown);
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    }
   }, [disabled])
 
   const adjustHeight = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -223,6 +240,24 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled }) => {
 
   return (
     <footer className="chat-input">
+      {disabled && !isAborting && (
+        <Tooltip type="controls" content={<>{t('chat.abort')}<span className="key">Esc</span></>}>
+          <div
+            className="abort-btn"
+            onClick={() => {
+              setIsAborting(true)
+              onAbort()
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+              <circle cx="12" cy="12" r="12" fill="black"></circle>
+              <circle cx="12" cy="12" r="7" fill="white"></circle>
+              <circle cx="12" cy="12" r="6.5" fill="black"></circle>
+              <circle cx="12" cy="12" r="3" fill="white"></circle>
+            </svg>
+          </div>
+        </Tooltip>
+      )}
       <div className="input-wrapper">
         <textarea
           ref={textareaRef}

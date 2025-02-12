@@ -31,7 +31,7 @@ const ChatWindow = () => {
 
         // 轉換訊息格式
         const convertedMessages = data.data.messages.map((msg: any) => ({
-          id: msg.id || String(currentId.current++),
+          id: msg.messageId || msg.id || String(currentId.current++),
           text: msg.content,
           isSent: msg.role === "user",
           timestamp: new Date(msg.createdAt).getTime(),
@@ -91,10 +91,52 @@ const ChatWindow = () => {
     setAiStreaming(true)
     scrollToBottom()
 
+    handlePost(formData, "formData", "/api/chat")
+  }, [isAiStreaming, scrollToBottom])
+
+  const onAbort = useCallback(async () => {
+    if (!isAiStreaming || !currentChatId.current) return
+
     try {
-      const response = await fetch("/api/chat", {
+      await fetch(`/api/chat/${currentChatId.current}/abort`, {
         method: "POST",
-        body: formData
+      })
+    } catch (error) {
+      console.error("Failed abort:", error)
+    }
+  }, [isAiStreaming, currentChatId.current, scrollToBottom])
+
+  const onRetry = useCallback(async (messageId: string) => {
+    if (isAiStreaming || !currentChatId.current) return
+
+    setMessages(prev => {
+      let newMessages = [...prev]
+      const messageIndex = newMessages.findIndex(msg => msg.id === messageId)
+      if (messageIndex !== -1) {
+        newMessages = newMessages.slice(0, messageIndex+1)
+      }
+      newMessages[newMessages.length - 1].text = ""
+      return newMessages
+    })
+    setAiStreaming(true)
+    scrollToBottom()
+
+    const body = JSON.stringify({
+      chatId: currentChatId.current,
+      messageId: messageId,
+    })
+
+    handlePost(body, "json", "/api/chat/retry")
+  }, [isAiStreaming, currentChatId.current])
+
+  const handlePost = useCallback(async (body: any, type: "json" | "formData", url: string) => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: type === "json" ? {
+          "Content-Type": "application/json",
+        } : {},
+        body: body
       })
 
       const reader = response.body!.getReader()
@@ -112,7 +154,7 @@ const ChatWindow = () => {
         for (const line of lines) {
           if (line.trim() === "" || !line.startsWith("data: "))
             continue
-          
+
           const dataStr = line.slice(5)
           if (dataStr.trim() === "[DONE]")
             break
@@ -177,6 +219,19 @@ const ChatWindow = () => {
                 navigate(`/chat/${data.content.id}`, { replace: true })
                 break
 
+              case "message_info":
+                setMessages(prev => {
+                  const newMessages = [...prev]
+                  if(data.content.userMessageId) {
+                    newMessages[newMessages.length - 2].id = data.content.userMessageId
+                  }
+                  if(data.content.assistantMessageId) {
+                    newMessages[newMessages.length - 1].id = data.content.assistantMessageId
+                  }
+                  return newMessages
+                })
+                break
+
               case "error":
                 setMessages(prev => {
                   const newMessages = [...prev]
@@ -212,7 +267,7 @@ const ChatWindow = () => {
       setAiStreaming(false)
       scrollToBottom()
     }
-  }, [isAiStreaming, scrollToBottom])
+  }, [])
 
   const handleInitialMessage = useCallback(async (message: string, files?: File[]) => {
     if (files && files.length > 0) {
@@ -254,10 +309,12 @@ const ChatWindow = () => {
           <ChatMessages
             messages={messages}
             isLoading={isAiStreaming}
+            onRetry={onRetry}
           />
           <ChatInput
             onSendMessage={onSendMsg}
             disabled={isAiStreaming}
+            onAbort={onAbort}
           />
         </div>
       </div>

@@ -73,6 +73,56 @@
   padding: 5px 15px;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
+
+  .message-tools {
+    display: none;
+    // display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+
+    .message-page {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 10px;
+      button {
+        padding: 8px 12px;
+        svg {
+          color: #b0b5c5;
+        }
+
+        &.active {
+          svg {
+            color: #2e2e3e;
+          }
+        }
+      }
+    }
+
+    .retry-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      word-break: keep-all;
+      svg {
+        fill: currentColor;
+      }
+    }
+  }
+
+  &:hover {
+    .message-tools {
+      display: flex;
+    }
+  }
 }
 
 .chat-input {
@@ -97,9 +147,17 @@
     @include theme-colors($dark-bg, $dark-text);
   }
 
+  .abort-btn {
+    position: absolute;
+    top: -5px;
+    left: 13px;
+    transform: translateY(-100%);
+    cursor: pointer;
+  }
+
   .input-wrapper {
     width: 100%;
-    
+
     textarea {
       width: 100%;
       padding: 8px;
