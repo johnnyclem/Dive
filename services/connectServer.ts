@@ -15,7 +15,7 @@ export async function handleConnectToServer(
   logger.debug(`Attempting to connect to server: ${serverName}`);
   // Check specific command 'node'
   serverConfig.command = SystemCommandManager.getInstance().getValue(serverConfig.command) || serverConfig.command;
-  const allSpecificEnv_ = process.platform === 'win32' ? { ...allSpecificEnv, PYTHONIOENCODING: "utf-8" } : allSpecificEnv;
+  const allSpecificEnv_ = process.platform === 'win32' ? { ...serverConfig.env, PYTHONIOENCODING: "utf-8" } : serverConfig.env;
   const defaultEnv = getDefaultEnvironment();
 
   // Establish transport
