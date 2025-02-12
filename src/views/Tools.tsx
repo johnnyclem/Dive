@@ -6,6 +6,7 @@ import { showToastAtom } from "../atoms/toastState"
 import CodeMirror, { EditorView } from "@uiw/react-codemirror"
 import { json } from "@codemirror/lang-json"
 import { linter, lintGutter } from "@codemirror/lint"
+// @ts-ignore
 import jsonlint from "jsonlint-mod"
 import { themeAtom } from "../atoms/themeState"
 
@@ -82,7 +83,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
         jsonlint.parse(doc)
         setIsFormatError(false)
         return []
-      } catch (e) {
+      } catch (e: any) {
         const lineMatch = e.message.match(/line\s+(\d+)/)
         const line = lineMatch ? parseInt(lineMatch[1]) : 1
         const linePos = view.state.doc.line(line)

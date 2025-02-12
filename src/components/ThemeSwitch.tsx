@@ -55,7 +55,7 @@ const ThemeSwitch = () => {
         return (
           <div
             key={index}
-            onClick={() => updateThemeColor(item.value)}
+            onClick={() => updateThemeColor(item.value as ThemeType)}
             className={`theme-button ${theme === item.value ? 'active' : ''}`}
           >
             {item.icon}
