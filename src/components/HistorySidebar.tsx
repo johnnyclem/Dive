@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { useAtom } from "jotai"
-import { sidebarVisibleAtom, toggleConfigSidebarAtom } from "../atoms/sidebarState"
+import { useAtom, useSetAtom } from "jotai"
+import { sidebarVisibleAtom, toggleConfigSidebarAtom, toggleSidebarAtom } from "../atoms/sidebarState"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
@@ -45,6 +45,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [, loadHistories] = useAtom(loadHistoriesAtom)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [, toggleConfigSidebar] = useAtom(toggleConfigSidebarAtom)
+  const toggleSidebar = useSetAtom(toggleSidebarAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const [, showToast] = useAtom(showToastAtom)
 
@@ -53,6 +54,18 @@ const HistorySidebar = ({ onNewChat }: Props) => {
       loadHistories()
     }
   }, [isVisible, loadHistories])
+
+  useEffect(() => {
+    function handleKeydown(e: KeyboardEvent) {
+      if (e.key === "Escape" && isVisible) {
+        toggleSidebar()
+      }
+    }
+    window.addEventListener("keydown", handleKeydown);
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    }
+  }, [isVisible])
 
   const confirmDelete = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation()
@@ -126,6 +139,17 @@ const HistorySidebar = ({ onNewChat }: Props) => {
     <>
       <div className={`history-sidebar ${isVisible ? "visible" : ""}`}>
         <Header />
+        {isVisible && (
+          <button
+            className="close-btn"
+            onClick={toggleSidebar}
+          >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        )}
         <div className="history-header">
           <button onClick={handleNewChat} className="new-chat-btn">
             + {t("chat.newChat")}

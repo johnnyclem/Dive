@@ -6,6 +6,9 @@ import { useAtom } from "jotai"
 import { loadConfigAtom } from "../atoms/configState"
 import { showToastAtom } from "../atoms/toastState"
 import useDebounce from "../hooks/useDebounce"
+import Toast from "./Toast"
+import CustomInstructions from "./CustomInstructions"
+import InfoTooltip from "./InfoTooltip"
 
 const PROVIDERS: ModelProvider[] = ["openai", "openai_compatible", "ollama", "anthropic"]
 
@@ -17,6 +20,7 @@ interface ModelConfigFormProps {
   onSubmit: (data: any) => void
   submitLabel?: string
   showVerify?: boolean
+  showParameters?: boolean
 }
 
 const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
@@ -26,7 +30,8 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   onProviderChange,
   onSubmit,
   submitLabel = "setup.submit",
-  showVerify = true
+  showVerify = true,
+  showParameters = false
 }) => {
   const { t } = useTranslation()
   const [formData, setFormData] = useState<ModelConfig>(initialData || {} as ModelConfig)
@@ -38,8 +43,10 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const initProvider = useRef(provider)
   const [, loadConfig] = useAtom(loadConfigAtom)
   const [config] = useAtom(configAtom)
+  const [, setConfig] = useAtom(configAtom)
+  const [ifChanged, setIfChanged] = useState(false)
   const [, saveConfig] = useAtom(saveConfigAtom)
-  const [, showToast] = useAtom(showToastAtom)
+  const [toast, showToast] = useAtom(showToastAtom)
 
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
     try {
@@ -60,6 +67,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     }
   }, 100)
 
+  
   useEffect(() => {
     if (initProvider.current !== provider) {
       setListOptions({})
@@ -69,6 +77,10 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       setFormData(initialData || {} as ModelConfig)
     }
   }, [provider])
+
+  useEffect(() => {
+    setIfChanged(JSON.stringify(formData) !== JSON.stringify(initialData))
+  }, [formData, initialData])
 
   useEffect(() => {
     Object.entries(fields).forEach(([key, field]) => {
@@ -176,7 +188,9 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       ...prev,
       [key]: ""
     }))
-    setIsVerified(false)
+    if(fields[key]?.required) {
+      setIsVerified(false)
+    }
   }
 
   const validateForm = () => {
@@ -192,6 +206,10 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       return false
     }
     return true
+  }
+
+  const validateNumber = (value: number, min: number, max: number) => {
+    return value > max ? max : value < min ? min : value
   }
 
   return (
@@ -242,6 +260,61 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         </div>
       ))}
 
+      {/* <div className="divider" /> */}
+      {showParameters && (
+        <div className="form-group parameters">
+          <label>{t("setup.parameters")}</label>
+          <div className="parameters-container">
+            <div className="parameters-grid">
+                <InfoTooltip
+                  maxWidth={270}
+                  side="left"
+                  content={t("setup.topPDescription")}
+                >
+                <div className="parameter-label">
+                  <div>TOP-P</div>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 23 22" width="15" height="15">
+                    <g clipPath="url(#ic_information_svg__a)">
+                      <circle cx="11.5" cy="11" r="10.25" stroke="currentColor" strokeWidth="1.5"></circle>
+                      <path fill="currentColor" d="M9.928 13.596h3.181c-.126-2.062 2.516-2.63 2.516-5.173 0-2.01-1.6-3.677-4.223-3.608-2.229.051-4.08 1.288-4.026 3.9h2.714c0-.824.593-1.168 1.222-1.185.593 0 1.258.326 1.222.962-.144 1.942-2.911 2.389-2.606 5.104Zm1.582 3.591c.988 0 1.779-.618 1.779-1.563 0-.963-.791-1.581-1.78-1.581-.97 0-1.76.618-1.76 1.58 0 .946.79 1.565 1.76 1.565Z"></path>
+                    </g>
+                    <defs>
+                      <clipPath id="ic_information_svg__a">
+                        <path fill="currentColor" d="M.5 0h22v22H.5z"></path>
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </div>
+              </InfoTooltip>
+              <input type="number" value={formData.topP ?? 0} min={0} max={1} step={0.1} onChange={e => handleChange("topP", validateNumber(parseFloat(e.target.value), 0, 1))} />
+            </div>
+            <div className="parameters-grid">
+              <InfoTooltip
+                maxWidth={270}
+                side="left"
+                content={t("setup.temperatureDescription")}
+              >
+                <div className="parameter-label">
+                  <div>Temperature</div>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 23 22" width="15" height="15">
+                    <g clipPath="url(#ic_information_svg__a)">
+                      <circle cx="11.5" cy="11" r="10.25" stroke="currentColor" strokeWidth="1.5"></circle>
+                      <path fill="currentColor" d="M9.928 13.596h3.181c-.126-2.062 2.516-2.63 2.516-5.173 0-2.01-1.6-3.677-4.223-3.608-2.229.051-4.08 1.288-4.026 3.9h2.714c0-.824.593-1.168 1.222-1.185.593 0 1.258.326 1.222.962-.144 1.942-2.911 2.389-2.606 5.104Zm1.582 3.591c.988 0 1.779-.618 1.779-1.563 0-.963-.791-1.581-1.78-1.581-.97 0-1.76.618-1.76 1.58 0 .946.79 1.565 1.76 1.565Z"></path>
+                    </g>
+                    <defs>
+                      <clipPath id="ic_information_svg__a">
+                        <path fill="currentColor" d="M.5 0h22v22H.5z"></path>
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </div>
+              </InfoTooltip>
+              <input type="number" value={formData.temperature ?? 0} min={0} max={1} step={0.1} onChange={e => handleChange("temperature", validateNumber(parseFloat(e.target.value), 0, 1))} />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="form-actions">
         {showVerify && (
           <button 
@@ -258,13 +331,26 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         <button 
           type="submit" 
           className="submit-btn"
-          disabled={isVerifying || isSubmitting || (showVerify && !isVerified)}
+          disabled={isVerifying || isSubmitting || (showVerify && !isVerified) || !ifChanged}
         >
           {isSubmitting ? (
             <div className="loading-spinner"></div>
           ) : t(submitLabel)}
         </button>
       </div>
+
+      <div className="divider" />
+
+      {showParameters && (
+        <CustomInstructions />
+      )}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </form>
   )
 }

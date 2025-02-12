@@ -59,6 +59,7 @@ const CustomInstructions = () => {
         rows={3}
         placeholder={t("modelConfig.customInstructionsPlaceholder")}
       />
+      <div className="custom-instructions-description">{t("modelConfig.customInstructionsDescription")}</div>
       <button
         className="save-btn"
         onClick={handleSubmit}

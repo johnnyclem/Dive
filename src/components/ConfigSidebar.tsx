@@ -7,6 +7,7 @@ import { defaultInterface, interfaceAtom, ModelProvider } from "../atoms/interfa
 import { activeProviderAtom, configAtom } from "../atoms/configState"
 import CustomInstructions from "./CustomInstructions"
 import { showToastAtom } from "../atoms/toastState"
+import Toast from "./Toast"
 
 const ConfigSidebar = () => {
   const { t } = useTranslation()
@@ -23,7 +24,19 @@ const ConfigSidebar = () => {
     }
   }, [isVisible, activeProvider, fields])
 
-  const handleSubmit = async (data: any) => {
+  useEffect(() => {
+    function handleKeydown(e: KeyboardEvent) {
+      if (e.key === "Escape" && isVisible) {
+        setIsVisible(false)
+      }
+    }
+    window.addEventListener("keydown", handleKeydown);
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    }
+  }, [isVisible])
+
+  const handleSubmit = async (formData: Record<string, any>) => {
     try {
       if (data.success) {
         showToast({
@@ -67,9 +80,8 @@ const ConfigSidebar = () => {
               initialData={config?.configs[localProvider] || null}
               onProviderChange={setLocalProvider}
               onSubmit={handleSubmit}
+              showParameters={true}
             />
-            <div className="divider" />
-            <CustomInstructions />
           </div>
         )}
       </div>

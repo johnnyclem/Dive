@@ -181,6 +181,22 @@
           }
         }
       }
+
+      .tools-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: fit-content;
+      }
+
+      .tools-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        border-radius: 8px;
+      }
     }
   }
 
@@ -410,6 +426,118 @@
           @media (prefers-color-scheme: dark) {
             background-color: #1a1a1a;
           }
+        }
+      }
+
+      .parameters-container {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .parameters-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        align-items: center;
+  
+        input[type="number"] {
+          -moz-appearance: textfield;
+          appearance: textfield;
+          grid-column: span 2;
+        }
+  
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+  
+        .parameter-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+  
+          svg {
+            color: #686a7a;
+          }
+        }
+      }
+    }
+
+    .custom-instructions {
+      h3 {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 12px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #d9d9d9;
+        resize: vertical;
+        font-size: 14px;
+        line-height: 1.5;
+        font-family: inherit;
+        transition: all 0.3s ease;
+        
+        @media (prefers-color-scheme: dark) {
+          background: #1a1a1a;
+          border-color: #404040;
+          color: white;
+          
+          &::placeholder {
+            color: #666;
+          }
+        }
+        
+        &:focus {
+          outline: none;
+          border-color: #1890ff;
+          box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+      }
+
+      .custom-instructions-description {
+        margin-bottom: 16px;
+        font-size: 16px;
+        color: rgba(109, 126, 152, 1);
+      }
+
+      .save-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        background: #1890ff;
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        min-height: 36px;
+        
+        &:hover:not(:disabled) {
+          background: #40a9ff;
+        }
+        
+        &:active:not(:disabled) {
+          background: #096dd9;
+        }
+        
+        &:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        
+        .loading-spinner {
+          @include loading-spinner;
         }
       }
     }
