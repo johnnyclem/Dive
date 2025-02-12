@@ -3,6 +3,10 @@ import { useTranslation } from "react-i18next"
 import Toast from "../components/Toast"
 import { useAtom } from "jotai"
 import { showToastAtom } from "../atoms/toastState"
+import CodeMirror from "@uiw/react-codemirror";
+import { json } from "@codemirror/lang-json"
+import { linter, lintGutter } from "@codemirror/lint";
+import jsonlint from 'jsonlint-mod';
 
 interface SubTool {
   name: string
@@ -37,6 +41,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   const [jsonString, setJsonString] = useState(JSON.stringify(config, null, 2))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
+  const [isFormatError, setIsFormatError] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,7 +51,9 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
       if (!processedJsonString.startsWith('{')) {
         processedJsonString = `{${processedJsonString}}`
       }
-      
+      if (isFormatError) {
+        return
+      }
       const parsedConfig = JSON.parse(processedJsonString)
       setIsSubmitting(true)
       await onSubmit(parsedConfig)
@@ -62,12 +69,37 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
     }
   }
 
+  const createJsonLinter = () => {
+    return linter((view) => {
+      const doc = view.state.doc.toString();
+      if (!doc.trim()) return [];
+
+      try {
+        jsonlint.parse(doc);
+        setIsFormatError(false)
+        return [];
+      } catch (e) {
+        const lineMatch = e.message.match(/line\s+(\d+)/);
+        const line = lineMatch ? parseInt(lineMatch[1]) : 1;
+        const linePos = view.state.doc.line(line);
+        setIsFormatError(true)
+
+        return [{
+          from: linePos.from,
+          to: linePos.to,
+          message: e.message,
+          severity: 'error',
+        }];
+      }
+    });
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
           <h2>{title}</h2>
-          <button 
+          <button
             className="close-btn"
             onClick={onCancel}
           >
@@ -76,11 +108,17 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
         </div>
         <form onSubmit={handleSubmit} className="config-form">
           {subtitle && <p className="subtitle">{subtitle}</p>}
-          <textarea
+          <CodeMirror
+            maxHeight="300px"
             value={jsonString}
-            onChange={e => setJsonString(e.target.value)}
-            className="config-textarea"
-            rows={20}
+            extensions={[
+              json(),
+              lintGutter(),
+              createJsonLinter()
+            ]}
+            onChange={(value, viewUpdate) => {
+              setJsonString(value)
+            }}
           />
           <div className="form-actions">
             <button 
