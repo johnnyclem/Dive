@@ -107,7 +107,7 @@ pip install yt-dlp
 See [BUILD.md](BUILD.md) for more details.
 
 ## Connect With Us 🌐
-- 💬 Join our [Discord](https://discord.gg/jact84GwGh)
+- 💬 Join our [Discord](https://discord.gg/qceMERf4y2)
 - 🐦 Follow us on [Twitter/X](https://x.com/Dive_ai_agent)
 - ⭐ Star us on GitHub
 - 🐛 Report issues on our [Issue Tracker](https://github.com/OpenAgentPlatform/Dive/issues)
