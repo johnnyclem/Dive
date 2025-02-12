@@ -282,7 +282,6 @@
   padding: 10px 15px;
   border-radius: 18px;
   word-wrap: break-word;
-  white-space: pre-wrap;
   
   .message-images {
     display: flex;
@@ -331,12 +330,9 @@
       background: #273340;
     }
     
-    pre {
-      margin: 10px 0;
-      padding: 12px;
-      border-radius: 8px;
-      overflow-x: auto;
-      
+    .inline-code {
+      padding: 2px 3px;
+
       @media (prefers-color-scheme: light) {
         background: rgba(0, 0, 0, 0.05);
       }
@@ -344,6 +340,11 @@
       @media (prefers-color-scheme: dark) {
         background: rgba(255, 255, 255, 0.05);
       }
+    }
+    
+    pre {
+      border-radius: 8px;
+      overflow-x: auto;
       
       code {
         font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
