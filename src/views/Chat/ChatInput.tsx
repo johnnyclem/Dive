@@ -304,7 +304,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
       {previews.length > 0 && (
         <div className="file-previews">
           {previews.map((preview, index) => (
-            <div key={index} className="preview-item">
+            <div key={index} className={`preview-item ${preview.type}`}>
               {preview.type === 'image' ? (
                 <img src={preview.url} alt={preview.name} />
               ) : (

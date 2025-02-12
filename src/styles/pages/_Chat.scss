@@ -206,24 +206,29 @@
 
   .file-previews {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     margin-bottom: 8px;
     overflow-x: auto;
     padding-bottom: 10px;
-    
+
     .preview-item {
       position: relative;
       border-radius: 8px;
       display: flex;
-      align-items: center;
-      width: 240px;
+      align-items: flex-end;
+      height: 64px;
+      width: 248px;
       min-width: 240px;
-      
-      img {
-        max-height: 50px;
-        width: auto;
-        object-fit: cover;
-        border-radius: 8px;
+
+      &.image {
+        width: 56px;
+        min-width: 56px;
+
+        img {
+          height: 56px;
+          border-radius: 8px;
+          object-fit: cover;
+        }
       }
 
       .file-info {
@@ -232,7 +237,8 @@
         gap: 8px;
         padding: 8px;
         border-radius: 8px;
-        width: 100%;
+        height: 56px;
+        width: 240px;
         text-align: left;
         background: var(--bg-op-dark-extremeweak);
 
@@ -268,8 +274,8 @@
         position: absolute;
         top: 0;
         right: 0;
-        width: 18px;
-        height: 18px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         background: var(--bg-op-dark-strong);
         color: var(--text-inverted);
@@ -278,7 +284,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
+        font-size: 20px;
         padding: 0;
 
         &:hover {
