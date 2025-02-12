@@ -7,6 +7,8 @@ export type ModelConfig = {
   model: string
   modelProvider: ModelProvider
   configuration: ModelConfig
+  topP: number
+  temperature: number
 }
 
 export type ActiveProviderConfig = {

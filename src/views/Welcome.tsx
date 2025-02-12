@@ -45,13 +45,13 @@ const Welcome = () => {
         setToolsCnt(data.tools?.length ?? 0)
       } else {
         setToolsCnt(0)
-        setToast({
+        showToast({
           message: data.message || t("tools.fetchFailed"),
           type: "error"
         })
       }
     } catch (error) {
-      setToast({
+      showToast({
         message: error instanceof Error ? error.message : t("tools.fetchFailed"),
         type: "error"
       })

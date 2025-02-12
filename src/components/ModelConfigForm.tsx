@@ -4,7 +4,7 @@ import { FieldDefinition, ModelProvider, PROVIDER_LABELS } from "../atoms/interf
 import { configAtom, ModelConfig, saveConfigAtom } from "../atoms/configState"
 import { useAtom } from "jotai"
 import { loadConfigAtom } from "../atoms/configState"
-import { showToastAtom } from "../atoms/toastState"
+import { hideToastAtom, showToastAtom, toastAtom } from "../atoms/toastState"
 import useDebounce from "../hooks/useDebounce"
 import Toast from "./Toast"
 import CustomInstructions from "./CustomInstructions"
@@ -43,10 +43,11 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const initProvider = useRef(provider)
   const [, loadConfig] = useAtom(loadConfigAtom)
   const [config] = useAtom(configAtom)
-  const [, setConfig] = useAtom(configAtom)
   const [ifChanged, setIfChanged] = useState(false)
   const [, saveConfig] = useAtom(saveConfigAtom)
-  const [toast, showToast] = useAtom(showToastAtom)
+  const [toast] = useAtom(toastAtom)
+  const [, showToast] = useAtom(showToastAtom)
+  const [, hideToast] = useAtom(hideToastAtom)
 
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
     try {
@@ -347,7 +348,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => setToast(null)}
+          onClose={hideToast}
         />
       )}
     </form>

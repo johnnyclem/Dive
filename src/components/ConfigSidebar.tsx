@@ -5,9 +5,7 @@ import { configSidebarVisibleAtom } from "../atoms/sidebarState"
 import ModelConfigForm from "./ModelConfigForm"
 import { defaultInterface, interfaceAtom, ModelProvider } from "../atoms/interfaceState"
 import { activeProviderAtom, configAtom } from "../atoms/configState"
-import CustomInstructions from "./CustomInstructions"
 import { showToastAtom } from "../atoms/toastState"
-import Toast from "./Toast"
 
 const ConfigSidebar = () => {
   const { t } = useTranslation()
@@ -36,7 +34,7 @@ const ConfigSidebar = () => {
     }
   }, [isVisible])
 
-  const handleSubmit = async (formData: Record<string, any>) => {
+  const handleSubmit = async (data: Record<string, any>) => {
     try {
       if (data.success) {
         showToast({
