@@ -186,7 +186,7 @@
 
     .verify-btn {
       background: var(--bg-success);
-      color: var(--text-inverted);
+      color: var(--text-light);
       
       &:hover:not(:disabled) {
         background: var(--bg-hover-success);
@@ -199,7 +199,7 @@
 
     .submit-btn {
       background: var(--bg-pri-blue);
-      color: var(--text-inverted);
+      color: var(--text-light);
       
       &:hover:not(:disabled) {
         background: var(--bg-hover-blue);
@@ -314,7 +314,7 @@
 
     .edit-btn {
       background: var(--bg-pri-blue);
-      color: var(--text-inverted);
+      color: var(--text-light);
 
       &:hover {
         background: var(--bg-hover-blue);
@@ -543,7 +543,7 @@
 
     .add-btn {
       background: var(--bg-success);
-      color: var(--text-inverted);
+      color: var(--text-light);
 
       &:hover {
         background: var(--bg-hover-success);
@@ -560,7 +560,7 @@
 
     .edit-btn {
       background: var(--bg-pri-blue);
-      color: var(--text-inverted);
+      color: var(--text-light);
 
       &:hover {
         background: var(--bg-hover-blue);
@@ -661,7 +661,7 @@
 
     .submit-btn {
       background: var(--bg-pri-blue);
-      color: var(--text-inverted);
+      color: var(--text-light);
 
       &:hover {
         background: var(--bg-hover-blue);

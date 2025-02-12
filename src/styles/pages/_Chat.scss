@@ -221,10 +221,12 @@
       min-width: 240px;
 
       &.image {
-        width: 56px;
-        min-width: 56px;
+        width: 64px;
+        min-width: 64px;
 
         img {
+          width: 56px;
+          min-width: 56px;
           height: 56px;
           border-radius: 8px;
           object-fit: cover;
@@ -278,7 +280,7 @@
         height: 22px;
         border-radius: 50%;
         background: var(--bg-op-dark-strong);
-        color: var(--text-inverted);
+        color: var(--text-light);
         border: none;
         cursor: pointer;
         display: flex;
@@ -416,7 +418,7 @@
     align-items: center;
     gap: 8px;
     background: var(--bg-pri-blue);
-    color: var(--text-inverted);
+    color: var(--text-light);
     border: none;
     padding: 8px 16px;
     border-radius: 20px;
@@ -450,7 +452,7 @@
   .code-modal-content {
     height: 100%;
     background: var(--bg-modal);
-    color: var(--text-inverted);
+    color: var(--text-light);
     display: flex;
     flex-direction: column;
     border-radius: 8px;
@@ -478,7 +480,7 @@
         padding: 0 8px;
 
         &:hover {
-          color: var(--text-inverted);
+          color: var(--text-light);
         }
       }
     }
@@ -509,7 +511,7 @@
         border-radius: 4px;
         cursor: pointer;
         background: var(--bg-pri-blue);
-        color: var(--text-inverted);
+        color: var(--text-light);
         transition: all 0.2s;
 
         &:hover {

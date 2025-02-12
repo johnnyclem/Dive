@@ -40,7 +40,7 @@
         padding: 8px;
         font-size: 16px;
         line-height: 1.5;
-        color: var(--text-inverted);
+        color: var(--text);
 
         &::placeholder {
           color: var(--text-inverted-weak);
@@ -292,7 +292,7 @@
         padding: 4px;
         border-radius: 50%;
         cursor: pointer;
-        color: var(--text-inverted);
+        color: var(--text-light);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -441,7 +441,7 @@
         border: none;
         border-radius: 6px;
         background: var(--bg-pri-blue);
-        color: var(--text);
+        color: var(--text-light);
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
