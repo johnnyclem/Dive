@@ -44,11 +44,7 @@ jobs:
       
       - name: Download Prebuilt binary
         if: matrix.platform == 'windows'
-        run: |
-          npm run download-node:win-${{ matrix.arch }}
-          npm run download-python:win-${{ matrix.arch }}
-          npm run download-uv:win-${{ matrix.arch }}
-
+        run: npm run download:windows-bin
       
       - name: Create release directory
         run: mkdir -p output
