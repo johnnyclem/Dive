@@ -4,13 +4,13 @@ import React, { useMemo } from "react"
 import Markdown from "marked-react"
 import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { useColorScheme } from "../../hooks/useColorScheme";
-import { useSetAtom } from 'jotai'
+import { useAtom, useSetAtom } from 'jotai'
 import { updateStreamingCodeAtom } from '../../atoms/codeStreaming'
 import ToolPanel, { ToolCall, ToolResult } from './ToolPanel'
 import FilePreview from './FilePreview'
 import { useTranslation } from 'react-i18next'
 import katex from 'katex'
+import { themeAtom } from "../../atoms/themeState";
 
 interface MessageProps {
   messageId: string
@@ -27,7 +27,7 @@ interface MessageProps {
 
 const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls, toolResults, onRetry }: MessageProps) => {
   const { t } = useTranslation()
-  const colorScheme = useColorScheme()
+  const [theme] = useAtom(themeAtom)
   const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
   
   const copyToClipboard = async (text: string) => {
@@ -98,7 +98,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
           </div>
           <SyntaxHighlighter
             language={language.toLowerCase()}
-            style={colorScheme === "dark" ? tomorrow : oneLight}
+            style={theme === "dark" ? tomorrow : oneLight}
             customStyle={{
               margin: 0,
               padding: '12px',

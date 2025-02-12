@@ -260,7 +260,6 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         </div>
       ))}
 
-      {/* <div className="divider" /> */}
       {showParameters && (
         <div className="form-group parameters">
           <label>{t("setup.parameters")}</label>

@@ -3,10 +3,11 @@ import { useTranslation } from "react-i18next"
 import Toast from "../components/Toast"
 import { useAtom } from "jotai"
 import { showToastAtom } from "../atoms/toastState"
-import CodeMirror from "@uiw/react-codemirror"
+import CodeMirror, { EditorView } from "@uiw/react-codemirror"
 import { json } from "@codemirror/lang-json"
 import { linter, lintGutter } from "@codemirror/lint"
 import jsonlint from "jsonlint-mod"
+import { themeAtom } from "../atoms/themeState"
 
 interface SubTool {
   name: string
@@ -42,6 +43,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
   const [isFormatError, setIsFormatError] = useState(false)
+  const [theme] = useAtom(themeAtom)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -96,6 +98,15 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
     })
   }
 
+  const inputTheme = EditorView.theme({
+    '.cm-content': {
+      color: 'var(--text)',
+    },
+    '.cm-lineNumbers': {
+      color: 'var(--text)',
+    },
+  });
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -111,12 +122,14 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
         <form onSubmit={handleSubmit} className="config-form">
           {subtitle && <p className="subtitle">{subtitle}</p>}
           <CodeMirror
+            theme={theme === 'dark' ? 'dark' : 'light'}
             maxHeight="300px"
             value={jsonString}
             extensions={[
               json(),
               lintGutter(),
-              createJsonLinter()
+              createJsonLinter(),
+              inputTheme
             ]}
             onChange={(value, viewUpdate) => {
               setJsonString(value)

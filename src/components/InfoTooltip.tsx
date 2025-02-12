@@ -8,7 +8,7 @@ type Props = {
   side?: "top" | "right" | "bottom" | "left";
 };
 
-/** 按鍵提示 */
+/** info hint tooltip */
 const InfoTooltip = forwardRef<HTMLButtonElement | null, Props>(({children, content, side = "top", maxWidth, ...rest}, ref) => {
   
   return (
@@ -17,7 +17,7 @@ const InfoTooltip = forwardRef<HTMLButtonElement | null, Props>(({children, cont
         <RadixTooltip.Trigger
           asChild
           ref={ref} {...rest}
-          // 避免點擊icon時關閉
+          // avoid trigger tooltip when click icon
           onClick={(event) => event.preventDefault()}
         >
           {children}
@@ -28,13 +28,12 @@ const InfoTooltip = forwardRef<HTMLButtonElement | null, Props>(({children, cont
             sideOffset={4}
             side={side}
             style={maxWidth ? {maxWidth: maxWidth + "px"} : {}}
-            // 避免點擊icon時關閉
+            // avoid trigger tooltip when click icon
             onPointerDownOutside={(event) => {
               event.preventDefault();
             }}
           >
             {content}
-            {/* <RadixTooltip.Arrow className={styles['tooltip-arrow']} /> */}
           </RadixTooltip.Content>
         </RadixTooltip.Portal>
       </RadixTooltip.Root>
