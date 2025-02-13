@@ -191,10 +191,9 @@ const Tools = () => {
     }
   }
 
-  const toggleTool = async (toolIndex: number) => {
+  const toggleTool = async (tool: Tool) => {
     try {
       setIsLoading(true)
-      const tool = tools[toolIndex]
       const currentEnabled = tool.enabled
 
       const newConfig = JSON.parse(JSON.stringify(mcpConfig))
@@ -308,7 +307,7 @@ const Tools = () => {
                   <input
                     type="checkbox"
                     checked={tool.enabled}
-                    onChange={() => toggleTool(index)}
+                    onChange={() => toggleTool(tool)}
                   />
                   <span className="slider round"></span>
                 </label>
