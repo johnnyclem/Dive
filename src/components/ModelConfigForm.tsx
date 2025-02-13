@@ -43,7 +43,6 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const initProvider = useRef(provider)
   const [, loadConfig] = useAtom(loadConfigAtom)
   const [config] = useAtom(configAtom)
-  const [ifChanged, setIfChanged] = useState(false)
   const [, saveConfig] = useAtom(saveConfigAtom)
   const [toast] = useAtom(toastAtom)
   const [, showToast] = useAtom(showToastAtom)
@@ -78,10 +77,6 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       setFormData(initialData || {} as ModelConfig)
     }
   }, [provider])
-
-  useEffect(() => {
-    setIfChanged(JSON.stringify(formData) !== JSON.stringify(initialData))
-  }, [formData, initialData])
 
   useEffect(() => {
     Object.entries(fields).forEach(([key, field]) => {
@@ -331,7 +326,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         <button 
           type="submit" 
           className="submit-btn"
-          disabled={isVerifying || isSubmitting || (showVerify && !isVerified) || !ifChanged}
+          disabled={isVerifying || isSubmitting || (showVerify && !isVerified)}
         >
           {isSubmitting ? (
             <div className="loading-spinner"></div>
