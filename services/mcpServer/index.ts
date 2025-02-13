@@ -52,13 +52,18 @@ export class MCPServerManager implements IMCPServerManager {
     const { config, servers } = await loadConfigAndServers(this.configPath);
     logger.info(`Connect to ${servers.length} enabled servers...`);
 
-    const allSpecificEnv = Object.values(config.mcpServers).reduce((acc, server) => {
-      return { ...acc, ...server.env };
+    // only connect enabled servers
+    const enabledServers = Object.keys(config.mcpServers).filter((serverName) => config.mcpServers[serverName].enabled);
+
+    const allEnabledSpecificEnv = enabledServers.reduce((acc, serverName) => {
+      return { ...acc, ...config.mcpServers[serverName].env };
     }, {});
 
     // async connect all servers
     const connectionResults = await Promise.allSettled(
-      servers.map((serverName) => this.connectSingleServer(serverName, config.mcpServers[serverName], allSpecificEnv))
+      enabledServers.map((serverName) =>
+        this.connectSingleServer(serverName, config.mcpServers[serverName], allEnabledSpecificEnv)
+      )
     );
 
     // collect error
