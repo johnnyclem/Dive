@@ -1,3 +1,4 @@
+import { ToolDefinition } from "@langchain/core/language_models/base";
 import axios from "axios";
 import express from "express";
 import fs from "fs/promises";
@@ -230,18 +231,73 @@ export class WebServer {
         }
         const modelName = (modelSettings as ModelSettings).model;
         const baseUrl =
-          (modelSettings as ModelSettings).configuration?.baseURL ||
-          (modelSettings as ModelSettings).baseURL ||
-          "";
+          (modelSettings as ModelSettings).configuration?.baseURL || (modelSettings as ModelSettings).baseURL || "";
         const model = await initChatModel(modelName, {
           ...(modelSettings as ModelSettings),
           baseUrl,
           max_tokens: 5,
         });
-        const result = await model.invoke("Only return 'Hi' strictly");
+
+        const testTools = [
+          {
+            type: "function",
+            function: {
+              name: "test",
+              description: "meaningless tool",
+              parameters: {
+                type: "object",
+                properties: {
+                  url: { description: "test" },
+                },
+                required: ["url"],
+                additionalProperties: false,
+                title: "test",
+              },
+            },
+          },
+        ] as ToolDefinition[];
+
+
+        let connectingSuccess = false;
+        let connectingResult = null;
+        let supportTools = false;
+        let supportToolsResult = null;
+
+        // check if model can connect
+        try{
+          const result = await model.invoke("Only return 'Hi' strictly")
+          connectingSuccess = true;
+          connectingResult = result;
+        } catch(error){
+          logger.error(`Model verification error: ${(error as Error).message}`);
+          res.json({
+            connectingSuccess: false,
+            connectingResult: (error as Error).message,
+          });
+          return;
+        }
+
+        // check if support tools
+        try{
+          const result = await model.invoke("Only return 'Hi' strictly", {
+            tools: testTools,
+          });
+          supportTools = true;
+          supportToolsResult = result;
+        } catch(error){
+          logger.error(`Model verification error: ${(error as Error).message}`);
+          supportTools = false;
+          supportToolsResult = (error as Error).message;
+        }
+
+        logger.info(`Model verification success - connecting: ${connectingSuccess}, supportTools: ${supportTools}`);
+
         res.json({
           success: true,
-          data: result.lc_kwargs,
+          connectingSuccess,
+          connectingResult,
+          supportTools,
+          supportToolsResult,
         });
       } catch (error) {
         logger.error(`Model verification error: ${(error as Error).message}`);
