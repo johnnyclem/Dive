@@ -68,7 +68,9 @@ export const saveConfigAtom = atom(
     provider: ModelProvider 
   }) => {
     const { formData, provider } = params
-    const activeProvider = provider.startsWith("openai") ? "openai" : provider
+    const modelProvider = provider.startsWith("openai") ? "openai" : provider
+    const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
+    delete configuration.configuration
     
     try {
       const response = await fetch("/api/config/model", {
@@ -77,11 +79,11 @@ export const saveConfigAtom = atom(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          provider: activeProvider,
+          provider,
           modelSettings: {
             ...formData,
-            modelProvider: activeProvider,
-            configuration: formData,
+            modelProvider,
+            configuration,
           },
         }),
       })
@@ -90,7 +92,7 @@ export const saveConfigAtom = atom(
       if (data.success) {
         const config = get(configAtom)
         if (config) {
-          config.configs[activeProvider] = formData
+          config.configs[provider] = formData
         }
         set(configAtom, config)
       }
