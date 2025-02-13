@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback } from "react"
 import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter"
-import { tomorrow, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { tomorrow, darcula } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { themeAtom } from '../../atoms/themeState'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { codeStreamingAtom, updateStreamingCodeAtom } from '../../atoms/codeStreaming'
@@ -52,7 +52,7 @@ const CodeModal = () => {
         <div className="code-modal-body" ref={codeModalRef}>
           <SyntaxHighlighter
             language={streamingCode?.language.toLowerCase() || ""}
-            style={theme === "dark" ? tomorrow : oneLight}
+            style={theme === "dark" ? tomorrow : darcula}
             showLineNumbers={true}
             customStyle={{
               margin: 0,

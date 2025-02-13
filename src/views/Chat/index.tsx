@@ -6,6 +6,7 @@ import CodeModal from './CodeModal'
 import { useSetAtom } from 'jotai'
 import { updateStreamingCodeAtom } from '../../atoms/codeStreaming'
 import { ToolCall, ToolResult } from "./ToolPanel"
+import { setChatIdAtom } from "../../atoms/chatIdState"
 
 const ChatWindow = () => {
   const { chatId } = useParams()
@@ -18,7 +19,7 @@ const ChatWindow = () => {
   const navigate = useNavigate()
   const isInitialMessageHandled = useRef(false)
   const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
-
+  const setChatId = useSetAtom(setChatIdAtom)
   const loadChat = useCallback(async (id: string) => {
     try {
       setAiStreaming(true)
@@ -27,6 +28,7 @@ const ChatWindow = () => {
 
       if (data.success) {
         currentChatId.current = id
+        setChatId(id)
         document.title = `${data.data.chat.title} - Dive AI`
 
         // 轉換訊息格式
@@ -116,6 +118,9 @@ const ChatWindow = () => {
         newMessages = newMessages.slice(0, messageIndex+1)
       }
       newMessages[newMessages.length - 1].text = ""
+      newMessages[newMessages.length - 1].toolCalls = undefined
+      newMessages[newMessages.length - 1].toolResults = undefined
+      newMessages[newMessages.length - 1].isError = false
       return newMessages
     })
     setAiStreaming(true)

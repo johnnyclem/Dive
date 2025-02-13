@@ -43,11 +43,11 @@
     "temperatureDescription": "Temperature 參數是一種用來控制GPT 模型生成文本的“創造性”或隨機性的參數。一個較高的Temperature (例如 0.7) 會導致更多元和創新的輸出，而一個較低的 Temperature (例如 0.2) 會使輸出更確定和集中。"
   },
   "sidebar": {
-    "tools": "MCP Server 管理",
+    "tools": "工具管理(MCP)",
     "settings": "模型設定"
   },
   "tools": {
-    "title": "MCP Server 管理",
+    "title": "工具管理(MCP)",
     "subtitle": "管理 MCP Server 的工具與設定",
     "editConfig": "編輯設定",
     "configTitle": "MCP Server 設定",
@@ -64,7 +64,7 @@
     "invalidJson": "無效的 JSON 格式"
   },
   "modelConfig": {
-    "title": "語言模型設定",
+    "title": "模型設定",
     "customInstructions": "自訂指令",
     "customInstructionsPlaceholder": "輸入自訂的模型指令...",
     "customInstructionsDescription": "這些指令會被添加到每個請求的系統提示中。",

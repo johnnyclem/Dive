@@ -7,6 +7,7 @@ import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import { hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { showToastAtom } from "../atoms/toastState"
+import { setChatIdAtom } from "../atoms/chatIdState"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -31,8 +32,10 @@ const Welcome = () => {
   const [hasConfig] = useAtom(hasConfigAtom)
   const isComposing = useRef(false)
   const [toolsCnt, setToolsCnt] = useState<number>(0)
+  const setChatId = useSetAtom(setChatIdAtom)
 
   useEffect(() => {
+    setChatId('')
     fetchTools()
   }, [])
 

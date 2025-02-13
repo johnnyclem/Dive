@@ -10,6 +10,13 @@ export const toggleSidebarAtom = atom(
   }
 )
 
+export const setSidebarVisibleAtom = atom(
+  null,
+  (get, set, visible: boolean) => {
+    set(sidebarVisibleAtom, visible)
+  }
+)
+
 export const toggleConfigSidebarAtom = atom(
   null,
   (get, set) => {

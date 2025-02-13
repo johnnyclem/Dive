@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react"
 import { useTranslation } from 'react-i18next'
 import Tooltip from "../../components/Tooltip"
+import { showToastAtom } from "../../atoms/toastState"
+import { useAtom } from "jotai"
 
 interface Props {
   onSendMessage?: (message: string, files?: FileList) => void
@@ -38,6 +40,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const uploadedFiles = useRef<File[]>([])
   const isComposing = useRef(false)
   const [isAborting, setIsAborting] = useState(false)
+  const [, showToast] = useAtom(showToastAtom)
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B'
@@ -132,6 +135,17 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
       return
 
     const imageItems = Array.from(items).filter(item => item.type.startsWith("image/"))
+    if (imageItems.length === 0)
+      return
+
+    if (uploadedFiles.current.length + imageItems.length > 5) {
+      showToast({
+        message: t("chat.uploadLimit"),
+        type: "warning"
+      })
+      return
+    }
+
     if (imageItems.length > 0) {
       e.preventDefault()
       const files = imageItems.map(item => item.getAsFile()).filter((file): file is File => file !== null)

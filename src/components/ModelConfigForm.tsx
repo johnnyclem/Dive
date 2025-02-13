@@ -138,13 +138,15 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         setIsVerified(true)
         showToast({
           message: t("setup.verifySuccess"),
-          type: "success"
+          type: "success",
+          duration: 5000
         })
       } else {
         setIsVerified(false)
         showToast({
           message: t("setup.verifyFailed"),
-          type: "error"
+          type: "error",
+          duration: 5000
         })
       }
     } catch (error) {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import Toast from "../components/Toast"
-import { useAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { showToastAtom } from "../atoms/toastState"
 import CodeMirror, { EditorView } from "@uiw/react-codemirror"
 import { json } from "@codemirror/lang-json"
@@ -9,7 +9,9 @@ import { linter, lintGutter } from "@codemirror/lint"
 // @ts-ignore
 import jsonlint from "jsonlint-mod"
 import { themeAtom } from "../atoms/themeState"
-
+import { chatIdAtom } from "../atoms/chatIdState"
+import { useNavigate } from "react-router-dom"
+import { setSidebarVisibleAtom, sidebarVisibleAtom } from "../atoms/sidebarState"
 interface SubTool {
   name: string
   description?: string
@@ -135,6 +137,13 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
             onChange={(value, viewUpdate) => {
               setJsonString(value)
             }}
+            onPaste={(e) => {
+              e.preventDefault()
+              const text = e.clipboardData.getData("text")
+              if(!text.startsWith("{")) {
+                setJsonString(`{\n ${text}\n}`)
+              }
+            }}
           />
           <div className="form-actions">
             <button 
@@ -165,12 +174,17 @@ const Tools = () => {
   const { t } = useTranslation()
   const [tools, setTools] = useState<Tool[]>([])
   const [showConfigModal, setShowConfigModal] = useState(false)
+  const [, setIsVisible] = useAtom(sidebarVisibleAtom)
   const [mcpConfig, setMcpConfig] = useState<Record<string, any>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
+  const navigate = useNavigate()
+  const [chatId] = useAtom(chatIdAtom)
+  const setSidebarVisible = useSetAtom(setSidebarVisibleAtom)
 
   useEffect(() => {
+    setIsVisible(true)
     fetchTools()
     fetchMCPConfig()
   }, [])
@@ -308,8 +322,34 @@ const Tools = () => {
     setShowAddModal(false)
   }
 
+  const onClose = () => {
+    setSidebarVisible(false)
+    navigate(`${chatId ? `/chat/${chatId}` : "/"}`)
+  }
+
+  useEffect(() => {
+    function handleKeydown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose()
+      }
+    }
+    window.addEventListener("keydown", handleKeydown);
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    }
+  }, [])
+
   return (
     <div className="tools-page">
+      <button
+        className="close-btn"
+        onClick={onClose}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
       <div className="tools-container">
         <div className="tools-header">
           <div>
