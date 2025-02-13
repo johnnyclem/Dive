@@ -4,11 +4,10 @@ import { FieldDefinition, ModelProvider, PROVIDER_LABELS } from "../atoms/interf
 import { configAtom, ModelConfig, saveConfigAtom } from "../atoms/configState"
 import { useAtom } from "jotai"
 import { loadConfigAtom } from "../atoms/configState"
-import { hideToastAtom, showToastAtom, toastAtom } from "../atoms/toastState"
 import useDebounce from "../hooks/useDebounce"
-import Toast from "./Toast"
 import CustomInstructions from "./CustomInstructions"
 import InfoTooltip from "./InfoTooltip"
+import { showToastAtom } from "../atoms/toastState"
 
 const PROVIDERS: ModelProvider[] = ["openai", "openai_compatible", "ollama", "anthropic"]
 
@@ -44,9 +43,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const [, loadConfig] = useAtom(loadConfigAtom)
   const [config] = useAtom(configAtom)
   const [, saveConfig] = useAtom(saveConfigAtom)
-  const [toast] = useAtom(toastAtom)
   const [, showToast] = useAtom(showToastAtom)
-  const [, hideToast] = useAtom(hideToastAtom)
 
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
     try {
@@ -340,13 +337,6 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
       {showParameters && (
         <CustomInstructions />
-      )}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={hideToast}
-        />
       )}
     </form>
   )
