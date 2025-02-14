@@ -314,11 +314,17 @@ export async function handleProcessQuery(
 
                 try {
                   const raceResult = (await Promise.race([
-                    client?.callTool({
-                      name: toolName,
-                      arguments: toolArgs,
-                      signal: abortController.signal,
-                    }),
+                    client?.callTool(
+                      {
+                        name: toolName,
+                        arguments: toolArgs,
+                      },
+                      undefined,
+                      {
+                        signal: abortController.signal,
+                        timeout: 99999000,
+                      }
+                    ),
                     new Promise((_, reject) => {
                       abortPromiseReject = reject;
                       abortController.signal.addEventListener("abort", abortListener);
@@ -357,7 +363,7 @@ export async function handleProcessQuery(
             }
           } catch (error) {
             if (error instanceof Error && error.message === "ABORTED") {
-              logger.info(`[${chatId}] Tool call has been aborted`);
+              // logger.info(`[${chatId}] Tool call has been aborted`);
               throw error; // Re-throw to be caught by the outer try-catch
             }
             throw error;
