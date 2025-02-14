@@ -557,6 +557,13 @@
         border-radius: 0 !important;
         height: 100% !important;
       }
+
+      .html-preview {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: transparent;
+      }
     }
     
     .code-modal-footer {

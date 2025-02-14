@@ -1,5 +1,6 @@
 import React from "react"
 import Mermaid from "./preview/mermaid"
+import Html from "./preview/html"
 
 interface CodePreviewProps {
   language: string
@@ -9,6 +10,10 @@ interface CodePreviewProps {
 const CodePreview = ({ language, code }: CodePreviewProps) => {
   if (language === "mermaid") {
     return <Mermaid chart={code} />
+  }
+
+  if (language === "html" || language === "svg") {
+    return <Html html={code} />
   }
 
   return (
