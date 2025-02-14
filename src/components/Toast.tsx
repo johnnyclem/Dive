@@ -1,5 +1,4 @@
-import React, { useEffect } from "react"
-import { createPortal } from "react-dom"
+import React, { useEffect, useState } from "react"
 
 export interface ToastProps {
   id: string
@@ -17,15 +16,22 @@ const Toast: React.FC<ToastProps> = ({
   closable = false,
   onClose 
 }) => {
+  const [isMouseOver, setIsMouseOver] = useState(false)
+
   useEffect(() => {
-    if (duration && !closable) {
-      const timer = setTimeout(onClose, duration)
-      return () => clearTimeout(timer)
-    }
-  }, [duration, closable, onClose])
+    if (isMouseOver)
+      return
+
+    const timer = setTimeout(onClose, duration || 5000)
+    return () => clearTimeout(timer)
+  }, [duration, isMouseOver, onClose])
 
   return (
-    <div className={`toast-container ${type}`}>
+    <div 
+      className={`toast-container ${type}`}
+      onMouseEnter={() => setIsMouseOver(true)}
+      onMouseLeave={() => setIsMouseOver(false)}
+    >
       <div className="toast-content">
         {message}
         {closable && (
