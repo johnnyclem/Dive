@@ -15,7 +15,13 @@ const ConfigSidebar = () => {
   const [localProvider, setLocalProvider] = useState<ModelProvider>(activeProvider || "openai")
   const [config] = useAtom(configAtom)
   const [, showToast] = useAtom(showToastAtom)
-  
+
+  useEffect(() => {
+    return () => {
+      setIsVisible(false)
+    };
+  }, [])
+
   useEffect(() => {
     if (!isVisible) {
       setLocalProvider(activeProvider || "openai")

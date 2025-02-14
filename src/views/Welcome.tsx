@@ -35,7 +35,7 @@ const Welcome = () => {
   const setChatId = useSetAtom(setChatIdAtom)
 
   useEffect(() => {
-    setChatId('')
+    setChatId(null)
     fetchTools()
   }, [])
 

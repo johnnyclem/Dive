@@ -28,7 +28,6 @@ const ChatWindow = () => {
 
       if (data.success) {
         currentChatId.current = id
-        setChatId(id)
         document.title = `${data.data.chat.title} - Dive AI`
 
         // 轉換訊息格式
@@ -51,10 +50,15 @@ const ChatWindow = () => {
 
   // 處理 URL 中的 chatId
   useEffect(() => {
-    if (chatId && chatId !== currentChatId.current) {
-      loadChat(chatId)
+    if(chatId) {
+      setChatId(chatId)
+      if (chatId !== currentChatId.current) {
+        loadChat(chatId)
+      }
+    }else{
+      setChatId("init") // when chatId is init, it means the chat is not initialized yet
     }
-  }, [chatId, loadChat])
+  }, [chatId, loadChat, setChatId])
 
   const scrollToBottom = useCallback(() => {
     if (chatContainerRef.current) {

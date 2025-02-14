@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { useAtom, useSetAtom } from "jotai"
-import { setSidebarVisibleAtom, sidebarVisibleAtom, toggleConfigSidebarAtom } from "../atoms/sidebarState"
+import { useAtom, useAtomValue } from "jotai"
+import { configSidebarVisibleAtom, getPopupVisibleAtom, sidebarVisibleAtom } from "../atoms/sidebarState"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
@@ -45,8 +45,8 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [histories] = useAtom(historiesAtom)
   const [, loadHistories] = useAtom(loadHistoriesAtom)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
-  const [, toggleConfigSidebar] = useAtom(toggleConfigSidebarAtom)
-  const setSidebarVisible = useSetAtom(setSidebarVisibleAtom)
+  const [, setConfigSidebarVisible] = useAtom(configSidebarVisibleAtom)
+  const popupVisible = useAtomValue(getPopupVisibleAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const [, showToast] = useAtom(showToastAtom)
   const [chatId] = useAtom(chatIdAtom)
@@ -59,15 +59,15 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
   useEffect(() => {
     function handleKeydown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setSidebarVisible(false)
+      if (e.key === "Escape" && !popupVisible) {
+        setIsVisible(false)
       }
     }
     window.addEventListener("keydown", handleKeydown);
     return () => {
       window.removeEventListener("keydown", handleKeydown);
     }
-  }, [])
+  }, [popupVisible])
 
   const confirmDelete = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation()
@@ -133,8 +133,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
   const handleSettings = () => {
     navigate(`${chatId ? `/chat/${chatId}` : "/"}`)
-    setIsVisible(false)
-    toggleConfigSidebar()
+    setConfigSidebarVisible(true)
   }
 
   return (

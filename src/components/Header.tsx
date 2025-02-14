@@ -13,7 +13,16 @@ const Header = () => {
 
   const onClose = () => {
     toggleSidebar()
-    navigate(`${chatId ? `/chat/${chatId}` : "/"}`)
+    switch(chatId) {
+      case "init": // when chatId is init, it means the chat is not initialized yet
+        break
+      case null:
+        navigate("/")
+        break
+      default:
+        navigate(`/chat/${chatId}`)
+        break
+    }
   }
 
   return (

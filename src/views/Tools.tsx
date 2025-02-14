@@ -11,7 +11,7 @@ import jsonlint from "jsonlint-mod"
 import { themeAtom } from "../atoms/themeState"
 import { chatIdAtom } from "../atoms/chatIdState"
 import { useNavigate } from "react-router-dom"
-import { setSidebarVisibleAtom, sidebarVisibleAtom } from "../atoms/sidebarState"
+import { sidebarVisibleAtom, toolsVisibleAtom } from "../atoms/sidebarState"
 interface SubTool {
   name: string
   description?: string
@@ -171,19 +171,24 @@ const Tools = () => {
   const { t } = useTranslation()
   const [tools, setTools] = useState<Tool[]>([])
   const [showConfigModal, setShowConfigModal] = useState(false)
-  const [, setIsVisible] = useAtom(sidebarVisibleAtom)
+  const [, setIsSidebarVisible] = useAtom(sidebarVisibleAtom)
+  const [, setToolsVisible] = useAtom(toolsVisibleAtom)
   const [mcpConfig, setMcpConfig] = useState<Record<string, any>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
   const navigate = useNavigate()
   const [chatId] = useAtom(chatIdAtom)
-  const setSidebarVisible = useSetAtom(setSidebarVisibleAtom)
 
   useEffect(() => {
-    setIsVisible(true)
+    setIsSidebarVisible(true)
+    setToolsVisible(true)
     fetchTools()
     fetchMCPConfig()
+
+    return () => {
+      setToolsVisible(false) //tools page may be closed by navigating to other pages, so it needs setToolsVisible to false
+    };
   }, [])
 
   const fetchTools = async () => {
@@ -320,7 +325,7 @@ const Tools = () => {
   }
 
   const onClose = () => {
-    setSidebarVisible(false)
+    setToolsVisible(false)
     navigate(`${chatId ? `/chat/${chatId}` : "/"}`)
   }
 

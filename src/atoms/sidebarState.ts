@@ -2,6 +2,7 @@ import { atom } from 'jotai'
 
 export const sidebarVisibleAtom = atom(false)
 export const configSidebarVisibleAtom = atom(false)
+export const toolsVisibleAtom = atom(false)
 
 export const toggleSidebarAtom = atom(
   null,
@@ -10,16 +11,6 @@ export const toggleSidebarAtom = atom(
   }
 )
 
-export const setSidebarVisibleAtom = atom(
-  null,
-  (get, set, visible: boolean) => {
-    set(sidebarVisibleAtom, visible)
-  }
-)
-
-export const toggleConfigSidebarAtom = atom(
-  null,
-  (get, set) => {
-    set(configSidebarVisibleAtom, !get(configSidebarVisibleAtom))
-  }
-)
+export const getPopupVisibleAtom = atom((get) => {  // is there any sidebar popup visible
+  return get(configSidebarVisibleAtom) || get(toolsVisibleAtom)
+})
