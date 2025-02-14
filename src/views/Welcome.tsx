@@ -109,13 +109,6 @@ const Welcome = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    if (files.length + uploadedFiles.length > 5) {
-      showToast({
-        message: t("chat.uploadLimit"),
-        type: "warning"
-      })
-      return
-    }
     setUploadedFiles(prev => [...prev, ...files])
   }
 
@@ -135,14 +128,6 @@ const Welcome = () => {
     const imageItems = Array.from(items).filter(item => item.type.startsWith("image/"))
     if (imageItems.length === 0)
       return
-
-    if (uploadedFiles.length + imageItems.length > 5) {
-      showToast({
-        message: t("chat.uploadLimit"),
-        type: "warning"
-      })
-      return
-    }
 
     const newFiles = await Promise.all(
       imageItems.map(async item => {

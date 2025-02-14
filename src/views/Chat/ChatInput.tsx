@@ -138,14 +138,6 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
     if (imageItems.length === 0)
       return
 
-    if (uploadedFiles.current.length + imageItems.length > 5) {
-      showToast({
-        message: t("chat.uploadLimit"),
-        type: "warning"
-      })
-      return
-    }
-
     if (imageItems.length > 0) {
       e.preventDefault()
       const files = imageItems.map(item => item.getAsFile()).filter((file): file is File => file !== null)

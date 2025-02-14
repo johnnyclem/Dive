@@ -14,7 +14,6 @@
     "deleteChat": "刪除對話",
     "deleteSuccess": "對話已刪除",
     "deleteFailed": "刪除失敗",
-    "uploadLimit": "最多只能上傳 5 個檔案",
     "confirmDelete": "確認刪除",
     "tools": "工具",
     "abort": "停止生成回應",

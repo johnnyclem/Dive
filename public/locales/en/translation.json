@@ -14,7 +14,6 @@
     "deleteChat": "Delete Chat",
     "deleteSuccess": "Chat deleted",
     "deleteFailed": "Failed to delete",
-    "uploadLimit": "Maximum 5 files allowed",
     "confirmDelete": "Confirm Delete",
     "tools": "Tools",
     "abort": "Stop generating response",
