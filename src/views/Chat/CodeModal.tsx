@@ -12,7 +12,8 @@ type TabType = "code" | "preview"
 const supportedPreviewLanguage = [
   "mermaid",
   "html",
-  "svg"
+  "svg",
+  "xml",
 ]
 
 const CodeModal = () => {

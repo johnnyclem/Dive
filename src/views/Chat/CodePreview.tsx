@@ -12,7 +12,7 @@ const CodePreview = ({ language, code }: CodePreviewProps) => {
     return <Mermaid chart={code} />
   }
 
-  if (language === "html" || language === "svg") {
+  if (language === "html" || language === "svg" || language === "xml") {
     return <Html html={code} />
   }
 
