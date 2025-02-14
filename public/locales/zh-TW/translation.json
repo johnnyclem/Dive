@@ -33,6 +33,7 @@
     "provider": "模型提供者",
     "verify": "驗證模型",
     "verifySuccess": "模型驗證成功",
+    "verifySuccessNoTool": "模型驗證成功，但不支援MCP Tool Calls",
     "verifyFailed": "模型驗證失敗",
     "verifyError": "驗證過程發生錯誤",
     "saveSuccess": "設定已儲存",

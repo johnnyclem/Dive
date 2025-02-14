@@ -33,6 +33,7 @@
     "provider": "Model Provider",
     "verify": "Verify Model",
     "verifySuccess": "Model verification successful",
+    "verifySuccessNoTool": "Model verification successful, but does not support MCP Tool Calls",
     "verifyFailed": "Model verification failed",
     "verifyError": "Error occurred during verification",
     "saveSuccess": "Settings saved successfully",

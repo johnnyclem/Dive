@@ -37,6 +37,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const [formData, setFormData] = useState<ModelConfig>(initialData || {} as ModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isVerifying, setIsVerifying] = useState(false)
+  const [isVerifyingNoTool, setIsVerifyingNoTool] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [listOptions, setListOptions] = useState<Record<string, string[]>>(initialData?.model ? { model: [initialData.model] } : {})
@@ -136,11 +137,21 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       const data = await response.json()
       if (data.success) {
         setIsVerified(true)
-        showToast({
-          message: t("setup.verifySuccess"),
-          type: "success",
-          duration: 5000
-        })
+        if(data.connectingSuccess && data.supportTools) {
+          setIsVerifyingNoTool(false)
+          showToast({
+            message: t("setup.verifySuccess"),
+            type: "success",
+            duration: 5000
+          })
+        }else if(data.connectingSuccess || data.supportTools){
+          setIsVerifyingNoTool(true)
+          showToast({
+            message: t("setup.verifySuccessNoTool"),
+            type: "success",
+            duration: 5000
+          })
+        }
       } else {
         setIsVerified(false)
         showToast({
@@ -254,9 +265,40 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
               className={errors[key] ? "error" : ""}
             />
           )}
+          {key==="model" && isVerifyingNoTool && (
+              <div className="field-model-description">
+                {t("setup.verifySuccessNoTool")}
+              </div>
+          )}
           {errors[key] && <div className="error-message">{errors[key]}</div>}
         </div>
       ))}
+
+      <div className="form-actions">
+        {showVerify && (
+          <button 
+            type="button" 
+            className="verify-btn"
+            onClick={verifyModel}
+            disabled={isVerifying || isSubmitting}
+          >
+            {isVerifying ? (
+              <div className="loading-spinner"></div>
+            ) : t("setup.verify")}
+          </button>
+        )}
+        <button 
+          type="submit" 
+          className="submit-btn"
+          disabled={isVerifying || isSubmitting || (showVerify && !isVerified)}
+        >
+          {isSubmitting ? (
+            <div className="loading-spinner"></div>
+          ) : t(submitLabel)}
+        </button>
+      </div>
+
+      <div className="divider" />
 
       {showParameters && (
         <div className="form-group parameters">
@@ -311,30 +353,6 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
           </div>
         </div>
       )}
-
-      <div className="form-actions">
-        {showVerify && (
-          <button 
-            type="button" 
-            className="verify-btn"
-            onClick={verifyModel}
-            disabled={isVerifying || isSubmitting}
-          >
-            {isVerifying ? (
-              <div className="loading-spinner"></div>
-            ) : t("setup.verify")}
-          </button>
-        )}
-        <button 
-          type="submit" 
-          className="submit-btn"
-          disabled={isVerifying || isSubmitting || (showVerify && !isVerified)}
-        >
-          {isSubmitting ? (
-            <div className="loading-spinner"></div>
-          ) : t(submitLabel)}
-        </button>
-      </div>
 
       <div className="divider" />
 

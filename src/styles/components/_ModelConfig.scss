@@ -89,10 +89,14 @@
         margin-bottom: 0px;
       }
 
-      .field-description {
+      .field-description,
+      .field-model-description {
         font-size: 13px;
         margin-bottom: 8px;
         color: var(--text-weak);
+      }
+      .field-model-description {
+        margin-bottom: -1rem;
       }
 
       input, select {
