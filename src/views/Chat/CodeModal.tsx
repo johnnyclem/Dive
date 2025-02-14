@@ -34,7 +34,8 @@ const CodeModal = () => {
 
   useEffect(() => {
     scrollCodeToBottom()
-  }, [streamingCode, scrollCodeToBottom])
+    setActiveTab("code")
+  }, [streamingCode])
 
   const copyToClipboard = async (text: string) => {
     try {
