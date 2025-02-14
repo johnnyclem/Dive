@@ -30,6 +30,7 @@ interface ConfigModalProps {
   title: string
   subtitle?: string
   config: Record<string, any>
+  ifHandlePaste?: boolean
   onSubmit: (config: Record<string, any>) => void
   onCancel: () => void
 }
@@ -38,6 +39,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   title,
   subtitle,
   config,
+  ifHandlePaste,
   onSubmit,
   onCancel
 }) => {
@@ -138,6 +140,9 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
               setJsonString(value)
             }}
             onPaste={(e) => {
+              if (!ifHandlePaste)
+                return
+
               e.preventDefault()
               const text = e.clipboardData.getData("text")
               if(!text.startsWith("{")) {
@@ -456,6 +461,7 @@ const Tools = () => {
           config={{}}
           onSubmit={handleAddSubmit}
           onCancel={() => setShowAddModal(false)}
+          ifHandlePaste={true}
         />
       )}
     </div>
