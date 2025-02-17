@@ -174,7 +174,7 @@ app.on("activate", () => {
   if (allWindows.length) {
     allWindows[0].focus()
   } else {
-    onReady()
+    createWindow()
   }
 })
 
