@@ -66,10 +66,9 @@ export class WebServer {
     this.upload = multer({
       storage: storage,
       limits: {
-        fileSize: 5 * 1024 * 1024,
-        files: 5,
+        // remove limit
       },
-    }).array("files", 5);
+    }).array("files"); // remove limit
 
     // Set up template engine
     this.app.set("view engine", "ejs");
