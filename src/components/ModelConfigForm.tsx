@@ -124,6 +124,14 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         delete (formData as any).baseURL
         delete (configuration as any).baseURL
       }
+      
+      if (formData.topP === 0) {
+        delete (formData as any).topP
+      }
+      
+      if (formData.temperature === 0) {
+        delete (formData as any).temperature
+      }
 
       const response = await fetch("/api/modelVerify", {
         method: "POST",
@@ -184,6 +192,14 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     if (!validateForm())
       return
     
+    if (formData.topP === 0) {
+      delete (formData as any).topP
+    }
+    
+    if (formData.temperature === 0) {
+      delete (formData as any).temperature
+    }
+    
     try {
       setIsSubmitting(true)
       const data = await saveConfig({ formData, provider })
@@ -207,7 +223,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       setIsVerified(false)
     }
   }
-
+  
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
     Object.entries(fields).forEach(([key, field]) => {
