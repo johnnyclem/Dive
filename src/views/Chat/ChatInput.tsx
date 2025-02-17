@@ -246,24 +246,6 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
 
   return (
     <footer className="chat-input">
-      {disabled && !isAborting && (
-        <Tooltip type="controls" content={<>{t('chat.abort')}<span className="key">Esc</span></>}>
-          <div
-            className="abort-btn"
-            onClick={() => {
-              setIsAborting(true)
-              onAbort()
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-              <circle cx="12" cy="12" r="12" fill="black"></circle>
-              <circle cx="12" cy="12" r="7" fill="white"></circle>
-              <circle cx="12" cy="12" r="6.5" fill="black"></circle>
-              <circle cx="12" cy="12" r="3" fill="white"></circle>
-            </svg>
-          </div>
-        </Tooltip>
-      )}
       <div className="input-wrapper">
         <textarea
           ref={textareaRef}
@@ -296,16 +278,36 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
             <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
           </svg>
         </button>
-        <button 
-          className="send-btn" 
-          onClick={handleSubmit} 
-          disabled={disabled}
-          title={t('chat.send')}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-          </svg>
-        </button>
+        {(disabled && !isAborting) ? (
+          <Tooltip type="controls" content={<>{t('chat.abort')}<span className="key">Esc</span></>}>
+            <button
+              className="abort-btn"
+              onClick={() => {
+                setIsAborting(true)
+                onAbort()
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                <circle cx="12" cy="12" r="12" fill="black"></circle>
+                <circle cx="12" cy="12" r="7" fill="white"></circle>
+                <circle cx="12" cy="12" r="6.5" fill="black"></circle>
+                <circle cx="12" cy="12" r="3" fill="white"></circle>
+              </svg>
+            </button>
+          </Tooltip>
+        ) : (
+          <Tooltip type="controls" content={t('chat.send')}>
+            <button
+              className="send-btn"
+              onClick={handleSubmit}
+              disabled={disabled}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              </svg>
+            </button>
+          </Tooltip>
+        )}
       </div>
       {previews.length > 0 && (
         <div className="file-previews">
