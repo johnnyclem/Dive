@@ -6,7 +6,7 @@ import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
-import { chatIdAtom } from "../atoms/chatIdState"
+import { chatIdAtom } from "../atoms/chatState"
 
 interface Props {
   onNewChat?: () => void

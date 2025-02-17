@@ -2,7 +2,7 @@ import React from "react"
 import { useAtom, useSetAtom } from "jotai"
 import { toggleSidebarAtom } from "../atoms/sidebarState"
 import { useTranslation } from "react-i18next"
-import { chatIdAtom } from "../atoms/chatIdState"
+import { chatIdAtom } from "../atoms/chatState"
 import { useNavigate } from "react-router-dom"
 
 const Header = () => {

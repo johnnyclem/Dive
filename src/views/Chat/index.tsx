@@ -6,7 +6,7 @@ import CodeModal from './CodeModal'
 import { useSetAtom } from 'jotai'
 import { updateStreamingCodeAtom } from '../../atoms/codeStreaming'
 import { ToolCall, ToolResult } from "./ToolPanel"
-import { setChatIdAtom } from "../../atoms/chatIdState"
+import { setChatIdAtom } from "../../atoms/chatState"
 
 const ChatWindow = () => {
   const { chatId } = useParams()

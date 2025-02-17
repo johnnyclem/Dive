@@ -10,7 +10,7 @@ type Props = {
 
 /** info hint tooltip */
 const InfoTooltip = forwardRef<HTMLButtonElement | null, Props>(({children, content, side = "top", maxWidth, ...rest}, ref) => {
-  
+
   return (
     <RadixTooltip.Provider delayDuration={300}>
       <RadixTooltip.Root>
@@ -38,8 +38,9 @@ const InfoTooltip = forwardRef<HTMLButtonElement | null, Props>(({children, cont
         </RadixTooltip.Portal>
       </RadixTooltip.Root>
     </RadixTooltip.Provider>
-  );
-});
+  )
+})
+
 InfoTooltip.displayName = "InfoTooltip";
 
 export default InfoTooltip;

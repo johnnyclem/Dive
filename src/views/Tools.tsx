@@ -9,7 +9,7 @@ import { linter, lintGutter } from "@codemirror/lint"
 // @ts-ignore
 import jsonlint from "jsonlint-mod"
 import { themeAtom } from "../atoms/themeState"
-import { chatIdAtom } from "../atoms/chatIdState"
+import { chatIdAtom } from "../atoms/chatState"
 import { useNavigate } from "react-router-dom"
 import { sidebarVisibleAtom, toolsVisibleAtom } from "../atoms/sidebarState"
 interface SubTool {

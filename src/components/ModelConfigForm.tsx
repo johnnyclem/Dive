@@ -30,7 +30,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   onSubmit,
   submitLabel = "setup.submit",
   showVerify = true,
-  showParameters = false
+  showParameters = false,
 }) => {
   const { t } = useTranslation()
   const [formData, setFormData] = useState<ModelConfig>(initialData || {} as ModelConfig)

@@ -7,7 +7,7 @@ import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import { hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { showToastAtom } from "../atoms/toastState"
-import { setChatIdAtom } from "../atoms/chatIdState"
+import { setChatIdAtom } from "../atoms/chatState"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
