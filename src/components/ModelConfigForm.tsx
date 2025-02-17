@@ -109,18 +109,27 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const verifyModel = async () => {
     try {
       setIsVerifying(true)
-      const _provider = provider.startsWith("openai") ? "openai" : provider
+      const modelProvider = provider.startsWith("openai") ? "openai" : provider
+
+      const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
+      delete configuration.configuration
+      
+      if (provider === "openai" && initialData?.baseURL) {
+        delete (formData as any).baseURL
+        delete (configuration as any).baseURL
+      }
+
       const response = await fetch("/api/modelVerify", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          provider: _provider,
+          provider,
           modelSettings: {
             ...formData,
-            modelProvider: _provider,
-            configuration: formData,
+            modelProvider,
+            configuration,
           },
         }),
       })

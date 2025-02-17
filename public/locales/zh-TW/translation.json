@@ -55,7 +55,8 @@
     "addServerSubtitle": "請直接貼上 MCP Server Json",
     "fetchFailed": "載入工具列表失敗",
     "configFetchFailed": "載入設定失敗",
-    "invalidJson": "無效的 JSON 格式"
+    "invalidJson": "無效的 JSON 格式",
+    "updateFailed": "{{serverName}} 啟動失敗：{{error}}"
   },
   "modelConfig": {
     "title": "語言模型設定",

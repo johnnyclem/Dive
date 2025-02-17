@@ -205,6 +205,23 @@ const Tools = () => {
     } catch (error) {
     }
   }
+  
+  const handleUpdateConfigResponse = (data: { errors: { error: string; serverName: string }[] }) => {
+    if (data.errors && data.errors.length && Array.isArray(data.errors)) {
+      data.errors.forEach(({ error, serverName }: { error: string; serverName: string }) => {
+        showToast({
+          message: t("tools.updateFailed", { serverName, error }),
+          type: "error",
+          closable: true
+        })
+      })
+    } else {
+      showToast({
+        message: t("tools.saveSuccess"),
+        type: "success"
+      })
+    }
+  }
 
   const handleConfigSubmit = async (newConfig: Record<string, any>) => {
     try {
@@ -214,10 +231,7 @@ const Tools = () => {
         setMcpConfig(newConfig)
         setShowConfigModal(false)
         fetchTools()
-        showToast({
-          message: t("tools.saveSuccess"),
-          type: "success"
-        })
+        handleUpdateConfigResponse(data)
       }
     } catch (error) {
       console.error("Failed to update MCP config:", error)
@@ -240,9 +254,13 @@ const Tools = () => {
       if (data.success) {
         setMcpConfig(newConfig)
         await fetchTools()
+        handleUpdateConfigResponse(data)
       }
     } catch (error) {
-      console.error("Failed to toggle tool:", error)
+      showToast({
+        message: error instanceof Error ? error.message : t("tools.toggleFailed"),
+        type: "error"
+      })
     } finally {
       setIsLoading(false)
     }
