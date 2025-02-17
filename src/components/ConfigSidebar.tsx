@@ -5,7 +5,6 @@ import { configSidebarVisibleAtom } from "../atoms/sidebarState"
 import ModelConfigForm from "./ModelConfigForm"
 import { defaultInterface, interfaceAtom, ModelProvider } from "../atoms/interfaceState"
 import { activeProviderAtom, configAtom } from "../atoms/configState"
-import CustomInstructions from "./CustomInstructions"
 import { showToastAtom } from "../atoms/toastState"
 
 const ConfigSidebar = () => {
@@ -16,14 +15,32 @@ const ConfigSidebar = () => {
   const [localProvider, setLocalProvider] = useState<ModelProvider>(activeProvider || "openai")
   const [config] = useAtom(configAtom)
   const [, showToast] = useAtom(showToastAtom)
-  
+
+  useEffect(() => {
+    return () => {
+      setIsVisible(false)
+    };
+  }, [])
+
   useEffect(() => {
     if (!isVisible) {
       setLocalProvider(activeProvider || "openai")
     }
   }, [isVisible, activeProvider, fields])
 
-  const handleSubmit = async (data: any) => {
+  useEffect(() => {
+    function handleKeydown(e: KeyboardEvent) {
+      if (e.key === "Escape" && isVisible) {
+        setIsVisible(false)
+      }
+    }
+    window.addEventListener("keydown", handleKeydown);
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    }
+  }, [isVisible])
+
+  const handleSubmit = async (data: Record<string, any>) => {
     try {
       if (data.success) {
         showToast({
@@ -67,9 +84,8 @@ const ConfigSidebar = () => {
               initialData={config?.configs[localProvider] || null}
               onProviderChange={setLocalProvider}
               onSubmit={handleSubmit}
+              showParameters={true}
             />
-            <div className="divider" />
-            <CustomInstructions />
           </div>
         )}
       </div>

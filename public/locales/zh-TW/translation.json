@@ -14,8 +14,10 @@
     "deleteChat": "刪除對話",
     "deleteSuccess": "對話已刪除",
     "deleteFailed": "刪除失敗",
-    "uploadLimit": "最多只能上傳 5 個檔案",
-    "confirmDelete": "確認刪除"
+    "confirmDelete": "確認刪除",
+    "tools": "工具",
+    "abort": "停止生成回應",
+    "retry": "重試"
   },
   "welcome": {
     "title": "歡迎使用 Dive AI",
@@ -30,18 +32,22 @@
     "provider": "模型提供者",
     "verify": "驗證模型",
     "verifySuccess": "模型驗證成功",
+    "verifySuccessNoTool": "模型驗證成功，但不支援MCP Tool Calls",
     "verifyFailed": "模型驗證失敗",
     "verifyError": "驗證過程發生錯誤",
     "saveSuccess": "設定已儲存",
     "saveFailed": "儲存失敗",
-    "back": "返回"
+    "back": "返回",
+    "parameters": "參數設定",
+    "topPDescription": "Top P 參數是一種用來控制 GPT 模型生成文本的多樣性的參數。當 GPT 模型生成文本時，它會對每個生成的字或子字在詞彙表中的概率分佈進行計算。Top P 參數控制了有多少最高概率的字或子字被選擇進入生成文本。例如，如果 top_p=0.9，那麼閾值就設定為概率在最高概率的字或子字中排名第 90 的那個。",
+    "temperatureDescription": "Temperature 參數是一種用來控制GPT 模型生成文本的“創造性”或隨機性的參數。一個較高的Temperature (例如 0.7) 會導致更多元和創新的輸出，而一個較低的 Temperature (例如 0.2) 會使輸出更確定和集中。"
   },
   "sidebar": {
-    "tools": "MCP Server 管理",
+    "tools": "工具管理(MCP)",
     "settings": "模型設定"
   },
   "tools": {
-    "title": "MCP Server 管理",
+    "title": "工具管理(MCP)",
     "subtitle": "管理 MCP Server 的工具與設定",
     "editConfig": "編輯設定",
     "configTitle": "MCP Server 設定",
@@ -59,9 +65,10 @@
     "updateFailed": "{{serverName}} 啟動失敗：{{error}}"
   },
   "modelConfig": {
-    "title": "語言模型設定",
+    "title": "模型設定",
     "customInstructions": "自訂指令",
     "customInstructionsPlaceholder": "輸入自訂的模型指令...",
+    "customInstructionsDescription": "這些指令會被添加到每個請求的系統提示中。",
     "saveInstructions": "儲存指令",
     "customRulesSaved": "自訂指令已儲存",
     "customRulesFailed": "儲存自訂指令失敗"
