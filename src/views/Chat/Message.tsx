@@ -170,7 +170,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
             </div>
           )} */}
           <div></div>
-          {messageId.includes("-") && (  //if messageId doesn't contain "-" then it's aborted before ready then it can't retry
+          {/* {messageId.includes("-") && (  //if messageId doesn't contain "-" then it's aborted before ready then it can't retry
             <button
               type="button"
               className="retry-btn"
@@ -187,7 +187,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
               </svg>
               <span>{t('chat.retry')}</span>
             </button>
-          )}
+          )} */}
         </div>
       )}
     </div>
