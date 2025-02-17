@@ -1,13 +1,26 @@
-import React, { useRef, useEffect, useCallback } from "react"
+import React, { useRef, useEffect, useCallback, useState } from "react"
 import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter"
 import { tomorrow, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useColorScheme } from "../../hooks/useColorScheme"
 import { useAtomValue, useSetAtom } from 'jotai'
 import { codeStreamingAtom, updateStreamingCodeAtom } from '../../atoms/codeStreaming'
+import { useTranslation } from "react-i18next"
+import CodePreview from "./CodePreview"
+
+type TabType = "code" | "preview"
+
+const supportedPreviewLanguage = [
+  "mermaid",
+  "html",
+  "svg",
+  "xml",
+]
 
 const CodeModal = () => {
   const colorScheme = useColorScheme()
   const codeModalRef = useRef<HTMLDivElement>(null)
+  const { t } = useTranslation()
+  const [activeTab, setActiveTab] = useState<TabType>("code")
 
   const { streamingCode } = useAtomValue(codeStreamingAtom)
   const code = streamingCode?.code || ""
@@ -24,7 +37,8 @@ const CodeModal = () => {
 
   useEffect(() => {
     scrollCodeToBottom()
-  }, [streamingCode, scrollCodeToBottom])
+    setActiveTab("code")
+  }, [streamingCode])
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -42,39 +56,62 @@ const CodeModal = () => {
       <div className="code-modal-content">
         <div className="code-modal-header">
           <span className="language">{streamingCode?.language}</span>
-          <button 
-            className="close-btn"
-            onClick={() => updateStreamingCode({ code: "", language: "" })}
-          >
-            ×
-          </button>
+          <div className="header-right">
+            {supportedPreviewLanguage.includes(streamingCode?.language || "") && (
+              <div className="code-modal-tabs">
+                <button 
+                  className={`tab-btn ${activeTab === "code" ? "active" : ""}`}
+                  onClick={() => setActiveTab("code")}
+                >
+                  Code
+                </button>
+                <button 
+                  className={`tab-btn ${activeTab === "preview" ? "active" : ""}`}
+                  onClick={() => setActiveTab("preview")}
+                >
+                  Preview
+                </button>
+              </div>
+            )}
+            <button 
+              className="close-btn"
+              onClick={() => updateStreamingCode({ code: "", language: "" })}
+            >
+              ×
+            </button>
+          </div>
         </div>
         <div className="code-modal-body" ref={codeModalRef}>
-          <SyntaxHighlighter
-            language={streamingCode?.language.toLowerCase() || ""}
-            style={colorScheme === "dark" ? tomorrow : oneLight}
-            showLineNumbers={true}
-            customStyle={{
-              margin: 0,
-              height: '100%',
-              background: 'transparent'
-            }}
-            codeTagProps={{
-              style: {
-                fontSize: '14px',
-                lineHeight: '1.5'
-              }
-            }}
-          >
-            {code}
-          </SyntaxHighlighter>
+          {activeTab === "code" && (
+            <SyntaxHighlighter
+              language={streamingCode?.language.toLowerCase() || ""}
+              style={colorScheme === "dark" ? tomorrow : oneLight}
+              showLineNumbers={true}
+              customStyle={{
+                margin: 0,
+                height: '100%',
+                background: 'transparent'
+              }}
+              codeTagProps={{
+                style: {
+                  fontSize: '14px',
+                  lineHeight: '1.5'
+                }
+              }}
+            >
+              {code}
+            </SyntaxHighlighter>
+          )}
+          {activeTab === "preview" && (
+            <CodePreview language={streamingCode?.language || ""} code={code} />
+          )}
         </div>
         <div className="code-modal-footer">
           <button 
             className="copy-btn"
             onClick={() => copyToClipboard(code)}
           >
-            複製
+            {t("chat.copyCode")}
           </button>
         </div>
       </div>
