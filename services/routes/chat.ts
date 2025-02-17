@@ -63,12 +63,11 @@ export function chatRouter() {
       const chatId = req.params.id;
       const controller = abortControllerMap.get(chatId);
       if (controller) {
+        logger.info(`[${chatId}] Chat abort signal sent successfully`);
         controller.abort();
-        abortControllerMap.delete(chatId);
-        logger.info(`[${chatId}] Chat aborted successfully`);
         res.json({
           success: true,
-          message: "Chat aborted successfully",
+          message: "Chat abort signal sent successfully",
         });
       } else {
         logger.info(`[${chatId}] No active chat found with this ID`);

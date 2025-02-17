@@ -142,8 +142,8 @@ export class ModelManager {
         - DO NOT try to use any tools to generate title
         - NO explanations, quotes, or extra text
         - NO punctuation at the end
-        - If input is Chinese, use Traditional Chinese
-        - If input is non-Chinese, use the same language as input`
+        - If the input is in Chinese, use Traditional Chinese characters for the title.
+        - For all other languages, generate the title in the same language as the input.`
       ),
       new HumanMessage(`<user_input_query>${content}</user_input_query>`)
     ]);

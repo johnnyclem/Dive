@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import Toast from "../components/Toast"
-import { useAtom, useSetAtom } from "jotai"
+import { useAtom } from "jotai"
 import { showToastAtom } from "../atoms/toastState"
 import CodeMirror, { EditorView } from "@uiw/react-codemirror"
 import { json } from "@codemirror/lang-json"
 import { linter, lintGutter } from "@codemirror/lint"
-// @ts-ignore
-import jsonlint from "jsonlint-mod"
 import { themeAtom } from "../atoms/themeState"
 import { chatIdAtom } from "../atoms/chatState"
 import { useNavigate } from "react-router-dom"
 import { sidebarVisibleAtom, toolsVisibleAtom } from "../atoms/sidebarState"
+
+// @ts-ignore
+import jsonlint from "jsonlint-mod"
+
 interface SubTool {
   name: string
   description?: string
@@ -32,6 +33,17 @@ interface ConfigModalProps {
   config: Record<string, any>
   onSubmit: (config: Record<string, any>) => void
   onCancel: () => void
+}
+
+interface ToolsCache {
+  [key: string]: {
+    description: string
+    icon?: string
+    subTools: {
+      name: string
+      description: string
+    }[]
+  }
 }
 
 const ConfigModal: React.FC<ConfigModalProps> = ({
@@ -179,8 +191,14 @@ const Tools = () => {
   const [, showToast] = useAtom(showToastAtom)
   const navigate = useNavigate()
   const [chatId] = useAtom(chatIdAtom)
+  const toolsCacheRef = useRef<ToolsCache>({})
 
   useEffect(() => {
+    const cachedTools = localStorage.getItem("toolsCache")
+    if (cachedTools) {
+      toolsCacheRef.current = JSON.parse(cachedTools)
+    }
+    
     setIsSidebarVisible(true)
     setToolsVisible(true)
     fetchTools()
@@ -198,6 +216,21 @@ const Tools = () => {
 
       if (data.success) {
         setTools(data.tools)
+        
+        const newCache: ToolsCache = {}
+        data.tools.forEach((tool: Tool) => {
+          newCache[tool.name] = {
+            description: tool.description || '',
+            icon: tool.icon,
+            subTools: tool.tools?.map(subTool => ({
+              name: subTool.name,
+              description: subTool.description || ''
+            })) || []
+          }
+        })
+        
+        toolsCacheRef.current = {...toolsCacheRef.current, ...newCache}
+        localStorage.setItem("toolsCache", JSON.stringify(toolsCacheRef.current))
       } else {
         showToast({
           message: data.message || t("tools.fetchFailed"),
@@ -210,6 +243,23 @@ const Tools = () => {
         type: "error"
       })
     }
+  }
+
+  const updateMCPConfig = async (newConfig: Record<string, any> | string) => {
+    return await fetch("/api/config/mcpserver", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: typeof newConfig === "string" ? newConfig : JSON.stringify(newConfig),
+    })
+      .then(async (response) => await response.json())
+      .catch((error) => {
+        showToast({
+          message: error instanceof Error ? error.message : t("tools.configFetchFailed"),
+          type: "error"
+        })
+      })
   }
 
   const fetchMCPConfig = async () => {
@@ -225,9 +275,22 @@ const Tools = () => {
         })
       }
     } catch (error) {
+    }
+  }
+  
+  const handleUpdateConfigResponse = (data: { errors: { error: string; serverName: string }[] }) => {
+    if (data.errors && data.errors.length && Array.isArray(data.errors)) {
+      data.errors.forEach(({ error, serverName }: { error: string; serverName: string }) => {
+        showToast({
+          message: t("tools.updateFailed", { serverName, error }),
+          type: "error",
+          closable: true
+        })
+      })
+    } else {
       showToast({
-        message: error instanceof Error ? error.message : t("tools.configFetchFailed"),
-        type: "error"
+        message: t("tools.saveSuccess"),
+        type: "success"
       })
     }
   }
@@ -235,22 +298,12 @@ const Tools = () => {
   const handleConfigSubmit = async (newConfig: Record<string, any>) => {
     try {
       const filledConfig = await window.ipcRenderer.fillPathToConfig(JSON.stringify(newConfig))
-      const response = await fetch("/api/config/mcpserver", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: filledConfig,
-      })
-      const data = await response.json()
+      const data = await updateMCPConfig(filledConfig)
       if (data.success) {
         setMcpConfig(newConfig)
         setShowConfigModal(false)
         fetchTools()
-        showToast({
-          message: t("tools.saveSuccess"),
-          type: "success"
-        })
+        handleUpdateConfigResponse(data)
       }
     } catch (error) {
       console.error("Failed to update MCP config:", error)
@@ -261,30 +314,25 @@ const Tools = () => {
     }
   }
 
-  const toggleTool = async (toolIndex: number) => {
+  const toggleTool = async (tool: Tool) => {
     try {
       setIsLoading(true)
-      const tool = tools[toolIndex]
       const currentEnabled = tool.enabled
 
       const newConfig = JSON.parse(JSON.stringify(mcpConfig))
       newConfig.mcpServers[tool.name].enabled = !currentEnabled
 
-      const response = await fetch("/api/config/mcpserver", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newConfig),
-      })
-
-      const data = await response.json()
+      const data = await updateMCPConfig(newConfig)
       if (data.success) {
         setMcpConfig(newConfig)
         await fetchTools()
+        handleUpdateConfigResponse(data)
       }
     } catch (error) {
-      console.error("Failed to toggle tool:", error)
+      showToast({
+        message: error instanceof Error ? error.message : t("tools.toggleFailed"),
+        type: "error"
+      })
     } finally {
       setIsLoading(false)
     }
@@ -341,6 +389,38 @@ const Tools = () => {
     }
   }, [])
 
+  const sortedTools = useMemo(() => {
+    const configOrder = mcpConfig.mcpServers ? Object.keys(mcpConfig.mcpServers) : []
+    const toolMap = new Map(tools.map(tool => [tool.name, tool]))
+    
+    return configOrder.map(name => {
+      if (toolMap.has(name)) {
+        return toolMap.get(name)!
+      }
+      
+      const cachedTool = toolsCacheRef.current[name]
+      if (cachedTool) {
+        return {
+          name,
+          description: cachedTool.description,
+          icon: cachedTool.icon,
+          enabled: false,
+          tools: cachedTool.subTools.map(subTool => ({
+            name: subTool.name,
+            description: subTool.description,
+            enabled: false
+          }))
+        }
+      }
+      
+      return {
+        name,
+        description: "",
+        enabled: false
+      }
+    })
+  }, [tools, mcpConfig.mcpServers])
+
   return (
     <div className="tools-page">
       <button
@@ -387,7 +467,7 @@ const Tools = () => {
         </div>
 
         <div className="tools-list">
-          {tools.map((tool, index) => (
+          {sortedTools.map((tool, index) => (
             <div key={index} id={`tool-${index}`} onClick={() => toggleToolSection(index)} className="tool-section">
               <div className="tool-header">
                 <div className="tool-header-content">
@@ -404,7 +484,7 @@ const Tools = () => {
                   <input
                     type="checkbox"
                     checked={tool.enabled}
-                    onChange={() => toggleTool(index)}
+                    onChange={() => toggleTool(tool)}
                   />
                   <span className="slider round"></span>
                 </label>
