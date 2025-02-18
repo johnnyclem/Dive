@@ -12,7 +12,6 @@ import { updateStreamingCodeAtom } from '../../atoms/codeStreaming'
 import ToolPanel, { ToolCall, ToolResult } from './ToolPanel'
 import FilePreview from './FilePreview'
 import { useTranslation } from 'react-i18next'
-import katex from 'katex'
 import { themeAtom } from "../../atoms/themeState";
 
 interface MessageProps {
