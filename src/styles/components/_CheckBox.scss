@@ -1,13 +1,13 @@
 @use "../_variables" as *;
 
-.checkbox-content{
+.checkbox-content {
   display: inline-block;
   line-height: 0;
 
-  &:not(.disabled):hover .box{
+  &:not(.disabled):hover .box {
     border-color:var(--stroke-dark-medium);
 
-    &::before{
+    &::before {
       content: "";
       display: block;
       background-color: var(--bg-inverted-op-dark-mediumweak);
@@ -23,20 +23,17 @@
     }
   }
 
-  &.disabled{
-    .touch-area{
+  &.disabled {
+    .touch-area {
       background-color: transparent;
       opacity: 30%;
     }
-    // .box{
-    //   border-color: rgba(205, 211, 227, 0.5);
-    // }
-    label{
+    label {
       cursor: default;
     }
   }
 
-  label{
+  label {
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -45,18 +42,15 @@
     line-height: normal;
   }
 
-  .touch-area{
+  .touch-area {
     display: flex;
     align-items: center;
     justify-content: center;
-    // width: 36px;
-    // height: 36px;
-    // border-radius: 50%;
     width: 22px;
     height: 22px;
   }
 
-  input[type="checkbox"]{
+  input[type="checkbox"] {
     display: none;
 
     &:checked ~ .box{
@@ -65,7 +59,7 @@
     }
   }
 
-  .box{  // 打勾
+  .box {
     height: 22px;
     width: 22px;
     border: 2px solid var(--stroke-dark-medium);
@@ -77,7 +71,7 @@
     position: relative;
     z-index: 0;
 
-    svg{
+    svg {
       color: var(--stroke-light-extremestrong);
       width: 22px;
       height: 22px;
@@ -85,21 +79,21 @@
   }
 }
 
-.s{
-  label{
+.s {
+  label {
     gap: 8px;
   }
 
-  .touch-area{
+  .touch-area {
     height: 16px;
     width: 16px;
   }
 
-  .box{
+  .box {
     height: 16px;
     width: 16px;
     border-radius: 2px;
-    svg{
+    svg {
       width: 16px;
       height: 16px;
     }
