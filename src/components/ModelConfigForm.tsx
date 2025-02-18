@@ -127,7 +127,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     }
 
     return Object.keys(_config).reduce((acc, key) => {
-      if (ignoreFieldsForModel.some(item => (item.model === _config.model || item.prefix === _config.model) && item.fields.includes(key))) {
+      if (ignoreFieldsForModel.some(item => (item.model === _config.model || _config.model?.startsWith(item.prefix)) && item.fields.includes(key))) {
         return acc
       }
 
