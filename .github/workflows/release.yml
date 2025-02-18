@@ -44,11 +44,7 @@ jobs:
       
       - name: Download Prebuilt binary
         if: matrix.platform == 'windows'
-        run: |
-          npm run download-node:win-${{ matrix.arch }}
-          npm run download-python:win-${{ matrix.arch }}
-          npm run download-uv:win-${{ matrix.arch }}
-
+        run: npm run download:windows-bin
       
       - name: Create release directory
         run: mkdir -p output
@@ -62,9 +58,9 @@ jobs:
       - name: Build macOS
         if: matrix.platform == 'darwin'
         env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLEID: ${{ secrets.APPLEID }}
+          APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
+          APPLETEAMID: ${{ secrets.APPLETEAMID }}
         run: |
           if [ "${{ matrix.arch }}" = "arm64" ]; then
             npm run package:darwin-dmg:arm64

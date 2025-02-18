@@ -4,8 +4,10 @@ import { FieldDefinition, ModelProvider, PROVIDER_LABELS } from "../atoms/interf
 import { configAtom, ModelConfig, saveConfigAtom } from "../atoms/configState"
 import { useAtom } from "jotai"
 import { loadConfigAtom } from "../atoms/configState"
-import { showToastAtom } from "../atoms/toastState"
 import useDebounce from "../hooks/useDebounce"
+import CustomInstructions from "./CustomInstructions"
+import InfoTooltip from "./InfoTooltip"
+import { showToastAtom } from "../atoms/toastState"
 
 const PROVIDERS: ModelProvider[] = ["openai", "openai_compatible", "ollama", "anthropic"]
 
@@ -17,6 +19,7 @@ interface ModelConfigFormProps {
   onSubmit: (data: any) => void
   submitLabel?: string
   showVerify?: boolean
+  showParameters?: boolean
 }
 
 const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
@@ -26,12 +29,14 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   onProviderChange,
   onSubmit,
   submitLabel = "setup.submit",
-  showVerify = true
+  showVerify = true,
+  showParameters = false,
 }) => {
   const { t } = useTranslation()
   const [formData, setFormData] = useState<ModelConfig>(initialData || {} as ModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isVerifying, setIsVerifying] = useState(false)
+  const [isVerifyingNoTool, setIsVerifyingNoTool] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [listOptions, setListOptions] = useState<Record<string, string[]>>(initialData?.model ? { model: [initialData.model] } : {})
@@ -60,6 +65,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     }
   }, 100)
 
+  
   useEffect(() => {
     if (initProvider.current !== provider) {
       setListOptions({})
@@ -109,18 +115,35 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const verifyModel = async () => {
     try {
       setIsVerifying(true)
-      const _provider = provider.startsWith("openai") ? "openai" : provider
+      const modelProvider = provider.startsWith("openai") ? "openai" : provider
+
+      const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
+      delete configuration.configuration
+      
+      if (provider === "openai" && initialData?.baseURL) {
+        delete (formData as any).baseURL
+        delete (configuration as any).baseURL
+      }
+      
+      if (formData.topP === 0) {
+        delete (formData as any).topP
+      }
+      
+      if (formData.temperature === 0) {
+        delete (formData as any).temperature
+      }
+
       const response = await fetch("/api/modelVerify", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          provider: _provider,
+          provider,
           modelSettings: {
             ...formData,
-            modelProvider: _provider,
-            configuration: formData,
+            modelProvider,
+            configuration,
           },
         }),
       })
@@ -128,15 +151,27 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       const data = await response.json()
       if (data.success) {
         setIsVerified(true)
-        showToast({
-          message: t("setup.verifySuccess"),
-          type: "success"
-        })
+        if(data.connectingSuccess && data.supportTools) {
+          setIsVerifyingNoTool(false)
+          showToast({
+            message: t("setup.verifySuccess"),
+            type: "success",
+            duration: 5000
+          })
+        }else if(data.connectingSuccess || data.supportTools){
+          setIsVerifyingNoTool(true)
+          showToast({
+            message: t("setup.verifySuccessNoTool"),
+            type: "success",
+            duration: 5000
+          })
+        }
       } else {
         setIsVerified(false)
         showToast({
           message: t("setup.verifyFailed"),
-          type: "error"
+          type: "error",
+          duration: 5000
         })
       }
     } catch (error) {
@@ -157,6 +192,14 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     if (!validateForm())
       return
     
+    if (formData.topP === 0) {
+      delete (formData as any).topP
+    }
+    
+    if (formData.temperature === 0) {
+      delete (formData as any).temperature
+    }
+    
     try {
       setIsSubmitting(true)
       const data = await saveConfig({ formData, provider })
@@ -176,9 +219,11 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       ...prev,
       [key]: ""
     }))
-    setIsVerified(false)
+    if(fields[key]?.required) {
+      setIsVerified(false)
+    }
   }
-
+  
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
     Object.entries(fields).forEach(([key, field]) => {
@@ -192,6 +237,10 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       return false
     }
     return true
+  }
+
+  const validateNumber = (value: number, min: number, max: number) => {
+    return value > max ? max : value < min ? min : value
   }
 
   return (
@@ -238,6 +287,11 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
               className={errors[key] ? "error" : ""}
             />
           )}
+          {key==="model" && isVerifyingNoTool && (
+              <div className="field-model-description">
+                {t("setup.verifySuccessNoTool")}
+              </div>
+          )}
           {errors[key] && <div className="error-message">{errors[key]}</div>}
         </div>
       ))}
@@ -265,6 +319,68 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
           ) : t(submitLabel)}
         </button>
       </div>
+
+      <div className="divider" />
+
+      {showParameters && (
+        <div className="form-group parameters">
+          <label>{t("setup.parameters")}</label>
+          <div className="parameters-container">
+            <div className="parameters-grid">
+                <InfoTooltip
+                  maxWidth={270}
+                  side="left"
+                  content={t("setup.topPDescription")}
+                >
+                <div className="parameter-label">
+                  <div>TOP-P</div>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 23 22" width="15" height="15">
+                    <g clipPath="url(#ic_information_svg__a)">
+                      <circle cx="11.5" cy="11" r="10.25" stroke="currentColor" strokeWidth="1.5"></circle>
+                      <path fill="currentColor" d="M9.928 13.596h3.181c-.126-2.062 2.516-2.63 2.516-5.173 0-2.01-1.6-3.677-4.223-3.608-2.229.051-4.08 1.288-4.026 3.9h2.714c0-.824.593-1.168 1.222-1.185.593 0 1.258.326 1.222.962-.144 1.942-2.911 2.389-2.606 5.104Zm1.582 3.591c.988 0 1.779-.618 1.779-1.563 0-.963-.791-1.581-1.78-1.581-.97 0-1.76.618-1.76 1.58 0 .946.79 1.565 1.76 1.565Z"></path>
+                    </g>
+                    <defs>
+                      <clipPath id="ic_information_svg__a">
+                        <path fill="currentColor" d="M.5 0h22v22H.5z"></path>
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </div>
+              </InfoTooltip>
+              <input type="number" value={formData.topP ?? 0} min={0} max={1} step={0.1} onChange={e => handleChange("topP", validateNumber(parseFloat(e.target.value), 0, 1))} />
+            </div>
+            <div className="parameters-grid">
+              <InfoTooltip
+                maxWidth={270}
+                side="left"
+                content={t("setup.temperatureDescription")}
+              >
+                <div className="parameter-label">
+                  <div>Temperature</div>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 23 22" width="15" height="15">
+                    <g clipPath="url(#ic_information_svg__a)">
+                      <circle cx="11.5" cy="11" r="10.25" stroke="currentColor" strokeWidth="1.5"></circle>
+                      <path fill="currentColor" d="M9.928 13.596h3.181c-.126-2.062 2.516-2.63 2.516-5.173 0-2.01-1.6-3.677-4.223-3.608-2.229.051-4.08 1.288-4.026 3.9h2.714c0-.824.593-1.168 1.222-1.185.593 0 1.258.326 1.222.962-.144 1.942-2.911 2.389-2.606 5.104Zm1.582 3.591c.988 0 1.779-.618 1.779-1.563 0-.963-.791-1.581-1.78-1.581-.97 0-1.76.618-1.76 1.58 0 .946.79 1.565 1.76 1.565Z"></path>
+                    </g>
+                    <defs>
+                      <clipPath id="ic_information_svg__a">
+                        <path fill="currentColor" d="M.5 0h22v22H.5z"></path>
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </div>
+              </InfoTooltip>
+              <input type="number" value={formData.temperature ?? 0} min={0} max={1} step={0.1} onChange={e => handleChange("temperature", validateNumber(parseFloat(e.target.value), 0, 1))} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="divider" />
+
+      {showParameters && (
+        <CustomInstructions />
+      )}
     </form>
   )
 }

@@ -8,3 +8,6 @@ node_modules
 .env.local
 .env.production
 .env.test
+release
+dist
+dist-electron

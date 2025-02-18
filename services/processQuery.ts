@@ -268,42 +268,106 @@ export async function handleProcessQuery(
       // Execute all tool calls in parallel
       const toolResults = await Promise.all(
         toolCalls.map(async (toolCall) => {
-          // Check if aborted
-          if (chatId && abortControllerMap.has(chatId)) {
-            const controller = abortControllerMap.get(chatId);
-            if (controller?.signal.aborted) {
-              logger.info(`[${chatId}] Aborted when tool call`);
-              throw new Error("ABORTED");
+          try {
+            // Check if already aborted
+            if (chatId && abortControllerMap.has(chatId)) {
+              const controller = abortControllerMap.get(chatId);
+              if (controller?.signal.aborted) {
+                logger.info(`[${chatId}] Aborted before tool call`);
+                throw new Error("ABORTED");
+              }
             }
+
+            const toolName = toolCall.function.name;
+            const toolArgs = JSON.parse(toolCall.function.arguments || "{}");
+            const client = toolToClientMap.get(toolName);
+
+            // Create an AbortSignal for this specific tool call
+            const abortController = new AbortController();
+
+            // If there's a chat ID, link this tool call's abort to the main abort
+            let mainAbortListener: (() => void) | undefined;
+            if (chatId && abortControllerMap.has(chatId)) {
+              const mainController = abortControllerMap.get(chatId);
+              if (mainController) {
+                // If already aborted, throw immediately
+                if (mainController.signal.aborted) {
+                  throw new Error("ABORTED");
+                }
+                // Listen for abort
+                mainAbortListener = () => {
+                  logger.info(`[${chatId}] Aborting tool call [${toolName}]`);
+                  abortController.abort();
+                };
+                mainController.signal.addEventListener("abort", mainAbortListener);
+              }
+            }
+
+            try {
+              const result = await (async () => {
+                const abortListener = () => {
+                  logger.info(`[${chatId}] Tool call [${toolName}] has been aborted`);
+                  abortPromiseReject?.(new Error("ABORTED"));
+                };
+
+                let abortPromiseReject: ((error: Error) => void) | undefined;
+
+                try {
+                  const raceResult = (await Promise.race([
+                    client?.callTool(
+                      {
+                        name: toolName,
+                        arguments: toolArgs,
+                      },
+                      undefined,
+                      {
+                        signal: abortController.signal,
+                        timeout: 99999000,
+                      }
+                    ),
+                    new Promise((_, reject) => {
+                      abortPromiseReject = reject;
+                      abortController.signal.addEventListener("abort", abortListener);
+                    }),
+                  ])) as { isError?: boolean };
+
+                  return raceResult;
+                } finally {
+                  abortController.signal.removeEventListener("abort", abortListener);
+                }
+              })();
+
+              if (result?.isError) logger.error(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
+              else logger.info(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
+
+              onStream?.(
+                JSON.stringify({
+                  type: "tool_result",
+                  content: {
+                    name: toolName,
+                    result: result,
+                  },
+                } as iStreamMessage)
+              );
+
+              return {
+                tool_call_id: toolCall.id,
+                role: "tool" as const,
+                content: JSON.stringify(result),
+              };
+            } finally {
+              if (mainAbortListener && chatId && abortControllerMap.has(chatId)) {
+                const mainController = abortControllerMap.get(chatId);
+                mainController?.signal.removeEventListener("abort", mainAbortListener);
+              }
+            }
+          } catch (error) {
+            if (error instanceof Error && error.message === "ABORTED") {
+              // logger.info(`[${chatId}] Tool call has been aborted`);
+              throw error; // Re-throw to be caught by the outer try-catch
+            }
+            throw error;
           }
-
-          const toolName = toolCall.function.name;
-          const toolArgs = JSON.parse(toolCall.function.arguments || "{}");
-          const client = toolToClientMap.get(toolName);
-
-          const result = await client?.callTool({
-            name: toolName,
-            arguments: toolArgs,
-          });
-
-          if (result?.isError) logger.error(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
-          else logger.info(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
-          // Send tool execution results
-          onStream?.(
-            JSON.stringify({
-              type: "tool_result",
-              content: {
-                name: toolName,
-                result: result,
-              },
-            } as iStreamMessage)
-          );
-
-          return {
-            tool_call_id: toolCall.id,
-            role: "tool" as const,
-            content: JSON.stringify(result),
-          };
         })
       );
 

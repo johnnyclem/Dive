@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { useAtom } from "jotai"
-import { sidebarVisibleAtom, toggleConfigSidebarAtom } from "../atoms/sidebarState"
+import { useAtom, useAtomValue } from "jotai"
+import { configSidebarVisibleAtom, getPopupVisibleAtom, sidebarVisibleAtom } from "../atoms/sidebarState"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
+import { chatIdAtom } from "../atoms/chatState"
 
 interface Props {
   onNewChat?: () => void
@@ -44,15 +45,29 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [histories] = useAtom(historiesAtom)
   const [, loadHistories] = useAtom(loadHistoriesAtom)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
-  const [, toggleConfigSidebar] = useAtom(toggleConfigSidebarAtom)
+  const [, setConfigSidebarVisible] = useAtom(configSidebarVisibleAtom)
+  const popupVisible = useAtomValue(getPopupVisibleAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const [, showToast] = useAtom(showToastAtom)
+  const [chatId] = useAtom(chatIdAtom)
 
   useEffect(() => {
     if (isVisible) {
       loadHistories()
     }
   }, [isVisible, loadHistories])
+
+  useEffect(() => {
+    function handleKeydown(e: KeyboardEvent) {
+      if (e.key === "Escape" && !popupVisible) {
+        setIsVisible(false)
+      }
+    }
+    window.addEventListener("keydown", handleKeydown);
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    }
+  }, [popupVisible])
 
   const confirmDelete = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation()
@@ -113,13 +128,12 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   }
 
   const handleTools = () => {
-    setIsVisible(false)
     navigate("/tools")
   }
 
   const handleSettings = () => {
-    setIsVisible(false)
-    toggleConfigSidebar()
+    navigate(`${chatId ? `/chat/${chatId}` : "/"}`)
+    setConfigSidebarVisible(true)
   }
 
   return (
