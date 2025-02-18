@@ -14,7 +14,7 @@
 @use "./components/CheckBox";
 @use "./pages/Welcome";
 @use "./pages/Chat";
-@use "./pages/Tool";
+@use "./overlay/Tool";
 
 * {
   box-sizing: border-box;

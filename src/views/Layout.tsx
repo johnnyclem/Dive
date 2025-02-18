@@ -7,6 +7,7 @@ import { hasConfigAtom } from "../atoms/configState"
 import ConfigSidebar from "../components/ConfigSidebar"
 import GlobalToast from "../components/GlobalToast"
 import { themeAtom } from "../atoms/themeState"
+import Overlay from "./Overlay"
 
 const Layout = () => {
   const [hasConfig] = useAtom(hasConfigAtom)
@@ -22,6 +23,7 @@ const Layout = () => {
         </>
       }
       <Outlet />
+      <Overlay />
       <GlobalToast />
     </div>
   )
