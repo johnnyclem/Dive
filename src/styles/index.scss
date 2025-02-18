@@ -8,9 +8,14 @@
 @use "./components/Tooltip";
 @use "./components/InfoTooltip";
 @use "./components/ThemeSwitch";
+@use "./components/PopupWindow";
+@use "./components/PopupConfirm";
+@use "./components/Switch";
+@use "./components/CheckBox";
 @use "./pages/Welcome";
 @use "./pages/Chat";
 @use "./pages/Tool";
+@use "./pages/Model";
 
 * {
   box-sizing: border-box;

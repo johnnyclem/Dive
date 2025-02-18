@@ -1,0 +1,11 @@
+@use "../_variables" as *;
+
+.container-wrapper {
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  inset: 0;
+  background-color: var(--bg-op-dark-strong);
+  pointer-events: auto;
+}
