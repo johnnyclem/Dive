@@ -77,9 +77,9 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
       type: "list",
       label: "Model ID",
       description: "Model name to use (Please enter API Key first to see available models)",
-      required: true,
+      required: false,
       default: "",
-      placeholder: "Select a model",
+      placeholder: "Default model",
       listCallback: async (deps) => {
         try {
           return await window.ipcRenderer.openaiCompatibleModelList(deps.apiKey, deps.baseURL)

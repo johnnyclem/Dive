@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { FieldDefinition, ModelProvider, PROVIDER_LABELS } from "../atoms/interfaceState"
 import { configAtom, ModelConfig, saveConfigAtom } from "../atoms/configState"
+import { ignoreFieldsForModel } from "../constants"
 import { useAtom } from "jotai"
 import { loadConfigAtom } from "../atoms/configState"
 import useDebounce from "../hooks/useDebounce"
@@ -64,7 +65,6 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       })
     }
   }, 100)
-
   
   useEffect(() => {
     if (initProvider.current !== provider) {
@@ -111,6 +111,32 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     onProviderChange?.(newProvider)
     setIsVerified(false)
   }
+  
+  const prepareModelConfig = useCallback((config: ModelConfig, provider: ModelProvider) => {
+    const _config = {...config}
+    if (provider === "openai" && initialData?.baseURL) {
+      delete (_config as any).baseURL
+    }
+      
+    if (_config.topP === 0) {
+      delete (_config as any).topP
+    }
+    
+    if (_config.temperature === 0) {
+      delete (_config as any).temperature
+    }
+
+    return Object.keys(_config).reduce((acc, key) => {
+      if (ignoreFieldsForModel.some(item => (item.model === _config.model || _config.model?.startsWith(item.prefix)) && item.fields.includes(key))) {
+        return acc
+      }
+
+      return {
+        ...acc,
+        [key]: _config[key as keyof ModelConfig]
+      }
+    }, {} as ModelConfig)
+  }, [])
 
   const verifyModel = async () => {
     try {
@@ -120,19 +146,8 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
       delete configuration.configuration
       
-      if (provider === "openai" && initialData?.baseURL) {
-        delete (formData as any).baseURL
-        delete (configuration as any).baseURL
-      }
+      const _formData = prepareModelConfig(formData, provider)
       
-      if (formData.topP === 0) {
-        delete (formData as any).topP
-      }
-      
-      if (formData.temperature === 0) {
-        delete (formData as any).temperature
-      }
-
       const response = await fetch("/api/modelVerify", {
         method: "POST",
         headers: {
@@ -141,7 +156,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         body: JSON.stringify({
           provider,
           modelSettings: {
-            ...formData,
+            ..._formData,
             modelProvider,
             configuration,
           },
@@ -192,17 +207,11 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     if (!validateForm())
       return
     
-    if (formData.topP === 0) {
-      delete (formData as any).topP
-    }
-    
-    if (formData.temperature === 0) {
-      delete (formData as any).temperature
-    }
+    const _formData = prepareModelConfig(formData, provider)
     
     try {
       setIsSubmitting(true)
-      const data = await saveConfig({ formData, provider })
+      const data = await saveConfig({ formData: _formData, provider })
       await onSubmit(data)
       loadConfig()
     } finally {
