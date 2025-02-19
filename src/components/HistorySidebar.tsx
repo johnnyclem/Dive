@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react"
+import React, { useState, useCallback, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAtom, useAtomValue } from "jotai"
 import { configSidebarVisibleAtom, getPopupVisibleAtom, sidebarVisibleAtom } from "../atoms/sidebarState"
@@ -50,12 +50,24 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const [, showToast] = useAtom(showToastAtom)
   const [chatId] = useAtom(chatIdAtom)
+  const [newVersion, setNewVersion] = useState("")
 
   useEffect(() => {
     if (isVisible) {
       loadHistories()
     }
   }, [isVisible, loadHistories])
+  
+  // check new version
+  const lastQueryTime = useRef(0)
+  useEffect(() => {
+    if (Date.now() - lastQueryTime.current > 1000 * 60) {
+      window.ipcRenderer.checkNewVersion().then(v => {
+        setNewVersion(v)
+        lastQueryTime.current = Date.now()
+      })
+    }
+  }, [])
 
   useEffect(() => {
     function handleKeydown(e: KeyboardEvent) {
@@ -172,7 +184,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
         </div>
         <div className="sidebar-footer">
           <button 
-            className="tools-btn"
+            className="sidebar-footer-btn"
             onClick={handleTools}
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
@@ -181,7 +193,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
             {t("sidebar.tools")}
           </button>
           <button 
-            className="setup-btn"
+            className="sidebar-footer-btn"
             onClick={handleSettings}
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
@@ -189,6 +201,20 @@ const HistorySidebar = ({ onNewChat }: Props) => {
             </svg>
             {t("sidebar.settings")}
           </button>
+          {newVersion && (
+            <button 
+              className="sidebar-footer-btn update-btn"
+              onClick={() => window.open("https://github.com/OpenAgentPlatform/Dive/releases/latest", "_blank")}
+            >
+              <div>
+                <span>✨</span>
+                <span className="update-btn-text">{t("sidebar.update")}</span>
+              </div>
+              <div>
+                <span>v{newVersion} &gt;</span>
+              </div>
+            </button>
+          )}
         </div>
       </div>
       {deletingChatId && (
