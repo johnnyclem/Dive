@@ -8,6 +8,7 @@ import { hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { showToastAtom } from "../atoms/toastState"
 import { openOverlayAtom } from "../atoms/overlayState"
+import useHotkeyEvent from "../hooks/useHotkeyEvent"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -33,6 +34,7 @@ const Welcome = () => {
   const isComposing = useRef(false)
   const [toolsCnt, setToolsCnt] = useState<number>(0)
   const [, openOverlay] = useAtom(openOverlayAtom)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     fetchTools()
@@ -67,6 +69,18 @@ const Welcome = () => {
   useEffect(() => {
     loadHistories()
   }, [loadHistories])
+  
+  useHotkeyEvent("chat-input:upload-file", () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  })
+  
+  useHotkeyEvent("chat-input:focus", () => {
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -157,6 +171,7 @@ const Welcome = () => {
         <form className="welcome-input" onSubmit={handleSubmit}>
           <div className="input-container">
             <textarea
+              ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}

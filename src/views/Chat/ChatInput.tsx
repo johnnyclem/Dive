@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import Tooltip from "../../components/Tooltip"
 import { showToastAtom } from "../../atoms/toastState"
 import { useAtom } from "jotai"
+import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 
 interface Props {
   onSendMessage?: (message: string, files?: FileList) => void
@@ -144,6 +145,18 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
       handleFiles(files)
     }
   }
+  
+  useHotkeyEvent("chat-input:upload-file", () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  })
+  
+  useHotkeyEvent("chat-input:focus", () => {
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  })
 
   useEffect(() => {
     document.addEventListener("paste", handlePaste)
