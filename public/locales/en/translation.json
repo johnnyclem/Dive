@@ -44,7 +44,8 @@
   },
   "sidebar": {
     "tools": "Tools Management(MCP)",
-    "settings": "Model Settings"
+    "settings": "Model Settings",
+    "update": "Update available"
   },
   "tools": {
     "title": "Tools Management(MCP)",

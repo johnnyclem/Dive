@@ -11,5 +11,6 @@ interface Window {
     openaiCompatibleModelList: (apiKey: string, baseURL: string) => Promise<string[]>
     anthropicModelList: (apiKey: string, baseURL: string) => Promise<string[]>
     ollamaModelList: (baseURL: string) => Promise<string[]>
+    checkNewVersion: () => Promise<string>
   }
 }

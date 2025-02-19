@@ -44,7 +44,8 @@
   },
   "sidebar": {
     "tools": "工具管理(MCP)",
-    "settings": "模型設定"
+    "settings": "模型設定",
+    "update": "新版本升級"
   },
   "tools": {
     "title": "工具管理(MCP)",
