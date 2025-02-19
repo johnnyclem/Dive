@@ -17,28 +17,10 @@ const ConfigSidebar = () => {
   const [, showToast] = useAtom(showToastAtom)
 
   useEffect(() => {
-    return () => {
-      setIsVisible(false)
-    };
-  }, [])
-
-  useEffect(() => {
     if (!isVisible) {
       setLocalProvider(activeProvider || "openai")
     }
   }, [isVisible, activeProvider, fields])
-
-  useEffect(() => {
-    function handleKeydown(e: KeyboardEvent) {
-      if (e.key === "Escape" && isVisible) {
-        setIsVisible(false)
-      }
-    }
-    window.addEventListener("keydown", handleKeydown);
-    return () => {
-      window.removeEventListener("keydown", handleKeydown);
-    }
-  }, [isVisible])
 
   const handleSubmit = async (data: Record<string, any>) => {
     try {

@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { useAtom, useAtomValue } from "jotai"
-import { configSidebarVisibleAtom, getPopupVisibleAtom, sidebarVisibleAtom } from "../atoms/sidebarState"
+import { useAtom } from "jotai"
+import { configSidebarVisibleAtom, sidebarVisibleAtom } from "../atoms/sidebarState"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
-import { chatIdAtom } from "../atoms/chatState"
+import { openOverlayAtom } from "../atoms/overlayState"
 
 interface Props {
   onNewChat?: () => void
@@ -46,10 +46,9 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [, loadHistories] = useAtom(loadHistoriesAtom)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [, setConfigSidebarVisible] = useAtom(configSidebarVisibleAtom)
-  const popupVisible = useAtomValue(getPopupVisibleAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const [, showToast] = useAtom(showToastAtom)
-  const [chatId] = useAtom(chatIdAtom)
+  const [, openOverlay] = useAtom(openOverlayAtom)
   const [newVersion, setNewVersion] = useState("")
 
   useEffect(() => {
@@ -68,18 +67,6 @@ const HistorySidebar = ({ onNewChat }: Props) => {
       })
     }
   }, [])
-
-  useEffect(() => {
-    function handleKeydown(e: KeyboardEvent) {
-      if (e.key === "Escape" && !popupVisible) {
-        setIsVisible(false)
-      }
-    }
-    window.addEventListener("keydown", handleKeydown);
-    return () => {
-      window.removeEventListener("keydown", handleKeydown);
-    }
-  }, [popupVisible])
 
   const confirmDelete = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation()
@@ -140,11 +127,10 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   }
 
   const handleTools = () => {
-    navigate("/tools")
+    openOverlay("Tools")
   }
 
   const handleSettings = () => {
-    navigate(`${chatId ? `/chat/${chatId}` : "/"}`)
     setConfigSidebarVisible(true)
   }
 
