@@ -9,7 +9,7 @@ import { themeAtom } from "../../atoms/themeState"
 
 // @ts-ignore
 import jsonlint from "jsonlint-mod"
-import { setOverlayAtom } from "../../atoms/overlayState"
+import { closeOverlayAtom } from "../../atoms/overlayState"
 import Switch from "../../components/Switch"
 
 interface SubTool {
@@ -186,7 +186,7 @@ const Tools = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
-  const [, setOverlay] = useAtom(setOverlayAtom)
+  const [, closeOverlay] = useAtom(closeOverlayAtom)
   const toolsCacheRef = useRef<ToolsCache>({})
 
   useEffect(() => {
@@ -363,7 +363,7 @@ const Tools = () => {
   }
 
   const onClose = () => {
-    setOverlay(null)
+    closeOverlay("Tools")
   }
 
   const sortedTools = useMemo(() => {

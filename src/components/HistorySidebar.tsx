@@ -6,7 +6,7 @@ import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
-import { setOverlayAtom } from "../atoms/overlayState"
+import { openOverlayAtom } from "../atoms/overlayState"
 
 interface Props {
   onNewChat?: () => void
@@ -48,7 +48,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [, setConfigSidebarVisible] = useAtom(configSidebarVisibleAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const [, showToast] = useAtom(showToastAtom)
-  const [, setOverlay] = useAtom(setOverlayAtom)
+  const [, openOverlay] = useAtom(openOverlayAtom)
 
   useEffect(() => {
     if (isVisible) {
@@ -115,7 +115,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   }
 
   const handleTools = () => {
-    setOverlay("Tools")
+    openOverlay("Tools")
   }
 
   const handleSettings = () => {

@@ -5,14 +5,25 @@ import { useAtom } from "jotai"
 import { overlaysAtom } from "../../atoms/overlayState"
 
 const Overlay = () => {
-  const [overlay] = useAtom(overlaysAtom)
+  const [overlays] = useAtom(overlaysAtom)
 
-  if (!overlay) return null
+  if (!overlays.length) return null
 
   return (
-    <PopupWindow isOverlay>
-      {overlay === 'Tools' && <Tools />}
-    </PopupWindow>
+    <>
+      {overlays.map((overlay, index) => {
+        switch (overlay) {
+          case 'Tools':
+            return (
+              <PopupWindow key={`tools-${index}`} isOverlay >
+                <Tools />
+              </PopupWindow>
+            )
+          default:
+            return null
+        }
+      })}
+    </>
   )
 }
 
