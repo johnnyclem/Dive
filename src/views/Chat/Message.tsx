@@ -59,8 +59,11 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
           img({className, src, alt}) {
             let imageSrc = src
             if (src?.startsWith("https://localfile")) {
-              const normalizedPath = src.replace(/\\/g, "/").replace("https://localfile", "")
-              imageSrc = `local-file:///${encodeURI(normalizedPath)}`
+              let path = src.replace("https://localfile", "").replace(/\\/g, "/")
+              if (path === decodeURI(path)) {
+                path = encodeURI(path)
+              }
+              imageSrc = `local-file:///${path}`
             }
 
             return <img src={imageSrc} alt={alt} className={className} />
