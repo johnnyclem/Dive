@@ -5,7 +5,7 @@
   line-height: 0;
 
   &:not(.disabled):hover .box {
-    border-color:var(--stroke-dark-medium);
+    border-color:var(--stroke-dark-weak);
 
     &::before {
       content: "";
@@ -62,7 +62,7 @@
   .box {
     height: 22px;
     width: 22px;
-    border: 2px solid var(--stroke-dark-medium);
+    border: 2px solid var(--stroke-dark-weak);
     border-radius: 4px;
 
     display: flex;

@@ -63,6 +63,7 @@ $shadow-dark: 0 2px 6px rgba(0, 0, 0, 0.2);
   --text-light: #FEFEFF;
   --text-inverted-weak: #999;
   --text-inverted: #ffffff;
+  --text-pri-green: #00bdc2;
   --text-pri-blue: #1890ff;
   --text-hover-blue: #40a9ff;
   --text-ultraweak: rgba(109, 126, 152, 1);
@@ -91,13 +92,14 @@ $shadow-dark: 0 2px 6px rgba(0, 0, 0, 0.2);
   --shadow-modal-light: rgba(0, 0, 0, 0.2);
   --shadow-modal: rgba(0, 0, 0, 0.2);
 
-  --stroke-dark-weak: #686a7a;
-  --stroke-dark-medium: #b0b5c5;
+  --stroke-dark-weak: #b0b5c5;
+  --stroke-dark-medium: #686a7a;
   --stroke-dark: #2e2e3e;
   --stroke-hover: #2e2e3e;
   --stroke-light-extremestrong: #fff;
   --stroke-extremestrong: #000000;
   --stroke-op-dark-extremestrong: rgba(0, 0, 0, 0.7);
+  --stroke-neg-medium: #f62257;
 
   --theme-btn: rgba(3, 163, 169, 0.36);
 }
@@ -150,6 +152,7 @@ $shadow-dark: 0 2px 6px rgba(0, 0, 0, 0.2);
   --text-light: #FEFEFF;
   --text-inverted-weak: #666;
   --text-inverted: #000000;
+  --text-pri-green: #09828b;
   --text-pri-blue: #1890ff;
   --text-hover-blue: #40a9ff;
   --text-ultraweak: rgba(109, 126, 152, 1);
@@ -178,13 +181,14 @@ $shadow-dark: 0 2px 6px rgba(0, 0, 0, 0.2);
   --shadow-modal-light: rgba(0, 0, 0, 0.1);
   --shadow-modal: rgba(0, 0, 0, 0.2);
 
-  --stroke-dark-weak: #686a7a;
-  --stroke-dark-medium: #b0b5c5;
+  --stroke-dark-weak: #b0b5c5;
+  --stroke-dark-medium: #686a7a;
   --stroke-dark: #2e2e3e;
   --stroke-hover: #F6F8FD;
   --stroke-light-extremestrong: #fff;
   --stroke-extremestrong: #ffffff;
   --stroke-op-dark-extremestrong: rgba(255, 255, 255, 0.7);
+  --stroke-neg-medium: #d11040;
 
   --theme-btn: rgb(14, 89, 95, 0.3);
 }
@@ -237,4 +241,60 @@ $z-sidebar: 200;
   -webkit-line-clamp: $line;
   -webkit-box-orient: vertical;
   word-break: break-word!important;
+}
+
+// dropdown list
+@mixin list-style {
+  background-color: var(--bg-medium);
+  color: var(--text-medium);
+  box-shadow: 0 3px 7px var(--shadow-modal);
+  font-size: 14px;
+  border-radius: 6px;
+  padding: 8px 0;
+  z-index: 2500;
+  overflow-y: auto;
+
+  .item{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover{
+      background-color: var(--bg-op-dark-ultraweak);
+    }
+
+    &.disabled{
+      opacity: 50%;
+      cursor: default;
+    }
+  }
+
+  & [data-highlighted]{
+    outline: none;
+    background-color: var(--bg-op-dark-medium);
+  }
+
+  // size
+  &.m .item,
+  &.s .item{
+    padding: 7px 8px;
+  }
+
+  &.l .item{
+    padding: 8px 16px;
+  }
+  // size END
+
+
+  // slot
+  .left-slot{
+    margin: 0;
+  }
+  .right-slot{
+    line-height: 0;
+    margin-left: auto;
+  }
+  // slot END
 }

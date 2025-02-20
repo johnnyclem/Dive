@@ -45,7 +45,9 @@
   "sidebar": {
     "tools": "工具管理(MCP)",
     "settings": "模型設定",
-    "update": "新版本升級"
+    "update": "新版本升級",
+    "models": "模型設定",
+    "system": "系統設定"
   },
   "tools": {
     "title": "工具管理(MCP)",
@@ -78,5 +80,10 @@
     "close": "關閉",
     "confirm": "確認",
     "cancel": "取消"
+  },
+  "system": {
+    "title": "系統設定",
+    "language": "系統言語",
+    "theme": "顯示模式"
   }
-} 
+}

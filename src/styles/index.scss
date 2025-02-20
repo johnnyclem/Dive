@@ -12,8 +12,10 @@
 @use "./components/PopupConfirm";
 @use "./components/Switch";
 @use "./components/CheckBox";
+@use "./components/Select";
 @use "./pages/Welcome";
 @use "./pages/Chat";
+@use "./overlay/Overlay";
 @use "./overlay/Tools";
 
 * {
