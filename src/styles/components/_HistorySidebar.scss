@@ -157,6 +157,13 @@
         fill: var(--stroke-op-dark-extremestrong);
       }
     }
+
+    .system-btn {
+      svg {
+        fill: none;
+        color: var(--stroke-op-dark-extremestrong);
+      }
+    }
   }
 }
 
