@@ -64,6 +64,8 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
       if (isLongCode) {
         const cleanText = text.replace(/\s+(?=```)/gm, '')
         const isBlockComplete = cleanText.includes(code.trim() + "```")
+        code = code.endsWith("``") ? code.slice(0, -2) : code
+        code = code.endsWith("`") ? code.slice(0, -1) : code
         const handleClick = () => {
           updateStreamingCode({ code, language })
         }
