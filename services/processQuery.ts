@@ -1,6 +1,14 @@
 import { BaseChatModel, BindToolsInput } from "@langchain/core/language_models/chat_models";
-import { AIMessage, BaseMessage, HumanMessage, MessageContentComplex, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+  HumanMessage,
+  MessageContentComplex,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { ModelManager } from "./models/index.js";
 import { imageToBase64 } from "./utils/image.js";
 import logger from "./utils/logger.js";
 import { iQueryInput, iStreamMessage } from "./utils/types.js";
@@ -14,6 +22,12 @@ export interface AbortedResponse {
 }
 
 export const abortedResponseMap = new Map<string, AbortedResponse>();
+
+interface TokenUsage {
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalTokens: number;
+}
 
 export async function handleProcessQuery(
   toolToClientMap: Map<string, Client>,
@@ -33,6 +47,15 @@ export async function handleProcessQuery(
   }
 
   let finalResponse = "";
+
+  const modelManager = ModelManager.getInstance();
+  const currentModelSettings = modelManager.currentModelSettings;
+
+  const tokenUsage = {
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
+    totalTokens: 0,
+  };
 
   try {
     // Handle input format
@@ -91,12 +114,12 @@ export async function handleProcessQuery(
 
     let hasToolCalls = true;
 
-    const runModel = model.bindTools?.(availableTools) || model;
+    const runModel = modelManager.enableTools ? model.bindTools?.(availableTools) || model : model;
 
-    const isOllama = model.lc_kwargs["defaultConfig"]?.modelProvider === "ollama";
+    const isOllama = currentModelSettings?.modelProvider === "ollama";
     const isDeepseek =
-      model.lc_kwargs["defaultConfig"]?.baseURL?.includes("deepseek") ||
-      model.lc_kwargs["defaultConfig"]?.model?.includes("deepseek-chat");
+      currentModelSettings?.configuration?.baseURL?.toLowerCase().includes("deepseek") ||
+      currentModelSettings?.model?.toLowerCase().includes("deepseek");
 
     logger.info(`Start to process query - ${chatId}`);
 
@@ -109,8 +132,10 @@ export async function handleProcessQuery(
       let toolCalls: any[] = [];
 
       try {
-        // Handle streaming response
+        // Track token usage if available
         for await (const chunk of stream) {
+          caculateTokenUsage(tokenUsage, chunk, currentModelSettings!.modelProvider!);
+
           if (chunk.content) {
             let chunkMessage = "";
             if (Array.isArray(chunk.content)) {
@@ -377,6 +402,11 @@ export async function handleProcessQuery(
       }
     }
 
+    // Log token usage at the end of processing
+    logger.info(
+      `Token usage for chat ${chatId}: Input tokens: ${tokenUsage.totalInputTokens}, Output tokens: ${tokenUsage.totalOutputTokens}, Total tokens: ${tokenUsage.totalTokens}`
+    );
+
     return finalResponse;
   } catch (error) {
     const err = error as Error;
@@ -394,5 +424,28 @@ export async function handleProcessQuery(
       abortControllerMap.delete(chatId);
       abortedResponseMap.delete(chatId);
     }
+  }
+}
+
+function caculateTokenUsage(tokenUsage: TokenUsage, chunk: AIMessageChunk, currentModelProvider: string) {
+  switch (currentModelProvider) {
+    case "openai":
+      if (chunk.response_metadata?.usage) {
+        const usage = chunk.response_metadata.usage;
+        tokenUsage.totalInputTokens += usage?.prompt_tokens || 0;
+        tokenUsage.totalOutputTokens += usage?.completion_tokens || 0;
+        tokenUsage.totalTokens += usage?.total_tokens || 0;
+      }
+      break;
+    case "anthropic":
+    case "ollama":
+      if (chunk.usage_metadata) {
+        const usage = chunk.usage_metadata;
+        tokenUsage.totalInputTokens += usage?.input_tokens || 0;
+        tokenUsage.totalOutputTokens += usage?.output_tokens || 0;
+        tokenUsage.totalTokens += usage?.total_tokens || 0;
+      }
+    default:
+      break;
   }
 }

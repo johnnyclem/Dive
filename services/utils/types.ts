@@ -62,6 +62,7 @@ export interface iOldModelConfig {
 
 export interface iModelConfig {
   activeProvider: string;
+  enableTools: boolean;
   configs: {
     [key: string]: ModelSettings;
   };

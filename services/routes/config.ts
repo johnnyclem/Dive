@@ -77,7 +77,7 @@ export function configRouter() {
 
   router.post("/model", async (req, res) => {
     try {
-      const { provider, modelSettings } = req.body;
+      const { provider, modelSettings, enableTools } = req.body;
 
       // Validate configuration format
       if (!modelSettings || typeof modelSettings !== "object") {
@@ -85,7 +85,7 @@ export function configRouter() {
       }
 
       // Save configuration
-      await ModelManager.getInstance().saveModelConfig(provider, modelSettings);
+      await ModelManager.getInstance().saveModelConfig(provider, modelSettings, enableTools);
 
       // Reinitialize MCP client
       await ModelManager.getInstance().reloadModel();
