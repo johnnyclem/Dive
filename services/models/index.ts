@@ -36,9 +36,11 @@ const MCP_SUPPORTED_PROVIDERS = [
 
 export class ModelManager {
   private static instance: ModelManager;
-  private model: BaseChatModel | null = null;
   private cleanModel: BaseChatModel | null = null;
+  public model: BaseChatModel | null = null;
   public configPath: string = "";
+  public currentModelSettings: ModelSettings | null = null;
+  public enableTools: boolean = true;
 
   private constructor(configPath?: string) {
     this.configPath = configPath || path.join(process.cwd(), "modelConfig.json");
@@ -65,6 +67,7 @@ export class ModelManager {
       logger.error("Model configuration not found");
       this.model = null;
       this.cleanModel = null;
+      this.currentModelSettings = null;
       return null;
     }
 
@@ -73,6 +76,7 @@ export class ModelManager {
       // transform to new version
       const newConfig: iModelConfig = {
         activeProvider: (config as iOldModelConfig).model_settings.modelProvider || "",
+        enableTools: true,
         configs: {
           [(config as iOldModelConfig).model_settings.modelProvider]: (config as iOldModelConfig).model_settings,
         },
@@ -84,6 +88,7 @@ export class ModelManager {
 
     const activeProvider = (config as iModelConfig).activeProvider;
     const modelSettings = (config as iModelConfig).configs[activeProvider];
+    this.enableTools = (config as iModelConfig).enableTools ?? true;
 
     if (!modelSettings) {
       logger.error(`Model settings not found for provider: ${activeProvider}`);
@@ -107,16 +112,19 @@ export class ModelManager {
       baseUrl,
     });
 
-    logger.info("Model initialized");
+    this.currentModelSettings = modelSettings;
+
+    logger.info(`Model initialized with tools ${this.enableTools ? "enabled" : "disabled"}`);
 
     return this.model;
   }
 
-  async saveModelConfig(provider: string, uploadModelSettings: ModelSettings) {
+  async saveModelConfig(provider: string, uploadModelSettings: ModelSettings, enableTools_: boolean) {
     let config = (await this.getModelConfig()) as iModelConfig;
     if (!config) {
       config = {
         activeProvider: provider,
+        enableTools: enableTools_ ?? true,
         configs: {
           [provider]: uploadModelSettings,
         },
@@ -124,6 +132,7 @@ export class ModelManager {
     }
     config.activeProvider = provider;
     config.configs[provider] = uploadModelSettings;
+    config.enableTools = enableTools_ ?? true;
     await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), "utf-8");
   }
 
