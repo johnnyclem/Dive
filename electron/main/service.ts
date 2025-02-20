@@ -1,8 +1,6 @@
 import { app } from "electron"
-import envPaths from "env-paths"
 import path from "node:path"
 import fse from "fs-extra"
-import os from "node:os"
 import { MCPClient, WebServer, setDatabase } from "../../services/index.js"
 import { drizzle } from "drizzle-orm/better-sqlite3"
 import Database from "better-sqlite3"
@@ -11,29 +9,7 @@ import * as schema from "../../services/database/schema.js"
 import { isPortInUse, npmInstall } from "./util.js"
 import { SystemCommandManager } from "../../services/syscmd/index.js"
 import { MCPServerManager } from "../../services/mcpServer/index.js"
-
-export const envPath = envPaths(app.getName(), {suffix: ""})
-export const configDir = envPath.config
-export const homeDir = os.homedir()
-export const appDir = path.join(homeDir, ".dive")
-export const scriptsDir = path.join(appDir, "scripts")
-export const binDirList = [
-  path.join(process.resourcesPath, "node"),
-  path.join(process.resourcesPath, "uv"),
-  path.join(process.resourcesPath, "python"),
-]
-
-const DEF_MCP_SERVER_CONFIG = {
-  "mcpServers": {
-    "echo": {
-      "enabled": true,
-      "command": "node",
-      "args": [
-        path.join(scriptsDir, "echo.js")
-      ]
-    },
-  }
-}
+import { scriptsDir, configDir, appDir, DEF_MCP_SERVER_CONFIG } from "./constant.js"
 
 export let client: Promise<MCPClient> | null = null
 async function initClient(): Promise<MCPClient> {

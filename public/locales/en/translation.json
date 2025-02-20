@@ -44,7 +44,10 @@
   },
   "sidebar": {
     "tools": "Tools Management(MCP)",
-    "settings": "Model Settings"
+    "settings": "Model Settings",
+    "update": "Update available",
+    "models": "Model Settings",
+    "system": "System Settings"
   },
   "tools": {
     "title": "Tools Management(MCP)",
@@ -77,5 +80,10 @@
     "close": "Close",
     "confirm": "Confirm",
     "cancel": "Cancel"
+  },
+  "system": {
+    "title": "System Settings",
+    "language": "System Language",
+    "theme": "Display Mode"
   }
-} 
+}

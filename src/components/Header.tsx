@@ -1,28 +1,14 @@
 import React from "react"
-import { useAtom, useSetAtom } from "jotai"
+import { useSetAtom } from "jotai"
 import { toggleSidebarAtom } from "../atoms/sidebarState"
 import { useTranslation } from "react-i18next"
-import { chatIdAtom } from "../atoms/chatState"
-import { useNavigate } from "react-router-dom"
 
 const Header = () => {
   const toggleSidebar = useSetAtom(toggleSidebarAtom)
   const { t } = useTranslation()
-  const navigate = useNavigate()
-  const [chatId] = useAtom(chatIdAtom)
 
   const onClose = () => {
     toggleSidebar()
-    switch(chatId) {
-      case "init": // when chatId is init, it means the chat is not initialized yet
-        break
-      case null:
-        navigate("/")
-        break
-      default:
-        navigate(`/chat/${chatId}`)
-        break
-    }
   }
 
   return (

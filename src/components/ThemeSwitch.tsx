@@ -13,7 +13,7 @@ const ThemeSwitch = () => {
 
   const Themes = [
     {label: 'Default', value: 'system', icon:
-      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g id="system-mode">
           <rect id="Rectangle 5880" x="4" y="4" width="14" height="14" rx="7" stroke="currentColor" strokeWidth="2"/>
           <path id="Vector 75" d="M11 17V4.99999C11 4.99999 17 4.33294 17 11C17 17.667 11 17 11 17Z" fill="currentColor"/>
@@ -21,7 +21,7 @@ const ThemeSwitch = () => {
       </svg>
     },
     {label: 'Light', value: 'light',icon:
-      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g id="light-mode">
           <path id="Vector 80" d="M11 4L11 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           <path id="Vector 84" d="M15.9498 6.0502L17.364 4.63599" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -36,7 +36,7 @@ const ThemeSwitch = () => {
       </svg>
       },
     {label: 'Dark', value: 'dark',icon:
-      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g id="dark-mode">
           <g id="Subtract">
           <mask id="path-1-inside-1_12614_101089" fill="white">

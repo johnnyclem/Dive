@@ -1,17 +1,16 @@
 import React, { useEffect, useState, useRef, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useAtom } from "jotai"
-import { showToastAtom } from "../atoms/toastState"
+import { showToastAtom } from "../../atoms/toastState"
 import CodeMirror, { EditorView } from "@uiw/react-codemirror"
 import { json } from "@codemirror/lang-json"
 import { linter, lintGutter } from "@codemirror/lint"
-import { themeAtom } from "../atoms/themeState"
-import { chatIdAtom } from "../atoms/chatState"
-import { useNavigate } from "react-router-dom"
-import { sidebarVisibleAtom, toolsVisibleAtom } from "../atoms/sidebarState"
+import { themeAtom } from "../../atoms/themeState"
 
 // @ts-ignore
 import jsonlint from "jsonlint-mod"
+import { closeOverlayAtom } from "../../atoms/overlayState"
+import Switch from "../../components/Switch"
 
 interface SubTool {
   name: string
@@ -183,14 +182,11 @@ const Tools = () => {
   const { t } = useTranslation()
   const [tools, setTools] = useState<Tool[]>([])
   const [showConfigModal, setShowConfigModal] = useState(false)
-  const [, setIsSidebarVisible] = useAtom(sidebarVisibleAtom)
-  const [, setToolsVisible] = useAtom(toolsVisibleAtom)
   const [mcpConfig, setMcpConfig] = useState<Record<string, any>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
-  const navigate = useNavigate()
-  const [chatId] = useAtom(chatIdAtom)
+  const [, closeOverlay] = useAtom(closeOverlayAtom)
   const toolsCacheRef = useRef<ToolsCache>({})
 
   useEffect(() => {
@@ -198,15 +194,9 @@ const Tools = () => {
     if (cachedTools) {
       toolsCacheRef.current = JSON.parse(cachedTools)
     }
-    
-    setIsSidebarVisible(true)
-    setToolsVisible(true)
+
     fetchTools()
     fetchMCPConfig()
-
-    return () => {
-      setToolsVisible(false) //tools page may be closed by navigating to other pages, so it needs setToolsVisible to false
-    };
   }, [])
 
   const fetchTools = async () => {
@@ -373,21 +363,8 @@ const Tools = () => {
   }
 
   const onClose = () => {
-    setToolsVisible(false)
-    navigate(`${chatId ? `/chat/${chatId}` : "/"}`)
+    closeOverlay("Tools")
   }
-
-  useEffect(() => {
-    function handleKeydown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        onClose()
-      }
-    }
-    window.addEventListener("keydown", handleKeydown);
-    return () => {
-      window.removeEventListener("keydown", handleKeydown);
-    }
-  }, [])
 
   const sortedTools = useMemo(() => {
     const configOrder = mcpConfig.mcpServers ? Object.keys(mcpConfig.mcpServers) : []
@@ -412,7 +389,7 @@ const Tools = () => {
           }))
         }
       }
-      
+
       return {
         name,
         description: "",
@@ -422,7 +399,7 @@ const Tools = () => {
   }, [tools, mcpConfig.mcpServers])
 
   return (
-    <div className="tools-page">
+    <div className="tools-page overlay-page">
       <button
         className="close-btn"
         onClick={onClose}
@@ -480,14 +457,12 @@ const Tools = () => {
                   )}
                   <span className="tool-name">{tool.name}</span>
                 </div>
-                <label onClick={(e) => e.stopPropagation()} className="switch">
-                  <input
-                    type="checkbox"
+                <div className="tool-switch-container">
+                  <Switch
                     checked={tool.enabled}
                     onChange={() => toggleTool(tool)}
                   />
-                  <span className="slider round"></span>
-                </label>
+                </div>
                 <span className="tool-toggle">▼</span>
               </div>
               <div className="tool-content">

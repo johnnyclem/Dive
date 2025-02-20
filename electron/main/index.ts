@@ -4,12 +4,15 @@ import { fileURLToPath } from "node:url"
 import path from "node:path"
 import os from "node:os"
 import { update } from "./update"
-import { binDirList, cleanup, initMCPClient, port, scriptsDir } from "./service"
+import { cleanup, initMCPClient, port } from "./service"
 import Anthropic from "@anthropic-ai/sdk"
 import fse from "fs-extra"
 import OpenAI from "openai"
 import { Ollama } from "ollama"
-import { getNvmPath, modifyPath } from "./util"
+import { getLatestVersion, getNvmPath, modifyPath } from "./util"
+import semver from "semver"
+import { binDirList, cacheDir, scriptsDir } from "./constant"
+import config from "../config"
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -282,4 +285,46 @@ ipcMain.handle("api:openaiCompatibleModelList", async (_, apiKey: string, baseUR
   } catch (error) {
     return []
   }
+})
+
+ipcMain.handle("api:checkNewVersion", async () => {
+  try {
+    fse.mkdirSync(cacheDir, { recursive: true })
+    const pathToLastVersion = path.join(cacheDir, "lastVersion.json")
+    let lastQueryTime = 0
+    let lastVersion = ""
+
+    if (fse.existsSync(pathToLastVersion)) {
+      const body = await fse.readFile(pathToLastVersion, "utf-8")
+      const data = JSON.parse(body)
+      lastQueryTime = data.lastQueryTime
+      lastVersion = data.lastVersion
+    }
+
+    const currentVersion = app.getVersion()
+    if (lastQueryTime && +lastQueryTime > Date.now() + 1000 * 60 * 60) {
+      return ""
+    }
+    
+    if (lastVersion && semver.gt(lastVersion, currentVersion)) {
+      return lastVersion
+    }
+
+    const lastVersionOnGithub = await getLatestVersion()
+    if (semver.gt(lastVersionOnGithub, currentVersion)) {
+      await fse.writeFile(pathToLastVersion, JSON.stringify({
+        lastQueryTime: Date.now(),
+        lastVersion: lastVersionOnGithub,
+      }))
+      return lastVersionOnGithub
+    }
+  } catch (e) {
+    console.error(e)
+  }
+  
+  return ""
+})
+
+ipcMain.handle("api:getHotkeyMap", async () => {
+  return config.hotkey
 })
