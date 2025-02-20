@@ -2,9 +2,9 @@ import "katex/dist/katex.min.css"
 
 import React, { useMemo } from "react"
 import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import remarkMath from "remark-math"
 import rehypeKatex from "rehype-katex"
-import remarkGfm from "remark-gfm"
 import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useAtom, useSetAtom } from 'jotai'
@@ -56,6 +56,15 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
         remarkPlugins={[remarkMath, remarkGfm]}
         rehypePlugins={[rehypeKatex]}
         components={{
+          img({className, src, alt}) {
+            let imageSrc = src
+            if (src?.startsWith("https://localfile")) {
+              const normalizedPath = src.replace(/\\/g, "/").replace("https://localfile", "")
+              imageSrc = `local-file:///${encodeURI(normalizedPath)}`
+            }
+
+            return <img src={imageSrc} alt={alt} className={className} />
+          }, 
           code({node, className, children, ...props}) {
             const match = /language-(\w+)/.exec(className || "")
             const language = match ? match[1] : ""
@@ -120,7 +129,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
           }
         }}
       >
-        {text}
+        {text.replaceAll("file://", "https://localfile")}
       </ReactMarkdown>
     )
   }, [text, isSent, isLoading])
