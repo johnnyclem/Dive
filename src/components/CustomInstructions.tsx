@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { useAtom } from "jotai"
 import { showToastAtom } from "../atoms/toastState"
+import Textarea from "./WrappedTextarea"
 
 const CustomInstructions = () => {
   const { t } = useTranslation()
@@ -53,7 +54,7 @@ const CustomInstructions = () => {
   return (
     <div className="custom-instructions">
       <h3>{t("modelConfig.customInstructions")}</h3>
-      <textarea
+      <Textarea
         value={instructions}
         onChange={(e) => setInstructions(e.target.value)}
         rows={3}
