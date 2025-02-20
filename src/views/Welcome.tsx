@@ -9,6 +9,7 @@ import Setup from "./Setup"
 import { showToastAtom } from "../atoms/toastState"
 import { openOverlayAtom } from "../atoms/overlayState"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
+import Textarea from "../components/WrappedTextarea"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -170,7 +171,7 @@ const Welcome = () => {
         
         <form className="welcome-input" onSubmit={handleSubmit}>
           <div className="input-container">
-            <textarea
+            <Textarea
               ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}

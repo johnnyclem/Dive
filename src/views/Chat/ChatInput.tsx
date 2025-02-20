@@ -4,6 +4,7 @@ import Tooltip from "../../components/Tooltip"
 import { showToastAtom } from "../../atoms/toastState"
 import { useAtom } from "jotai"
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
+import Textarea from "../../components/WrappedTextarea"
 
 interface Props {
   onSendMessage?: (message: string, files?: FileList) => void
@@ -260,7 +261,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   return (
     <footer className="chat-input">
       <div className="input-wrapper">
-        <textarea
+        <Textarea
           ref={textareaRef}
           value={message}
           onChange={adjustHeight}
