@@ -255,15 +255,6 @@
 }
 
 .tools-page {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  height: 100%;
-  padding: 40px;
-  // padding-top: 0;
-  // padding-left: $sidebar-width + 40px;
-  background: var(--bg);
-
   .header-actions {
     display: flex;
     gap: 12px;
@@ -301,29 +292,6 @@
       &:hover {
         background: var(--bg-op-dark-ultraweak);
       }
-    }
-  }
-
-  > .close-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 5px;
-    left: 0;
-    transition: left $transition-normal ease;
-
-    &:hover {
-      background: var(--bg-op-dark-ultraweak);
-    }
-
-    svg {
-      fill: var(--stroke-extremestrong);
     }
   }
 }

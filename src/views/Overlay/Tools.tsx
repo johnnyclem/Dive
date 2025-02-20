@@ -389,7 +389,7 @@ const Tools = () => {
           }))
         }
       }
-      
+
       return {
         name,
         description: "",
@@ -399,7 +399,7 @@ const Tools = () => {
   }, [tools, mcpConfig.mcpServers])
 
   return (
-    <div className="tools-page">
+    <div className="tools-page overlay-page">
       <button
         className="close-btn"
         onClick={onClose}
