@@ -10,8 +10,8 @@ interface Props<T = string>{
   value: T
   onSelect: (value: T) => void
   placeholder?: string
-  size?: 'l' | 'm' | 's', //按鈕尺寸
-  type?: 'color' | 'outline'  //按鈕類型
+  size?: 'l' | 'm' | 's',
+  type?: 'color' | 'outline'
   className?: string
   error?: boolean
   fill?:  boolean
