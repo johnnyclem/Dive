@@ -12,5 +12,6 @@ interface Window {
     anthropicModelList: (apiKey: string, baseURL: string) => Promise<string[]>
     ollamaModelList: (baseURL: string) => Promise<string[]>
     checkNewVersion: () => Promise<string>
+    getHotkeyMap: () => Promise<Record<string, any>>
   }
 }

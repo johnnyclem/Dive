@@ -12,6 +12,7 @@ import { Ollama } from "ollama"
 import { getLatestVersion, getNvmPath, modifyPath } from "./util"
 import semver from "semver"
 import { binDirList, cacheDir, scriptsDir } from "./constant"
+import config from "../config"
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -322,4 +323,8 @@ ipcMain.handle("api:checkNewVersion", async () => {
   }
   
   return ""
+})
+
+ipcMain.handle("api:getHotkeyMap", async () => {
+  return config.hotkey
 })
