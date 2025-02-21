@@ -56,6 +56,13 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
         remarkPlugins={[remarkMath, remarkGfm]}
         rehypePlugins={[rehypeKatex]}
         components={{
+          a(props) {
+            return (
+              <a href={props.href} target="_blank" rel="noreferrer">
+                {props.children}
+              </a>
+            )
+          },
           img({className, src, alt}) {
             let imageSrc = src
             if (src?.startsWith("https://localfile")) {
