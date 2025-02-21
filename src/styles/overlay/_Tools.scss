@@ -255,6 +255,8 @@
 }
 
 .tools-page {
+  overflow: auto;
+
   .header-actions {
     display: flex;
     gap: 12px;

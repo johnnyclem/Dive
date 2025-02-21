@@ -273,7 +273,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
             {field.label}
             {field.required && <span className="required">*</span>}
           </label>
-          <div className="field-description">{field.description}</div>
+          <div className="field-description">{t(field.description)}</div>
           {field.type === "list" ? (
             <select
               value={formData[key as keyof ModelConfig] as string || ""}
