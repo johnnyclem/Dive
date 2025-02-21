@@ -6,17 +6,16 @@ import { useAtom } from "jotai"
 import { hasConfigAtom } from "../atoms/configState"
 import ConfigSidebar from "../components/ConfigSidebar"
 import GlobalToast from "../components/GlobalToast"
-import { themeAtom } from "../atoms/themeState"
+import { themeAtom, systemTheme as _systemTheme } from "../atoms/themeState"
 import Overlay from "./Overlay"
 
 const Layout = () => {
   const [hasConfig] = useAtom(hasConfigAtom)
   const [theme] = useAtom(themeAtom)
-  const [systemTheme, setSystemTheme] = useState(theme)
+  const [systemTheme, setSystemTheme] = useState(_systemTheme)
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
-    setSystemTheme(mediaQuery.matches ? "dark" : "light")
     const handleChange = () => {
       setSystemTheme(mediaQuery.matches ? "dark" : "light")
     }
