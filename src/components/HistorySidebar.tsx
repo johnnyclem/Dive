@@ -210,7 +210,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
               className="sidebar-footer-btn update-btn"
               onClick={() => window.open("https://github.com/OpenAgentPlatform/Dive/releases/latest", "_blank")}
             >
-              <div>
+              <div className="update-btn-wrap">
                 <span>✨</span>
                 <span className="update-btn-text">{t("sidebar.update")}</span>
               </div>
