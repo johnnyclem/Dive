@@ -12,22 +12,23 @@ import Overlay from "./Overlay"
 const Layout = () => {
   const [hasConfig] = useAtom(hasConfigAtom)
   const [theme] = useAtom(themeAtom)
-  const [systemTheme, setSystemTheme] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  const [systemTheme, setSystemTheme] = useState(theme)
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+    setSystemTheme(mediaQuery.matches ? "dark" : "light")
     const handleChange = () => {
-      setSystemTheme(mediaQuery.matches ? 'dark' : 'light')
+      setSystemTheme(mediaQuery.matches ? "dark" : "light")
     }
 
-    mediaQuery.addEventListener('change', handleChange)
+    mediaQuery.addEventListener("change", handleChange)
     return () => {
-      mediaQuery.removeEventListener('change', handleChange)
+      mediaQuery.removeEventListener("change", handleChange)
     }
   }, [])
 
   return (
-    <div className="app-container" data-theme={theme === 'system' ? systemTheme : theme}>
+    <div className="app-container" data-theme={theme === "system" ? systemTheme : theme}>
       {hasConfig &&
         <>
           <Header />
