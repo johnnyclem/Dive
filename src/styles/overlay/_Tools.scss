@@ -595,6 +595,10 @@
       }
     }
   }
+
+  .cm-scroller {
+    @include scrollbar;
+  }
 }
 
 .config-textarea {

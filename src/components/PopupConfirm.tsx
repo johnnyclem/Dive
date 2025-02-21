@@ -5,22 +5,24 @@ type TPopupConfirmProps = {
 	title?: string
 	children?: React.ReactNode
 	zIndex?: number,
+	className?: string,
 	isNoBorder?: boolean,
 	showClose?: boolean,
 	onClickOutside?: () => void,
 	onConfirm?: () => void,
-	onConfirmText?: string,
+	onConfirmText?: string | React.ReactNode,
+	disabled?: boolean,
 	onCancel?: () => void,
-	onCancelText?: string,
+	onCancelText?: string | React.ReactNode,
 	footerHint?: React.ReactNode | string,
 	footerType?: "center" | "flex-end",
 }
-export default function PopupConfirm({ title, children, zIndex, isNoBorder, showClose, onClickOutside, onConfirm, onConfirmText, onCancel, onCancelText, footerHint, footerType }: TPopupConfirmProps) {
+export default function PopupConfirm({ title, children, zIndex, className, isNoBorder, showClose, onClickOutside, onConfirm, onConfirmText, disabled, onCancel, onCancelText, footerHint, footerType }: TPopupConfirmProps) {
 	const { t } = useTranslation();
 
 	return (
 		<PopupWindow onClickOutside={onClickOutside} zIndex={zIndex}>
-			<div className={`popup-confirm ${isNoBorder ? "no-border" : ""}`}>
+			<div className={`popup-confirm ${isNoBorder ? "no-border" : ""} ${className}`}>
 				{showClose && (
 					<div className="close-btn" onClick={onClickOutside}>
 						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -58,6 +60,7 @@ export default function PopupConfirm({ title, children, zIndex, isNoBorder, show
 							<button
 								className="confirm-btn"
 								onClick={onConfirm}
+								disabled={disabled}
 							>
 								{onConfirmText || t('confirm')}
 							</button>
