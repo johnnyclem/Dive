@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Outlet } from "react-router-dom"
 import HistorySidebar from "../components/HistorySidebar"
 import Header from "../components/Header"
@@ -12,9 +12,22 @@ import Overlay from "./Overlay"
 const Layout = () => {
   const [hasConfig] = useAtom(hasConfigAtom)
   const [theme] = useAtom(themeAtom)
+  const [systemTheme, setSystemTheme] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = () => {
+      setSystemTheme(mediaQuery.matches ? 'dark' : 'light')
+    }
+
+    mediaQuery.addEventListener('change', handleChange)
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange)
+    }
+  }, [])
 
   return (
-    <div className="app-container" data-theme={theme}>
+    <div className="app-container" data-theme={theme === 'system' ? systemTheme : theme}>
       {hasConfig &&
         <>
           <Header />

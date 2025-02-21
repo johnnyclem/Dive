@@ -39,7 +39,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
     model: {
       type: "list",
       label: "Model ID",
-      description: "Model name to use (Please enter API Key first to see available models)",
+      description: "modelConfig.modelDescriptionHint",
       required: false,
       default: "",
       placeholder: "Select a model",
@@ -76,7 +76,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
     model: {
       type: "list",
       label: "Model ID",
-      description: "Model name to use (Please enter API Key first to see available models)",
+      description: "modelConfig.modelDescriptionHint",
       required: false,
       default: "",
       placeholder: "Default model",
@@ -104,7 +104,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
     model: {
       type: "list",
       label: "Model ID",
-      description: "Model name to use",
+      description: "modelConfig.modelDescription",
       required: true,
       default: "",
       placeholder: "Select a model",
@@ -141,7 +141,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
     model: {
       type: "list",
       label: "Model ID",
-      description: "Model name to use (Please enter API Key first to see available models)",
+      description: "modelConfig.modelDescriptionHint",
       required: false,
       default: "",
       placeholder: "Select a model",

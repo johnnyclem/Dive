@@ -21,3 +21,10 @@ export const closeOverlayAtom = atom(
     set(overlaysAtom, filteredOverlays);
   }
 )
+
+export const closeAllOverlaysAtom = atom(
+  null,
+  (get, set) => {
+    set(overlaysAtom, []);
+  }
+)
