@@ -11,13 +11,13 @@ type TPopupConfirmProps = {
 	onClickOutside?: () => void,
 	onConfirm?: () => void,
 	onConfirmText?: string | React.ReactNode,
-	onConfirmDisabled?: boolean,
+	disabled?: boolean,
 	onCancel?: () => void,
 	onCancelText?: string | React.ReactNode,
 	footerHint?: React.ReactNode | string,
 	footerType?: "center" | "flex-end",
 }
-export default function PopupConfirm({ title, children, zIndex, className, isNoBorder, showClose, onClickOutside, onConfirm, onConfirmText, onConfirmDisabled, onCancel, onCancelText, footerHint, footerType }: TPopupConfirmProps) {
+export default function PopupConfirm({ title, children, zIndex, className, isNoBorder, showClose, onClickOutside, onConfirm, onConfirmText, disabled, onCancel, onCancelText, footerHint, footerType }: TPopupConfirmProps) {
 	const { t } = useTranslation();
 
 	return (
@@ -60,7 +60,7 @@ export default function PopupConfirm({ title, children, zIndex, className, isNoB
 							<button
 								className="confirm-btn"
 								onClick={onConfirm}
-								disabled={onConfirmDisabled}
+								disabled={disabled}
 							>
 								{onConfirmText || t('confirm')}
 							</button>
