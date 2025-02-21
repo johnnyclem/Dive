@@ -215,7 +215,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
                 <span>✨</span>
                 <span className="update-btn-text">{t("sidebar.update")}</span>
               </div>
-              <div>
+              <div className="update-btn-text">
                 <span>v{newVersion} &gt;</span>
               </div>
             </button>
