@@ -8,4 +8,5 @@ export default {
   "chat-message:delete": `<${mod}-backspace>`,
   "global:new-chat": `<${mod}-O>`,
   "global:toggle-sidebar": `<${mod}-S>`,
+  "global:close-layer": `<escape>`,
 }
