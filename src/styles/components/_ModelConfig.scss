@@ -6,12 +6,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--bg-op-dark-strong);
+  background: var(--bg-overlay);
   z-index: calc($z-modal - 1);
-
-  &.config-sidebar-overlay {
-    background: none;
-  }
 }
 
 .config-sidebar {
