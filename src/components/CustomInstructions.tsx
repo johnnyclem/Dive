@@ -8,17 +8,13 @@ const CustomInstructions = () => {
   const { t } = useTranslation()
   const [instructions, setInstructions] = useState("")
   const [initialInstructions, setInitialInstructions] = useState("")
-  const [changed, setChanged] = useState(false)
+  const changed = instructions !== initialInstructions
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
 
   useEffect(() => {
     fetchInstructions()
   }, [])
-
-  useEffect(() => {
-    setChanged(instructions !== initialInstructions)
-  }, [instructions, initialInstructions])
 
   const fetchInstructions = async () => {
     try {
