@@ -43,7 +43,7 @@ const ConfigSidebar = () => {
   return (
     <>
       {isVisible && (
-        <div className="modal-overlay config-sidebar-overlay" onClick={() => setIsVisible(false)} />
+        <div className="modal-overlay" onClick={() => setIsVisible(false)} />
       )}
       <div className={`config-sidebar ${isVisible ? "visible" : ""}`}>
         <div className="config-header">

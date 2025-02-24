@@ -7,9 +7,11 @@ import Textarea from "./WrappedTextarea"
 const CustomInstructions = () => {
   const { t } = useTranslation()
   const [instructions, setInstructions] = useState("")
+  const [initialInstructions, setInitialInstructions] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
-
+  const changed = instructions !== initialInstructions
+  
   useEffect(() => {
     fetchInstructions()
   }, [])
@@ -20,6 +22,7 @@ const CustomInstructions = () => {
       const data = await response.json()
       if (data.success) {
         setInstructions(data.rules)
+        setInitialInstructions(data.rules)
       }
     } catch (error) {
       console.error("Failed to fetch custom rules:", error)
@@ -39,6 +42,7 @@ const CustomInstructions = () => {
           message: t("modelConfig.customRulesSaved"),
           type: "success"
         })
+        setInitialInstructions(instructions)
       }
     } catch (error) {
       console.error("Failed to save custom rules:", error)
@@ -64,7 +68,7 @@ const CustomInstructions = () => {
       <button
         className="save-btn"
         onClick={handleSubmit}
-        disabled={isSubmitting}
+        disabled={isSubmitting || !changed}
       >
         {isSubmitting ? (
           <div className="loading-spinner" />
