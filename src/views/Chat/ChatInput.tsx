@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from "react"
 import { useTranslation } from 'react-i18next'
 import Tooltip from "../../components/Tooltip"
-import { showToastAtom } from "../../atoms/toastState"
-import { useAtom } from "jotai"
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import Textarea from "../../components/WrappedTextarea"
 
@@ -20,16 +18,7 @@ interface FilePreview {
 }
 
 const ACCEPTED_FILE_TYPES = [
-  'image/*',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-  'application/vnd.oasis.opendocument.text', // .odt
-  'text/html',
-  'text/csv',
-  'text/plain',
-  'application/rtf',
-  'application/epub+zip'
+  '*/*'
 ].join(',')
 
 const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
@@ -42,7 +31,6 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const uploadedFiles = useRef<File[]>([])
   const isComposing = useRef(false)
   const [isAborting, setIsAborting] = useState(false)
-  const [, showToast] = useAtom(showToastAtom)
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B'

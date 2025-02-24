@@ -188,7 +188,7 @@ const Welcome = () => {
                 type="file"
                 ref={fileInputRef}
                 multiple
-                accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.docx,.odt,.html,.csv,.txt,.rtf,.epub"
+                accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.*"
                 style={{ display: "none" }}
                 onChange={handleFileChange}
               />

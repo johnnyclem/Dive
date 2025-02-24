@@ -63,25 +63,27 @@ export async function handleUploadFiles({ files, filepaths }: { files: Express.M
       if (!OFFLINE_MODE) images.push(path.join(PROJECT_ROOT, "uploads", file.filename));
       else images.push(`uploads/${file.filename}`);
 
-    } else if (SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
+    } else {//(SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
 
       if (!OFFLINE_MODE) documents.push(path.join(PROJECT_ROOT, "uploads", file.filename));
       else documents.push(`uploads/${file.filename}`);
 
-    } else {
-      logger.error(`Unsupported file type: ${file.filename}`);
     }
+    // else {
+    //   logger.error(`Unsupported file type: ${file.filename}`);
+    // }
   }
 
   for (const filepath of filepaths) {
     const ext = path.extname(filepath).toLowerCase();
     if (SUPPORTED_IMAGE_EXTENSIONS.includes(ext)) {
       images.push(filepath);
-    } else if (SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
+    } else {//(SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
       documents.push(filepath);
-    } else {
-      logger.error(`Unsupported file type: ${filepath}`);
     }
+    // else {
+    //   logger.error(`Unsupported file type: ${filepath}`);
+    // }
   }
 
   return { images, documents };
