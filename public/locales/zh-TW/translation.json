@@ -74,7 +74,9 @@
     "customInstructionsDescription": "這些指令會被添加到每個請求的系統提示中。",
     "saveInstructions": "儲存指令",
     "customRulesSaved": "自訂指令已儲存",
-    "customRulesFailed": "儲存自訂指令失敗"
+    "customRulesFailed": "儲存自訂指令失敗",
+    "modelDescription": "要使用的模型名稱",
+    "modelDescriptionHint": "要使用的模型名稱（請先輸入 API Key 以查看可用的模型）"
   },
   "common": {
     "close": "關閉",

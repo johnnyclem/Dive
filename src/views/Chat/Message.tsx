@@ -78,7 +78,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
           code({node, className, children, ...props}) {
             const match = /language-(\w+)/.exec(className || "")
             const language = match ? match[1] : ""
-            const code = String(children).replace(/\n$/, "")
+            let code = String(children).replace(/\n$/, "")
 
             const inline = node?.position?.start.line === node?.position?.end.line
             if (inline) {
@@ -91,6 +91,8 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
             if (isLongCode) {
               const cleanText = text.replace(/\s+(?=```)/gm, "")
               const isBlockComplete = cleanText.includes(code.trim() + "```")
+              code = code.endsWith("``") ? code.slice(0, -2) : code
+              code = code.endsWith("`") ? code.slice(0, -1) : code
               const handleClick = () => {
                 updateStreamingCode({ code, language })
               }

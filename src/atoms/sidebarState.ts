@@ -9,3 +9,11 @@ export const toggleSidebarAtom = atom(
     set(sidebarVisibleAtom, !get(sidebarVisibleAtom))
   }
 )
+
+export const closeAllSidebarsAtom = atom(
+  null,
+  (get, set) => {
+    set(sidebarVisibleAtom, false)
+    set(configSidebarVisibleAtom, false)
+  }
+)

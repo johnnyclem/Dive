@@ -20,7 +20,11 @@ export default defineConfig(({ command }) => {
     resolve: {
       alias: {
         '@': path.join(__dirname, 'src'),
-        '@services': path.join(__dirname, 'services')
+        '@services': path.join(__dirname, 'services'),
+        '@codemirror/state': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/state/dist/index.js'
+        ),
       },
     },
     optimizeDeps: {

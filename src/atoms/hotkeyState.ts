@@ -1,8 +1,9 @@
 import { atom, getDefaultStore } from "jotai"
 import merge from "lodash/merge"
-import { toggleSidebarAtom } from "./sidebarState"
+import { closeAllSidebarsAtom, toggleSidebarAtom } from "./sidebarState"
 import { router } from "../router"
 import mitt from "mitt"
+import { closeAllOverlaysAtom } from "./overlayState"
 
 export const ChatInputHotkeyEvent = [
     "chat-input:submit",
@@ -15,7 +16,11 @@ export type ChatInputHotkeyEvent = typeof ChatInputHotkeyEvent[number]
 export const ChatMessageHotkeyEvent = ["chat-message:copy-last", "chat-message:delete"] as const
 export type ChatMessageHotkeyEvent = typeof ChatMessageHotkeyEvent[number]
 
-export const GlobalHotkeyEvent = ["global:new-chat", "global:toggle-sidebar"] as const
+export const GlobalHotkeyEvent = [
+  "global:new-chat",
+  "global:toggle-sidebar",
+  "global:close-layer",
+] as const
 export type GlobalHotkeyEvent = typeof GlobalHotkeyEvent[number]
 
 export type HotkeyEvent = ChatInputHotkeyEvent|ChatMessageHotkeyEvent|GlobalHotkeyEvent
@@ -129,10 +134,6 @@ function parseHotkeyTag(hotkey: string, event: HotkeyEvent): Record<string, any>
   }
   
   const buffer = hotkey.split("-")
-  if (buffer.length < 2) {
-    return {}
-  }
-
   let key = buffer.pop()!
   if (!key) {
     key = "-"
@@ -189,7 +190,13 @@ const handleGlobalEventAtom = atom(
   null,
   (get, set, event: GlobalHotkeyEvent) => {
     switch (event) {
+      case "global:close-layer":
+        set(closeAllSidebarsAtom)
+        set(closeAllOverlaysAtom)
+        break
       case "global:new-chat":
+        set(closeAllSidebarsAtom)
+        set(closeAllOverlaysAtom)
         router.navigate("/")
         break
       case "global:toggle-sidebar":

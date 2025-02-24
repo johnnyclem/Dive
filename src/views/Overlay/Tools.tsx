@@ -5,7 +5,7 @@ import { showToastAtom } from "../../atoms/toastState"
 import CodeMirror, { EditorView } from "@uiw/react-codemirror"
 import { json } from "@codemirror/lang-json"
 import { linter, lintGutter } from "@codemirror/lint"
-import { themeAtom } from "../../atoms/themeState"
+import { systemThemeAtom, themeAtom } from "../../atoms/themeState"
 
 // @ts-ignore
 import jsonlint from "jsonlint-mod"
@@ -29,7 +29,7 @@ interface Tool {
 interface ConfigModalProps {
   title: string
   subtitle?: string
-  config: Record<string, any>
+  config?: Record<string, any>
   onSubmit: (config: Record<string, any>) => void
   onCancel: () => void
 }
@@ -53,15 +53,16 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   onCancel
 }) => {
   const { t } = useTranslation()
-  const [jsonString, setJsonString] = useState(JSON.stringify(config, null, 2))
+  const [jsonString, setJsonString] = useState(config ? JSON.stringify(config, null, 2) : "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
   const [isFormatError, setIsFormatError] = useState(false)
   const [theme] = useAtom(themeAtom)
+  const [systemTheme] = useAtom(systemThemeAtom)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
       let processedJsonString = jsonString.trim()
       if (!processedJsonString.startsWith("{")) {
@@ -136,7 +137,9 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
         <form onSubmit={handleSubmit} className="config-form">
           {subtitle && <p className="subtitle">{subtitle}</p>}
           <CodeMirror
-            theme={theme === 'dark' ? 'dark' : 'light'}
+            placeholder={"{}"}
+            theme={theme === 'system' ? systemTheme : theme}
+            minHeight="300px"
             maxHeight="300px"
             value={jsonString}
             extensions={[
@@ -510,7 +513,6 @@ const Tools = () => {
         <ConfigModal
           title={t("tools.addServerTitle")}
           subtitle={t("tools.addServerSubtitle")}
-          config={{}}
           onSubmit={handleAddSubmit}
           onCancel={() => setShowAddModal(false)}
         />

@@ -6,7 +6,7 @@ import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
-import { openOverlayAtom } from "../atoms/overlayState"
+import { closeAllOverlaysAtom, openOverlayAtom } from "../atoms/overlayState"
 
 interface Props {
   onNewChat?: () => void
@@ -50,6 +50,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [, showToast] = useAtom(showToastAtom)
   const [, openOverlay] = useAtom(openOverlayAtom)
   const [newVersion, setNewVersion] = useState("")
+  const [, closeAllOverlays] = useAtom(closeAllOverlaysAtom)
 
   useEffect(() => {
     if (isVisible) {
@@ -112,13 +113,14 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
   const loadChat = useCallback((chatId: string) => {
     setCurrentChatId(chatId)
-    setIsVisible(false)
+    closeAllOverlays()
     navigate(`/chat/${chatId}`)
   }, [navigate, setIsVisible])
 
   const handleNewChat = () => {
     setCurrentChatId(null)
     setIsVisible(false)
+    closeAllOverlays()
     if (onNewChat) {
       onNewChat()
     } else {
@@ -208,11 +210,11 @@ const HistorySidebar = ({ onNewChat }: Props) => {
               className="sidebar-footer-btn update-btn"
               onClick={() => window.open("https://github.com/OpenAgentPlatform/Dive/releases/latest", "_blank")}
             >
-              <div>
+              <div className="update-btn-wrap">
                 <span>✨</span>
                 <span className="update-btn-text">{t("sidebar.update")}</span>
               </div>
-              <div>
+              <div className="update-btn-text">
                 <span>v{newVersion} &gt;</span>
               </div>
             </button>

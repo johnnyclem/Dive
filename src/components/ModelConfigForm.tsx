@@ -9,6 +9,7 @@ import useDebounce from "../hooks/useDebounce"
 import CustomInstructions from "./CustomInstructions"
 import InfoTooltip from "./InfoTooltip"
 import { showToastAtom } from "../atoms/toastState"
+import Input from "./WrappedInput"
 
 const PROVIDERS: ModelProvider[] = ["openai", "openai_compatible", "ollama", "anthropic"]
 
@@ -273,7 +274,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
             {field.label}
             {field.required && <span className="required">*</span>}
           </label>
-          <div className="field-description">{field.description}</div>
+          <div className="field-description">{t(field.description)}</div>
           {field.type === "list" ? (
             <select
               value={formData[key as keyof ModelConfig] as string || ""}
@@ -288,7 +289,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
               ))}
             </select>
           ) : (
-            <input
+            <Input
               type={"text"}
               value={formData[key as keyof ModelConfig] as string || ""}
               onChange={e => handleChange(key, e.target.value)}
@@ -356,7 +357,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
                   </svg>
                 </div>
               </InfoTooltip>
-              <input type="number" value={formData.topP ?? 0} min={0} max={1} step={0.1} onChange={e => handleChange("topP", validateNumber(parseFloat(e.target.value), 0, 1))} />
+              <Input type="number" value={formData.topP ?? 0} min={0} max={1} step={0.1} onChange={e => handleChange("topP", validateNumber(parseFloat(e.target.value), 0, 1))} />
             </div>
             <div className="parameters-grid">
               <InfoTooltip
@@ -379,7 +380,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
                   </svg>
                 </div>
               </InfoTooltip>
-              <input type="number" value={formData.temperature ?? 0} min={0} max={1} step={0.1} onChange={e => handleChange("temperature", validateNumber(parseFloat(e.target.value), 0, 1))} />
+              <Input type="number" value={formData.temperature ?? 0} min={0} max={1} step={0.1} onChange={e => handleChange("temperature", validateNumber(parseFloat(e.target.value), 0, 1))} />
             </div>
           </div>
         </div>

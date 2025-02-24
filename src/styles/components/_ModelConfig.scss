@@ -8,6 +8,10 @@
   bottom: 0;
   background: var(--bg-op-dark-strong);
   z-index: calc($z-modal - 1);
+
+  &.config-sidebar-overlay {
+    background: none;
+  }
 }
 
 .config-sidebar {

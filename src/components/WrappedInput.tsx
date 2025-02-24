@@ -5,15 +5,16 @@ const WrappedInput = forwardRef<HTMLInputElement, React.ComponentProps<"input">>
     if (!e.altKey && !e.ctrlKey && !e.metaKey) {
       e.stopPropagation()
     }
-    
+
     if (props.onKeyDown) {
       props.onKeyDown(e)
     }
   }
-
+  
   return (
     <input
       {...props}
+      ref={ref}
       onKeyDown={onKeyDown}
     />
   )

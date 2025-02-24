@@ -255,6 +255,8 @@
 }
 
 .tools-page {
+  overflow: auto;
+
   .header-actions {
     display: flex;
     gap: 12px;
@@ -516,11 +518,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: none;
+  background: var(--bg-op-dark-strong);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: $z-modal;
 }
 
 .modal-content {
@@ -592,6 +594,10 @@
         background: var(--bg-hover-blue);
       }
     }
+  }
+
+  .cm-scroller {
+    @include scrollbar;
   }
 }
 
