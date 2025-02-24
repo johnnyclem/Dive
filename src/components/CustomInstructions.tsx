@@ -8,10 +8,10 @@ const CustomInstructions = () => {
   const { t } = useTranslation()
   const [instructions, setInstructions] = useState("")
   const [initialInstructions, setInitialInstructions] = useState("")
-  const changed = instructions !== initialInstructions
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
-
+  const changed = instructions !== initialInstructions
+  
   useEffect(() => {
     fetchInstructions()
   }, [])
