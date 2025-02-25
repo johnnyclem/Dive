@@ -2,27 +2,28 @@ import React from "react"
 import PopupWindow from "../../components/PopupWindow"
 import Tools from "./Tools"
 import System from "./System"
-import { useAtom } from "jotai"
-import { overlaysAtom } from "../../atoms/overlayState"
+import { useAtomValue } from "jotai"
+import { overlaysAtom } from "../../atoms/layerState"
 
 const Overlay = () => {
-  const [overlays] = useAtom(overlaysAtom)
+  const overlays = useAtomValue(overlaysAtom)
 
-  if (!overlays.length) return null
+  if (!overlays.length)
+    return null
 
   return (
     <>
       {overlays.map((overlay, index) => {
         switch (overlay) {
-          case 'Tools':
+          case "Tools":
             return (
-              <PopupWindow key={`tools-${index}`} isOverlay >
+              <PopupWindow key={`tools-${index}`} overlay>
                 <Tools />
               </PopupWindow>
             )
-          case 'System':
+          case "System":
             return (
-              <PopupWindow key={`system-${index}`} isOverlay >
+              <PopupWindow key={`system-${index}`} overlay>
                 <System />
               </PopupWindow>
             )

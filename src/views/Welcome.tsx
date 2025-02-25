@@ -7,7 +7,7 @@ import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import { hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { showToastAtom } from "../atoms/toastState"
-import { openOverlayAtom } from "../atoms/overlayState"
+import { openOverlayAtom } from "../atoms/layerState"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
 import Textarea from "../components/WrappedTextarea"
 

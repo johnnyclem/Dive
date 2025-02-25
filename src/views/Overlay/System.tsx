@@ -1,7 +1,7 @@
 import { useAtom } from "jotai"
 import { useTranslation } from "react-i18next"
 import Select from "../../components/Select"
-import { closeOverlayAtom } from "../../atoms/overlayState"
+import { closeOverlayAtom } from "../../atoms/layerState"
 import React, { useState } from "react"
 import ThemeSwitch from "../../components/ThemeSwitch"
 

@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { useAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { configSidebarVisibleAtom, sidebarVisibleAtom } from "../atoms/sidebarState"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
-import { closeAllOverlaysAtom, openOverlayAtom } from "../atoms/overlayState"
 import Tooltip from "./Tooltip"
+import { closeAllOverlaysAtom, openOverlayAtom } from "../atoms/layerState"
+import { useSidebarLayer } from "../hooks/useLayer"
 
 interface Props {
   onNewChat?: () => void
@@ -42,16 +43,16 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const [isVisible, setIsVisible] = useAtom(sidebarVisibleAtom)
-  const [histories] = useAtom(historiesAtom)
-  const [, loadHistories] = useAtom(loadHistoriesAtom)
+  const histories = useAtomValue(historiesAtom)
+  const loadHistories = useSetAtom(loadHistoriesAtom)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
-  const [, setConfigSidebarVisible] = useAtom(configSidebarVisibleAtom)
+  const setConfigSidebarVisible = useSetAtom(configSidebarVisibleAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
-  const [, showToast] = useAtom(showToastAtom)
-  const [, openOverlay] = useAtom(openOverlayAtom)
+  const showToast = useSetAtom(showToastAtom)
+  const openOverlay = useSetAtom(openOverlayAtom)
   const [newVersion, setNewVersion] = useState("")
-  const [, closeAllOverlays] = useAtom(closeAllOverlaysAtom)
+  const closeAllOverlays = useSetAtom(closeAllOverlaysAtom)
+  const [isVisible, setVisible] = useSidebarLayer(sidebarVisibleAtom)
 
   useEffect(() => {
     if (isVisible) {
@@ -116,11 +117,11 @@ const HistorySidebar = ({ onNewChat }: Props) => {
     setCurrentChatId(chatId)
     closeAllOverlays()
     navigate(`/chat/${chatId}`)
-  }, [navigate, setIsVisible])
+  }, [navigate])
 
   const handleNewChat = () => {
     setCurrentChatId(null)
-    setIsVisible(false)
+    setVisible(false)
     closeAllOverlays()
     if (onNewChat) {
       onNewChat()
