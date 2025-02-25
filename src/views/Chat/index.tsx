@@ -3,24 +3,33 @@ import { useLocation, useNavigate, useParams } from "react-router-dom"
 import ChatMessages, { Message } from "./ChatMessages"
 import ChatInput from "./ChatInput"
 import CodeModal from './CodeModal'
-import { useSetAtom } from 'jotai'
-import { updateStreamingCodeAtom } from '../../atoms/codeStreaming'
+import { useAtom, useSetAtom } from 'jotai'
+import { codeStreamingAtom } from '../../atoms/codeStreaming'
 import { ToolCall, ToolResult } from "./ToolPanel"
+import useHotkeyEvent from "../../hooks/useHotkeyEvent"
+import { showToastAtom } from "../../atoms/toastState"
+import { useTranslation } from "react-i18next"
+import { currentChatIdAtom, isChatStreamingAtom, lastMessageAtom } from "../../atoms/chatState"
 
 const ChatWindow = () => {
   const { chatId } = useParams()
   const location = useLocation()
   const [messages, setMessages] = useState<Message[]>([])
-  const [isAiStreaming, setAiStreaming] = useState(false)
   const currentId = useRef(0)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const currentChatId = useRef<string | null>(null)
   const navigate = useNavigate()
   const isInitialMessageHandled = useRef(false)
-  const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
+  const showToast = useSetAtom(showToastAtom)
+  const { t } = useTranslation()
+  const updateStreamingCode = useSetAtom(codeStreamingAtom)
+  const setLastMessage = useSetAtom(lastMessageAtom)
+  const setCurrentChatId = useSetAtom(currentChatIdAtom)
+  const [isChatStreaming, setIsChatStreaming] = useAtom(isChatStreamingAtom)
+
   const loadChat = useCallback(async (id: string) => {
     try {
-      setAiStreaming(true)
+      setIsChatStreaming(true)
       const response = await fetch(`/api/chat/${id}`)
       const data = await response.json()
 
@@ -28,7 +37,6 @@ const ChatWindow = () => {
         currentChatId.current = id
         document.title = `${data.data.chat.title} - Dive AI`
 
-        // 轉換訊息格式
         const convertedMessages = data.data.messages.map((msg: any) => ({
           id: msg.messageId || msg.id || String(currentId.current++),
           text: msg.content,
@@ -42,16 +50,33 @@ const ChatWindow = () => {
     } catch (error) {
       console.warn("Failed to load chat:", error)
     } finally {
-      setAiStreaming(false)
+      setIsChatStreaming(false)
     }
   }, [])
+  
+  useHotkeyEvent("chat-message:copy-last", async () => {
+    const lastMessage = messages[messages.length - 1]
+    if (lastMessage) {
+      await navigator.clipboard.writeText(lastMessage.text)
+      showToast({
+        message: t("toast.copiedToClipboard"),
+        type: "success"
+      })
+    }
+  })
+  
+  useEffect(() => {
+    if (messages.length > 0 && !isChatStreaming) {
+      setLastMessage(messages[messages.length - 1].text)
+    }
+  }, [messages, setLastMessage, isChatStreaming])
 
-  // 處理 URL 中的 chatId
   useEffect(() => {
     if (chatId && chatId !== currentChatId.current) {
       loadChat(chatId)
+      setCurrentChatId(chatId)
     }
-  }, [chatId, loadChat])
+  }, [chatId, loadChat, setCurrentChatId])
 
   const scrollToBottom = useCallback(() => {
     if (chatContainerRef.current) {
@@ -60,7 +85,7 @@ const ChatWindow = () => {
   }, [])
 
   const onSendMsg = useCallback(async (msg: string, files?: FileList) => {
-    if (isAiStreaming) return
+    if (isChatStreaming) return
 
     const formData = new FormData()
     if (msg) formData.append("message", msg)
@@ -87,14 +112,14 @@ const ChatWindow = () => {
     }
 
     setMessages(prev => [...prev, userMessage, aiMessage])
-    setAiStreaming(true)
+    setIsChatStreaming(true)
     scrollToBottom()
 
     handlePost(formData, "formData", "/api/chat")
-  }, [isAiStreaming, scrollToBottom])
+  }, [isChatStreaming, scrollToBottom])
 
   const onAbort = useCallback(async () => {
-    if (!isAiStreaming || !currentChatId.current) return
+    if (!isChatStreaming || !currentChatId.current) return
 
     try {
       await fetch(`/api/chat/${currentChatId.current}/abort`, {
@@ -103,10 +128,10 @@ const ChatWindow = () => {
     } catch (error) {
       console.error("Failed abort:", error)
     }
-  }, [isAiStreaming, currentChatId.current, scrollToBottom])
+  }, [isChatStreaming, currentChatId.current, scrollToBottom])
 
   const onRetry = useCallback(async (messageId: string) => {
-    if (isAiStreaming || !currentChatId.current) return
+    if (isChatStreaming || !currentChatId.current) return
 
     setMessages(prev => {
       let newMessages = [...prev]
@@ -120,7 +145,7 @@ const ChatWindow = () => {
       newMessages[newMessages.length - 1].isError = false
       return newMessages
     })
-    setAiStreaming(true)
+    setIsChatStreaming(true)
     scrollToBottom()
 
     const body = JSON.stringify({
@@ -129,7 +154,7 @@ const ChatWindow = () => {
     })
 
     handlePost(body, "json", "/api/chat/retry")
-  }, [isAiStreaming, currentChatId.current])
+  }, [isChatStreaming, currentChatId.current])
 
   const handlePost = useCallback(async (body: any, type: "json" | "formData", url: string) => {
     try {
@@ -147,8 +172,9 @@ const ChatWindow = () => {
 
       while (true) {
         const { value, done } = await reader.read()
-        if (done)
+        if (done) {
           break
+        }
 
         const chunk = decoder.decode(value)
         const lines = chunk.split("\n")
@@ -266,7 +292,8 @@ const ChatWindow = () => {
         return newMessages
       })
     } finally {
-      setAiStreaming(false)
+      setIsChatStreaming(false)
+      setLastMessage(messages[messages.length - 1].text)
       scrollToBottom()
     }
   }, [])
@@ -298,7 +325,7 @@ const ChatWindow = () => {
   const lastChatId = useRef(chatId)
   useEffect(() => {
     if (lastChatId.current && lastChatId.current !== chatId) {
-      updateStreamingCode({ code: "", language: "" })
+      updateStreamingCode(null)
     }
 
     lastChatId.current = chatId
@@ -310,12 +337,12 @@ const ChatWindow = () => {
         <div className="chat-window">
           <ChatMessages
             messages={messages}
-            isLoading={isAiStreaming}
+            isLoading={isChatStreaming}
             onRetry={onRetry}
           />
           <ChatInput
             onSendMessage={onSendMsg}
-            disabled={isAiStreaming}
+            disabled={isChatStreaming}
             onAbort={onAbort}
           />
         </div>

@@ -3,7 +3,7 @@ import mitt from "mitt"
 
 export type OverlayType = "Tools" | "System"
 export type LayerType = {
-  type: "Overlay" | "Modal" | "Sidebar"
+  type: "Overlay" | "Modal" | "Sidebar" | "Surface"
   id: string
 }
 

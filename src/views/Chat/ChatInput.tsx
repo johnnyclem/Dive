@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import Tooltip from "../../components/Tooltip"
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import Textarea from "../../components/WrappedTextarea"
+import { lastMessageAtom } from "../../atoms/chatState"
+import { useAtomValue } from "jotai"
 
 interface Props {
   onSendMessage?: (message: string, files?: FileList) => void
@@ -31,6 +33,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const uploadedFiles = useRef<File[]>([])
   const isComposing = useRef(false)
   const [isAborting, setIsAborting] = useState(false)
+  const lastMessage = useAtomValue(lastMessageAtom)
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B'
@@ -144,6 +147,12 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   useHotkeyEvent("chat-input:focus", () => {
     if (textareaRef.current) {
       textareaRef.current.focus()
+    }
+  })
+  
+  useHotkeyEvent("chat-input:paste-last-message", () => {
+    if (lastMessage) {
+      setMessage(m => m + lastMessage)
     }
   })
 

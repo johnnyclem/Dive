@@ -8,7 +8,7 @@ import rehypeKatex from "rehype-katex"
 import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useAtom, useSetAtom } from 'jotai'
-import { updateStreamingCodeAtom } from '../../atoms/codeStreaming'
+import { codeStreamingAtom } from '../../atoms/codeStreaming'
 import ToolPanel, { ToolCall, ToolResult } from './ToolPanel'
 import FilePreview from './FilePreview'
 import { useTranslation } from 'react-i18next'
@@ -30,7 +30,7 @@ interface MessageProps {
 const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls, toolResults, onRetry }: MessageProps) => {
   const { t } = useTranslation()
   const [theme] = useAtom(themeAtom)
-  const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
+  const updateStreamingCode = useSetAtom(codeStreamingAtom)
   
   const copyToClipboard = async (text: string) => {
     try {
