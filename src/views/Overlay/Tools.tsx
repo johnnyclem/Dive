@@ -145,7 +145,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
         <form onSubmit={handleSubmit} className="config-form">
           {subtitle && <p className="subtitle">{subtitle}</p>}
           <CodeMirror
-            placeholder={"{}"}
+            placeholder={"{\n \"mcpServer\":{}\n}"}
             theme={theme === 'system' ? systemTheme : theme}
             minHeight="300px"
             maxHeight="300px"
