@@ -87,5 +87,8 @@
     "title": "System Settings",
     "language": "System Language",
     "theme": "Display Mode"
+  },
+  "toast": {
+    "copiedToClipboard": "Copied to clipboard"
   }
 }

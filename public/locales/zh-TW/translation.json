@@ -87,5 +87,8 @@
     "title": "系統設定",
     "language": "系統言語",
     "theme": "顯示模式"
+  },
+  "toast": {
+    "copiedToClipboard": "已複製到剪貼簿"
   }
 }

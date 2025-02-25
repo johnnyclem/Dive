@@ -9,7 +9,7 @@ export const ChatInputHotkeyEvent = [
     "chat-input:submit",
     "chat-input:upload-file",
     "chat-input:focus",
-    "chat-input:past-last-message"
+    "chat-input:paste-last-message"
 ] as const
 export type ChatInputHotkeyEvent = typeof ChatInputHotkeyEvent[number]
 
