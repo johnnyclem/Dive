@@ -2,10 +2,12 @@ import React, { useRef, useEffect, useCallback, useState } from "react"
 import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter"
 import { tomorrow, darcula } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { themeAtom } from '../../atoms/themeState'
-import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { codeStreamingAtom, updateStreamingCodeAtom } from '../../atoms/codeStreaming'
+import { useAtom } from 'jotai'
+import { codeStreamingAtom } from '../../atoms/codeStreaming'
 import { useTranslation } from "react-i18next"
 import CodePreview from "./CodePreview"
+import { useLayer } from "../../hooks/useLayer"
+import { isChatStreamingAtom } from "../../atoms/chatState"
 
 type TabType = "code" | "preview"
 
@@ -21,10 +23,21 @@ const CodeModal = () => {
   const codeModalRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<TabType>("code")
+  const [isChatStreaming] = useAtom(isChatStreamingAtom)
 
-  const { streamingCode } = useAtomValue(codeStreamingAtom)
+  const [streamingCode, updateStreamingCode] = useAtom(codeStreamingAtom)
   const code = streamingCode?.code || ""
-  const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
+
+  const { pushLayer, closeLayer } = useLayer({
+    type: "Surface",
+    onClose: () => {
+      if (isChatStreaming) {
+        return false
+      }
+
+      closeCodeModal()
+    },
+  })
 
   const scrollCodeToBottom = useCallback(() => {
     if (codeModalRef.current) {
@@ -35,10 +48,21 @@ const CodeModal = () => {
     }
   }, [])
 
+  const closeCodeModal = () => {
+    updateStreamingCode({ code: "", language: "" })
+    closeLayer()
+  }
+
   useEffect(() => {
     scrollCodeToBottom()
     setActiveTab("code")
   }, [streamingCode])
+  
+  useEffect(() => {
+    if (!isChatStreaming && streamingCode?.code) {
+      pushLayer()
+    }
+  }, [isChatStreaming, streamingCode?.code, pushLayer])
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -75,7 +99,7 @@ const CodeModal = () => {
             )}
             <button 
               className="close-btn"
-              onClick={() => updateStreamingCode({ code: "", language: "" })}
+              onClick={closeCodeModal}
             >
               ×
             </button>

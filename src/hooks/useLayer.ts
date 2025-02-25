@@ -10,9 +10,10 @@ export enum Behavior {
 interface Props {
   onClose?: () => boolean | void
   behavior?: Behavior
+  type?: LayerType["type"]
 }
 
-export function useLayer({ onClose, behavior = Behavior.default }: Props) {
+export function useLayer({ onClose, behavior = Behavior.default, type = "Modal" }: Props) {
   const id = useRef<string | null>(null)
   const pushLayer = useSetAtom(pushLayerAtom)
   const closeLayer = useSetAtom(closeLayerAtom)
@@ -36,7 +37,7 @@ export function useLayer({ onClose, behavior = Behavior.default }: Props) {
   useEffect(() => {
     id.current = Math.random().toString(36).substring(2)
     if (behavior === Behavior.autoPush) {
-      pushLayer({ type: "Modal", id: id.current })
+      pushLayer({ type, id: id.current })
     }
 
     return () => {
@@ -44,15 +45,22 @@ export function useLayer({ onClose, behavior = Behavior.default }: Props) {
     }
   }, [])
   
-  return id.current
+  return {
+    id: id.current,
+    pushLayer: useCallback(() => {
+      pushLayer({ type, id: id.current! })
+    }, [pushLayer]),
+    closeLayer: useCallback(() => {
+      closeLayer(id.current!)
+    }, [closeLayer]),
+  }
 }
 
-export function useSidebarLayer(atom: WritableAtom<boolean, [visible: boolean], void>): [boolean, (visible: boolean) => void] {
-  const [visible, setVisible] = useAtom(atom)
+export function useVisibleLayer(visible: boolean, setVisible: (visible: boolean) => void, type: LayerType["type"] = "Modal"): [boolean, (visible: boolean) => void] {
   const pushLayer = useSetAtom(pushLayerAtom)
   const closeLayer = useSetAtom(closeLayerAtom)
   
-  const id = useLayer({
+  const { id } = useLayer({
     onClose: useCallback(() => {
       setVisible(false)
     }, [setVisible])
@@ -64,11 +72,20 @@ export function useSidebarLayer(atom: WritableAtom<boolean, [visible: boolean], 
     }
 
     if (visible) {
-      pushLayer({ type: "Sidebar", id })
+      pushLayer({ type, id })
     } else {
       closeLayer(id)
     }
   }, [visible])
 
   return [visible, setVisible]
+}
+
+export function useVisibleAtomLayer(atom: WritableAtom<boolean, [visible: boolean], void>, type: LayerType["type"] = "Modal"): [boolean, (visible: boolean) => void] {
+  const [visible, setVisible] = useAtom(atom)
+  return useVisibleLayer(visible, setVisible, type)
+}
+
+export function useSidebarLayer(atom: WritableAtom<boolean, [visible: boolean], void>): [boolean, (visible: boolean) => void] {
+  return useVisibleAtomLayer(atom, "Sidebar")
 }

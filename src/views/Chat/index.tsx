@@ -4,7 +4,7 @@ import ChatMessages, { Message } from "./ChatMessages"
 import ChatInput from "./ChatInput"
 import CodeModal from './CodeModal'
 import { useAtom, useSetAtom } from 'jotai'
-import { updateStreamingCodeAtom } from '../../atoms/codeStreaming'
+import { codeStreamingAtom } from '../../atoms/codeStreaming'
 import { ToolCall, ToolResult } from "./ToolPanel"
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import { showToastAtom } from "../../atoms/toastState"
@@ -22,7 +22,7 @@ const ChatWindow = () => {
   const isInitialMessageHandled = useRef(false)
   const showToast = useSetAtom(showToastAtom)
   const { t } = useTranslation()
-  const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
+  const updateStreamingCode = useSetAtom(codeStreamingAtom)
   const setLastMessage = useSetAtom(lastMessageAtom)
   const setCurrentChatId = useSetAtom(currentChatIdAtom)
   const [isChatStreaming, setIsChatStreaming] = useAtom(isChatStreamingAtom)
@@ -325,7 +325,7 @@ const ChatWindow = () => {
   const lastChatId = useRef(chatId)
   useEffect(() => {
     if (lastChatId.current && lastChatId.current !== chatId) {
-      updateStreamingCode({ code: "", language: "" })
+      updateStreamingCode(null)
     }
 
     lastChatId.current = chatId

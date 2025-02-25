@@ -1,7 +1,7 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useSetAtom, useAtom } from "jotai"
-import { updateStreamingCodeAtom } from "../atoms/codeStreaming"
+import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import { hasConfigAtom } from "../atoms/configState"
@@ -28,7 +28,7 @@ const Welcome = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [, showToast] = useAtom(showToastAtom)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
+  const updateStreamingCode = useSetAtom(codeStreamingAtom)
   const [histories] = useAtom(historiesAtom)
   const [, loadHistories] = useAtom(loadHistoriesAtom)
   const [hasConfig] = useAtom(hasConfigAtom)
@@ -64,7 +64,7 @@ const Welcome = () => {
   }
 
   useEffect(() => {
-    updateStreamingCode({ code: "", language: "" })
+    updateStreamingCode(null)
   }, [updateStreamingCode])
 
   useEffect(() => {
