@@ -6,6 +6,7 @@ import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
+import Tooltip from "./Tooltip"
 import { closeAllOverlaysAtom, openOverlayAtom } from "../atoms/layerState"
 import { useSidebarLayer } from "../hooks/useLayer"
 
@@ -146,9 +147,13 @@ const HistorySidebar = ({ onNewChat }: Props) => {
       <div className={`history-sidebar ${isVisible ? "visible" : ""}`}>
         <Header />
         <div className="history-header">
-          <button onClick={handleNewChat} className="new-chat-btn">
-            + {t("chat.newChat")}
-          </button>
+          <Tooltip
+            content={`${t("chat.newChatTooltip")} Ctrl + Shift + O`}
+          >
+            <button className="new-chat-btn" onClick={handleNewChat}>
+              + {t("chat.newChat")}
+            </button>
+          </Tooltip>
         </div>
         <div className="history-list">
           {histories.map(chat => (
