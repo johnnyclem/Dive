@@ -9,8 +9,9 @@ import { systemThemeAtom, themeAtom } from "../../atoms/themeState"
 
 // @ts-ignore
 import jsonlint from "jsonlint-mod"
-import { closeOverlayAtom } from "../../atoms/overlayState"
+import { closeOverlayAtom } from "../../atoms/layerState"
 import Switch from "../../components/Switch"
+import { Behavior, useLayer } from "../../hooks/useLayer"
 
 interface SubTool {
   name: string
@@ -59,6 +60,13 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   const [isFormatError, setIsFormatError] = useState(false)
   const [theme] = useAtom(themeAtom)
   const [systemTheme] = useAtom(systemThemeAtom)
+  
+  useLayer({
+    onClose: () => {
+      onCancel()
+    },
+    behavior: Behavior.autoPush
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

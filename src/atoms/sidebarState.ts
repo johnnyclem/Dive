@@ -1,6 +1,7 @@
-import { atom } from 'jotai'
+import { atom } from "jotai"
 
 export const sidebarVisibleAtom = atom(false)
+
 export const configSidebarVisibleAtom = atom(false)
 
 export const toggleSidebarAtom = atom(

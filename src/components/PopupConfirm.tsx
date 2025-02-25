@@ -17,6 +17,7 @@ type TPopupConfirmProps = {
 	footerHint?: React.ReactNode | string,
 	footerType?: "center" | "flex-end",
 }
+
 export default function PopupConfirm({ title, children, zIndex, className, isNoBorder, showClose, onClickOutside, onConfirm, onConfirmText, disabled, onCancel, onCancelText, footerHint, footerType }: TPopupConfirmProps) {
 	const { t } = useTranslation();
 
