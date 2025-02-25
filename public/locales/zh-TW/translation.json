@@ -5,6 +5,7 @@
   "chat": {
     "placeholder": "傳送任何訊息...",
     "newChat": "新對話",
+    "newChatTooltip": "開始新的對話 Ctrl + Shift + O",
     "history": "歷史紀錄",
     "copyCode": "複製",
     "previewCode": "點擊預覽",

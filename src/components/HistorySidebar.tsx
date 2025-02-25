@@ -7,6 +7,7 @@ import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
 import { closeAllOverlaysAtom, openOverlayAtom } from "../atoms/overlayState"
+import Tooltip from "./Tooltip"
 
 interface Props {
   onNewChat?: () => void
@@ -145,9 +146,13 @@ const HistorySidebar = ({ onNewChat }: Props) => {
       <div className={`history-sidebar ${isVisible ? "visible" : ""}`}>
         <Header />
         <div className="history-header">
-          <button onClick={handleNewChat} className="new-chat-btn">
-            + {t("chat.newChat")}
-          </button>
+          <Tooltip
+            content={t("chat.newChatTooltip")}
+          >
+            <button className="new-chat-btn" onClick={handleNewChat}>
+              + {t("chat.newChat")}
+            </button>
+          </Tooltip>
         </div>
         <div className="history-list">
           {histories.map(chat => (

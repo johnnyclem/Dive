@@ -5,6 +5,7 @@
   "chat": {
     "placeholder": "Type a message...",
     "newChat": "New Chat",
+    "newChatTooltip": "Start a new chat Ctrl + Shift + O",
     "history": "History",
     "copyCode": "Copy",
     "previewCode": "Click to preview",
