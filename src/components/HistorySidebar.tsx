@@ -147,7 +147,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
         <Header />
         <div className="history-header">
           <Tooltip
-            content={t("chat.newChatTooltip")}
+            content={`${t("chat.newChatTooltip")} Ctrl + Shift + O`}
           >
             <button className="new-chat-btn" onClick={handleNewChat}>
               + {t("chat.newChat")}
