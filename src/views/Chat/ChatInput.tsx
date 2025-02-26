@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect, useCallback } from "react"
 import { useTranslation } from 'react-i18next'
 import Tooltip from "../../components/Tooltip"
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
@@ -35,11 +35,11 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const [isAborting, setIsAborting] = useState(false)
   const lastMessage = useAtomValue(lastMessageAtom)
 
-  const formatFileSize = (bytes: number): string => {
+  const formatFileSize = useCallback((bytes: number): string => {
     if (bytes < 1024) return bytes + ' B'
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-  }
+  }, [])
 
   const handleFiles = (files: File[]) => {
     const existingFiles = uploadedFiles.current
@@ -177,15 +177,18 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   }, [disabled])
 
   useEffect(() => {
-    function handleKeydown(e: KeyboardEvent) {
+    const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && disabled) {
+        e.stopPropagation()
+        e.preventDefault()
         setIsAborting(true)
         onAbort()
       }
     }
-    window.addEventListener("keydown", handleKeydown);
+
+    window.addEventListener("keydown", handleKeydown)
     return () => {
-      window.removeEventListener("keydown", handleKeydown);
+      window.removeEventListener("keydown", handleKeydown)
     }
   }, [disabled])
   
@@ -255,17 +258,17 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
     handleSubmit(e)
   }
 
-  const handleCompositionStart = () => {
+  const handleCompositionStart = useCallback(() => {
     isComposing.current = true
-  }
+  }, [])
 
-  const handleCompositionEnd = () => {
+  const handleCompositionEnd = useCallback(() => {
     isComposing.current = false
-  }
+  }, [])
 
-  const handleFileClick = () => {
+  const handleFileClick = useCallback(() => {
     fileInputRef.current?.click()
-  }
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -308,7 +311,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
           </svg>
         </button>
         {(disabled && !isAborting) ? (
-          <Tooltip type="controls" content={<>{t('chat.abort')}<span className="key">Esc</span></>}>
+          <Tooltip type="controls" content={<>{t("chat.abort")}<span className="key">Esc</span></>}>
             <button
               className="abort-btn"
               onClick={() => {
