@@ -30,6 +30,7 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
   showInputContextMenu: () => ipcRenderer.invoke("show-input-context-menu"),
   checkNewVersion: () => ipcRenderer.invoke("api:checkNewVersion"),
   getHotkeyMap: () => ipcRenderer.invoke("api:getHotkeyMap"),
+  getPlatform: () => ipcRenderer.invoke("api:getPlatform"),
 })
 
 // --------- Preload scripts loading ---------

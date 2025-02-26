@@ -15,5 +15,6 @@ interface Window {
     showInputContextMenu: () => Promise<void>
     checkNewVersion: () => Promise<string>
     getHotkeyMap: () => Promise<Record<string, any>>
+    getPlatform: () => Promise<string>
   }
 }

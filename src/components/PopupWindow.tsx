@@ -4,9 +4,13 @@ import { DismissableLayer } from "@radix-ui/react-dismissable-layer"
 import { useAtom } from "jotai"
 import { sidebarVisibleAtom } from "../atoms/sidebarState"
 
-type PopupWindowProps = {
-  children: React.ReactNode
+export type PopupStylePorps = {
   zIndex?: number
+  noBackground?: boolean
+}
+
+type PopupWindowProps = PopupStylePorps & {
+  children: React.ReactNode
   overlay?: boolean
   onClickOutside?: () => void
 }
@@ -16,13 +20,14 @@ export default function PopupWindow({
   zIndex = 100,
   onClickOutside = () => {},
   overlay = false,
+  noBackground = false,
 }: PopupWindowProps) {
   const [isSidebarVisible] = useAtom(sidebarVisibleAtom)
   const root = document.body
 
   return (
     <Portal.Root container={root}>
-      <div className={`container-wrapper ${overlay ? "overlay" : ""} ${!isSidebarVisible ? "full-width" : ""}`} style={{ zIndex }}>
+      <div className={`container-wrapper ${noBackground ? "transparent" : ""} ${overlay ? "overlay" : ""} ${!isSidebarVisible ? "full-width" : ""}`} style={{ zIndex }}>
         <DismissableLayer onPointerDownOutside={onClickOutside}>
           {children}
         </DismissableLayer>

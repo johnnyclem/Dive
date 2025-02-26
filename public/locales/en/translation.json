@@ -91,5 +91,19 @@
   },
   "toast": {
     "copiedToClipboard": "Copied to clipboard"
+  },
+  "keymap": {
+    "title": "Keyboard Shortcuts",
+    "events": {
+      "chat-input_submit": "Submit Message",
+      "chat-input_upload-file": "Upload File",
+      "chat-input_focus": "Focus Input",
+      "chat-input_paste-last-message": "Paste Last Message",
+      "chat-message_copy-last": "Copy Last Response",
+      "chat-delete": "Delete Chat",
+      "global_new-chat": "New Chat",
+      "global_toggle-sidebar": "Toggle Sidebar",
+      "global_close-layer": "Close Window"
+    }
   }
 }

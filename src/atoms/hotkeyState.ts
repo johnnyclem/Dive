@@ -205,21 +205,23 @@ const handleGlobalEventAtom = atom(
   }
 )
 
-export const hotkeyMapAtom = atom<Record<string, any>|null>(null)
+export const hotKeymapAtom = atom<Record<string, any>|null>(null)
+export const rawKeymapAtom = atom<Record<string, string>>({})
 
 export const loadHotkeyMapAtom = atom(
   null,
   async (get, set) => {
     const rawMap = await window.ipcRenderer.getHotkeyMap()
     const map = getHotkeyMap(rawMap)
-    set(hotkeyMapAtom, map)
+    set(rawKeymapAtom, rawMap)
+    set(hotKeymapAtom, map)
   }
 )
 
 export const getHotkeyEventAtom = atom(
   null,
   (get, set, keys: string[], modifierPressed: ModifierPressed) => {
-    const map = get(hotkeyMapAtom)
+    const map = get(hotKeymapAtom)
     if (!map) {
       return null
     }
