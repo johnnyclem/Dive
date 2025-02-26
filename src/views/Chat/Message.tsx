@@ -1,6 +1,6 @@
 import "katex/dist/katex.min.css"
 
-import React, { useMemo } from "react"
+import React, { useMemo, useRef } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import remarkMath from "remark-math"
@@ -31,6 +31,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
   const { t } = useTranslation()
   const [theme] = useAtom(themeAtom)
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
+  const cacheCode = useRef<string>("")
   
   const copyToClipboard = async (text: string) => {
     try {
@@ -97,7 +98,9 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
                 updateStreamingCode({ code, language })
               }
               
-              if (!isBlockComplete && isLoading) {
+              const diffLength = Math.abs(code.length - cacheCode.current.length)
+              if ((!isBlockComplete && isLoading) || (diffLength < 10 && cacheCode.current !== code)) {
+                cacheCode.current = code
                 updateStreamingCode({ code, language })
               }
 
