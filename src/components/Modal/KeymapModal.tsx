@@ -66,9 +66,9 @@ const KeymapModal = () => {
           case "space": return "Space"
           case "tab": return "Tab"
           case "enter": return "Enter"
-          case "esc": return "Esc"
-          case "bs": return "Backspace"
-          case "del": return "Delete"
+          case "escape": case "esc": return "Esc"
+          case "backspace": case "bs": return "Backspace"
+          case "delete": case "del": return "Delete"
           default: return part.charAt(0).toUpperCase() + part.slice(1)
         }
       }).join(" + ")
