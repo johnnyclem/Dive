@@ -293,7 +293,6 @@ const ChatWindow = () => {
       })
     } finally {
       setIsChatStreaming(false)
-      setLastMessage(messages[messages.length - 1].text)
       scrollToBottom()
     }
   }, [])
