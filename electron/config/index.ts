@@ -1,5 +1,5 @@
-import hotkey from "./hotkey"
+import keymap from "./keymap"
 
 export default {
-  hotkey,
+  keymap,
 }
