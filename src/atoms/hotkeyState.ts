@@ -13,7 +13,7 @@ export const ChatInputHotkeyEvent = [
 ] as const
 export type ChatInputHotkeyEvent = typeof ChatInputHotkeyEvent[number]
 
-export const ChatMessageHotkeyEvent = ["chat-message:copy-last", "chat-message:delete"] as const
+export const ChatMessageHotkeyEvent = ["chat-message:copy-last", "chat:delete"] as const
 export type ChatMessageHotkeyEvent = typeof ChatMessageHotkeyEvent[number]
 
 export const GlobalHotkeyEvent = [

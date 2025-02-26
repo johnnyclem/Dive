@@ -9,6 +9,7 @@ import { showToastAtom } from "../atoms/toastState"
 import Tooltip from "./Tooltip"
 import { closeAllOverlaysAtom, openOverlayAtom } from "../atoms/layerState"
 import { useSidebarLayer } from "../hooks/useLayer"
+import useHotkeyEvent from "../hooks/useHotkeyEvent"
 
 interface Props {
   onNewChat?: () => void
@@ -59,6 +60,10 @@ const HistorySidebar = ({ onNewChat }: Props) => {
       loadHistories()
     }
   }, [isVisible, loadHistories])
+  
+  useHotkeyEvent("chat:delete", () => {
+    currentChatId && setDeletingChatId(currentChatId)
+  })
   
   // check new version
   const lastQueryTime = useRef(0)
