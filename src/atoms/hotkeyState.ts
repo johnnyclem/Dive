@@ -142,7 +142,7 @@ function parseHotkeyTag(hotkey: string, event: HotkeyEvent): Record<string, any>
   } 
 
   const modifier: ModifierPressed = getModifierPressed(buffer as Modifier[])
-  if (key > "A" && key < "Z") {
+  if (key >= "A" && key <= "Z") {
     modifier.s = true
   }
   
