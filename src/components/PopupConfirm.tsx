@@ -45,7 +45,7 @@ export default function PopupConfirm({ title, children, zIndex, noBackground, cl
     type: "Modal",
     behavior: Behavior.autoPush,
     onClose: () => {
-      onCancel?.()
+      onCancel ? onCancel() : onClickOutside?.()
     }
   })
 	

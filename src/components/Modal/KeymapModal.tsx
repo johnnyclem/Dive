@@ -2,14 +2,13 @@ import React, { useCallback, useMemo } from "react"
 import { keymapModalVisibleAtom } from "../../atoms/modalState"
 import PopupConfirm from "../PopupConfirm"
 import { useTranslation } from "react-i18next"
-import { useVisibleAtomLayer } from "../../hooks/useLayer"
 import { rawKeymapAtom } from "../../atoms/hotkeyState"
-import { useAtomValue } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { platformAtom } from "../../atoms/globalState"
 
 const KeymapModal = () => {
   const { t } = useTranslation()
-  const [isVisible, setIsVisible] = useVisibleAtomLayer(keymapModalVisibleAtom, "Modal")
+  const [isVisible, setIsVisible] = useAtom(keymapModalVisibleAtom)
   const keyMap = useAtomValue(rawKeymapAtom)
   const platform = useAtomValue(platformAtom)
 
