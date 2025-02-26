@@ -1,11 +1,14 @@
-import React, { useState, useCallback, useEffect } from "react"
+import React, { useState, useCallback, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { useAtom } from "jotai"
-import { sidebarVisibleAtom, toggleConfigSidebarAtom } from "../atoms/sidebarState"
+import { useAtomValue, useSetAtom } from "jotai"
+import { configSidebarVisibleAtom, sidebarVisibleAtom } from "../atoms/sidebarState"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
+import Tooltip from "./Tooltip"
+import { closeAllOverlaysAtom, openOverlayAtom } from "../atoms/layerState"
+import { useSidebarLayer } from "../hooks/useLayer"
 
 interface Props {
   onNewChat?: () => void
@@ -40,19 +43,33 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const [isVisible, setIsVisible] = useAtom(sidebarVisibleAtom)
-  const [histories] = useAtom(historiesAtom)
-  const [, loadHistories] = useAtom(loadHistoriesAtom)
+  const histories = useAtomValue(historiesAtom)
+  const loadHistories = useSetAtom(loadHistoriesAtom)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
-  const [, toggleConfigSidebar] = useAtom(toggleConfigSidebarAtom)
+  const setConfigSidebarVisible = useSetAtom(configSidebarVisibleAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
-  const [, showToast] = useAtom(showToastAtom)
+  const showToast = useSetAtom(showToastAtom)
+  const openOverlay = useSetAtom(openOverlayAtom)
+  const [newVersion, setNewVersion] = useState("")
+  const closeAllOverlays = useSetAtom(closeAllOverlaysAtom)
+  const [isVisible, setVisible] = useSidebarLayer(sidebarVisibleAtom)
 
   useEffect(() => {
     if (isVisible) {
       loadHistories()
     }
   }, [isVisible, loadHistories])
+  
+  // check new version
+  const lastQueryTime = useRef(0)
+  useEffect(() => {
+    if (Date.now() - lastQueryTime.current > 1000 * 60) {
+      window.ipcRenderer.checkNewVersion().then(v => {
+        setNewVersion(v)
+        lastQueryTime.current = Date.now()
+      })
+    }
+  }, [])
 
   const confirmDelete = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation()
@@ -98,13 +115,14 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
   const loadChat = useCallback((chatId: string) => {
     setCurrentChatId(chatId)
-    setIsVisible(false)
+    closeAllOverlays()
     navigate(`/chat/${chatId}`)
-  }, [navigate, setIsVisible])
+  }, [navigate])
 
   const handleNewChat = () => {
     setCurrentChatId(null)
-    setIsVisible(false)
+    setVisible(false)
+    closeAllOverlays()
     if (onNewChat) {
       onNewChat()
     } else {
@@ -113,13 +131,15 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   }
 
   const handleTools = () => {
-    setIsVisible(false)
-    navigate("/tools")
+    openOverlay("Tools")
+  }
+
+  const handleSystem = () => {
+    openOverlay("System")
   }
 
   const handleSettings = () => {
-    setIsVisible(false)
-    toggleConfigSidebar()
+    setConfigSidebarVisible(true)
   }
 
   return (
@@ -127,9 +147,13 @@ const HistorySidebar = ({ onNewChat }: Props) => {
       <div className={`history-sidebar ${isVisible ? "visible" : ""}`}>
         <Header />
         <div className="history-header">
-          <button onClick={handleNewChat} className="new-chat-btn">
-            + {t("chat.newChat")}
-          </button>
+          <Tooltip
+            content={`${t("chat.newChatTooltip")} Ctrl + Shift + O`}
+          >
+            <button className="new-chat-btn" onClick={handleNewChat}>
+              + {t("chat.newChat")}
+            </button>
+          </Tooltip>
         </div>
         <div className="history-list">
           {histories.map(chat => (
@@ -158,7 +182,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
         </div>
         <div className="sidebar-footer">
           <button 
-            className="tools-btn"
+            className="sidebar-footer-btn"
             onClick={handleTools}
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
@@ -167,14 +191,40 @@ const HistorySidebar = ({ onNewChat }: Props) => {
             {t("sidebar.tools")}
           </button>
           <button 
-            className="setup-btn"
+            className="sidebar-footer-btn"
             onClick={handleSettings}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24">
-              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            <svg width="20px" height="20px" viewBox="0 0 20 20">
+              <g id="surface1">
+                <path d="M 8.015625 2.808594 C 5.308594 4.160156 5.589844 3.765625 5.589844 6.25 L 5.589844 8.367188 L 3.792969 9.292969 L 1.984375 10.21875 L 1.984375 15.367188 L 4.042969 16.425781 C 5.175781 17.015625 6.191406 17.5 6.292969 17.5 C 6.398438 17.5 7.28125 17.089844 8.28125 16.601562 L 10.074219 15.691406 L 11.851562 16.601562 C 12.839844 17.089844 13.71875 17.5 13.808594 17.5 C 14.074219 17.5 17.71875 15.632812 17.910156 15.398438 C 18.042969 15.234375 18.089844 14.5 18.058594 12.707031 L 18.015625 10.21875 L 16.21875 9.292969 L 14.410156 8.367188 L 14.410156 6.265625 C 14.410156 4.441406 14.382812 4.132812 14.160156 3.941406 C 13.765625 3.589844 10.339844 1.910156 10.042969 1.925781 C 9.898438 1.925781 8.984375 2.324219 8.015625 2.808594 Z M 11.324219 3.808594 L 12.425781 4.382812 L 11.21875 4.96875 L 10.03125 5.558594 L 8.867188 4.957031 L 7.691406 4.351562 L 8.808594 3.808594 C 9.425781 3.5 10 3.25 10.074219 3.25 C 10.160156 3.25 10.71875 3.5 11.324219 3.808594 Z M 8.234375 6.03125 L 9.410156 6.617188 L 9.410156 8.089844 C 9.410156 8.898438 9.382812 9.558594 9.339844 9.558594 C 9.292969 9.558594 8.734375 9.292969 8.089844 8.96875 L 6.910156 8.382812 L 6.910156 6.910156 C 6.910156 6.101562 6.941406 5.441406 6.984375 5.441406 C 7.03125 5.441406 7.589844 5.707031 8.234375 6.03125 Z M 13.089844 6.910156 L 13.089844 8.382812 L 11.910156 8.96875 C 11.265625 9.292969 10.707031 9.558594 10.660156 9.558594 C 10.617188 9.558594 10.589844 8.910156 10.589844 8.117188 L 10.589844 6.675781 L 11.808594 6.074219 C 12.46875 5.734375 13.03125 5.457031 13.058594 5.457031 C 13.074219 5.441406 13.089844 6.101562 13.089844 6.910156 Z M 7.425781 11.207031 L 6.265625 11.792969 L 5.074219 11.21875 L 3.898438 10.632812 L 5.074219 10.03125 L 6.25 9.441406 L 7.425781 10.03125 L 8.601562 10.617188 Z M 14.925781 11.207031 L 13.765625 11.792969 L 12.574219 11.21875 L 11.398438 10.632812 L 12.574219 10.03125 L 13.75 9.441406 L 14.925781 10.03125 L 16.101562 10.617188 Z M 5.589844 14.351562 L 5.589844 15.839844 L 3.089844 14.542969 L 3.089844 11.617188 L 5.589844 12.851562 Z M 9.351562 14.515625 C 9.308594 14.617188 8.734375 14.96875 8.089844 15.28125 L 6.910156 15.851562 L 6.910156 12.851562 L 8.132812 12.265625 L 9.339844 11.660156 L 9.382812 12.984375 C 9.398438 13.71875 9.398438 14.398438 9.351562 14.515625 Z M 13.089844 14.351562 L 13.089844 15.839844 L 10.589844 14.542969 L 10.589844 11.617188 L 13.089844 12.851562 Z M 16.851562 14.515625 C 16.808594 14.617188 16.234375 14.96875 15.589844 15.28125 L 14.410156 15.851562 L 14.410156 12.851562 L 15.632812 12.265625 L 16.839844 11.660156 L 16.882812 12.984375 C 16.898438 13.71875 16.898438 14.398438 16.851562 14.515625 Z M 16.851562 14.515625 "/>
+              </g>
             </svg>
             {t("sidebar.settings")}
           </button>
+          <button 
+            className="sidebar-footer-btn system-btn"
+            onClick={handleSystem}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 22 22" fill="none">
+              <path d="M11 15C13.2091 15 15 13.2091 15 11C15 8.79086 13.2091 7 11 7C8.79086 7 7 8.79086 7 11C7 13.2091 8.79086 15 11 15Z" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10"/>
+              <path d="M13.5404 2.49103L12.4441 3.94267C11.3699 3.71161 10.2572 3.72873 9.19062 3.99275L8.04466 2.58391C6.85499 2.99056 5.76529 3.64532 4.84772 4.50483L5.55365 6.17806C4.82035 6.99581 4.28318 7.97002 3.98299 9.02659L2.19116 9.31422C1.94616 10.5476 1.96542 11.8188 2.24768 13.0442L4.05324 13.2691C4.38773 14.3157 4.96116 15.27 5.72815 16.0567L5.07906 17.7564C6.02859 18.5807 7.14198 19.1945 8.34591 19.5574L9.44108 18.1104C10.5154 18.3413 11.6283 18.3245 12.6951 18.0613L13.8405 19.4692C15.0302 19.0626 16.12 18.4079 17.0375 17.5483L16.3321 15.876C17.0654 15.0576 17.6027 14.0829 17.9031 13.0259L19.6949 12.7382C19.9396 11.5049 19.9203 10.2337 19.6384 9.00827L17.8291 8.77918C17.4946 7.73265 16.9211 6.77831 16.1541 5.99166L16.8023 4.29248C15.8544 3.46841 14.7427 2.85442 13.5404 2.49103Z" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10"/>
+            </svg>
+            {t("sidebar.system")}
+          </button>
+          {newVersion && (
+            <button 
+              className="sidebar-footer-btn update-btn"
+              onClick={() => window.open("https://github.com/OpenAgentPlatform/Dive/releases/latest", "_blank")}
+            >
+              <div className="update-btn-wrap">
+                <span>✨</span>
+                <span className="update-btn-text">{t("sidebar.update")}</span>
+              </div>
+              <div className="update-btn-text">
+                <span>v{newVersion} &gt;</span>
+              </div>
+            </button>
+          )}
         </div>
       </div>
       {deletingChatId && (

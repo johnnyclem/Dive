@@ -1,8 +1,17 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import Toast from "../components/Toast"
 import { useAtom } from "jotai"
-import { showToastAtom } from "../atoms/toastState"
+import { showToastAtom } from "../../atoms/toastState"
+import CodeMirror, { EditorView } from "@uiw/react-codemirror"
+import { json } from "@codemirror/lang-json"
+import { linter, lintGutter } from "@codemirror/lint"
+import { systemThemeAtom, themeAtom } from "../../atoms/themeState"
+
+// @ts-ignore
+import jsonlint from "jsonlint-mod"
+import { closeOverlayAtom } from "../../atoms/layerState"
+import Switch from "../../components/Switch"
+import { Behavior, useLayer } from "../../hooks/useLayer"
 
 interface SubTool {
   name: string
@@ -21,9 +30,20 @@ interface Tool {
 interface ConfigModalProps {
   title: string
   subtitle?: string
-  config: Record<string, any>
+  config?: Record<string, any>
   onSubmit: (config: Record<string, any>) => void
   onCancel: () => void
+}
+
+interface ToolsCache {
+  [key: string]: {
+    description: string
+    icon?: string
+    subTools: {
+      name: string
+      description: string
+    }[]
+  }
 }
 
 const ConfigModal: React.FC<ConfigModalProps> = ({
@@ -34,19 +54,32 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   onCancel
 }) => {
   const { t } = useTranslation()
-  const [jsonString, setJsonString] = useState(JSON.stringify(config, null, 2))
+  const [jsonString, setJsonString] = useState(config ? JSON.stringify(config, null, 2) : "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
+  const [isFormatError, setIsFormatError] = useState(false)
+  const [theme] = useAtom(themeAtom)
+  const [systemTheme] = useAtom(systemThemeAtom)
+  
+  useLayer({
+    onClose: () => {
+      onCancel()
+    },
+    behavior: Behavior.autoPush
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
       let processedJsonString = jsonString.trim()
-      if (!processedJsonString.startsWith('{')) {
+      if (!processedJsonString.startsWith("{")) {
         processedJsonString = `{${processedJsonString}}`
       }
-      
+
+      if (isFormatError)
+        return
+
       const parsedConfig = JSON.parse(processedJsonString)
       setIsSubmitting(true)
       await onSubmit(parsedConfig)
@@ -62,12 +95,47 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
     }
   }
 
+  const createJsonLinter = () => {
+    return linter((view) => {
+      const doc = view.state.doc.toString()
+      if (!doc.trim())
+        return []
+
+      try {
+        jsonlint.parse(doc)
+        setIsFormatError(false)
+        return []
+      } catch (e: any) {
+        const lineMatch = e.message.match(/line\s+(\d+)/)
+        const line = lineMatch ? parseInt(lineMatch[1]) : 1
+        const linePos = view.state.doc.line(line)
+        setIsFormatError(true)
+
+        return [{
+          from: linePos.from,
+          to: linePos.to,
+          message: e.message,
+          severity: "error",
+        }]
+      }
+    })
+  }
+
+  const inputTheme = EditorView.theme({
+    '.cm-content': {
+      color: 'var(--text)',
+    },
+    '.cm-lineNumbers': {
+      color: 'var(--text)',
+    },
+  });
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
           <h2>{title}</h2>
-          <button 
+          <button
             className="close-btn"
             onClick={onCancel}
           >
@@ -76,11 +144,25 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
         </div>
         <form onSubmit={handleSubmit} className="config-form">
           {subtitle && <p className="subtitle">{subtitle}</p>}
-          <textarea
+          <CodeMirror
+            placeholder={"{\n \"mcpServer\":{}\n}"}
+            theme={theme === 'system' ? systemTheme : theme}
+            minHeight="300px"
+            maxHeight="300px"
             value={jsonString}
-            onChange={e => setJsonString(e.target.value)}
-            className="config-textarea"
-            rows={20}
+            extensions={[
+              json(),
+              lintGutter(),
+              createJsonLinter(),
+              inputTheme
+            ]}
+            onChange={(value, viewUpdate) => {
+              if(!value.trim().startsWith("{")) {
+                setJsonString(`{\n ${value}\n}`)
+              }else{
+                setJsonString(value)
+              }
+            }}
           />
           <div className="form-actions">
             <button 
@@ -115,8 +197,15 @@ const Tools = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
+  const [, closeOverlay] = useAtom(closeOverlayAtom)
+  const toolsCacheRef = useRef<ToolsCache>({})
 
   useEffect(() => {
+    const cachedTools = localStorage.getItem("toolsCache")
+    if (cachedTools) {
+      toolsCacheRef.current = JSON.parse(cachedTools)
+    }
+
     fetchTools()
     fetchMCPConfig()
   }, [])
@@ -128,6 +217,21 @@ const Tools = () => {
 
       if (data.success) {
         setTools(data.tools)
+        
+        const newCache: ToolsCache = {}
+        data.tools.forEach((tool: Tool) => {
+          newCache[tool.name] = {
+            description: tool.description || '',
+            icon: tool.icon,
+            subTools: tool.tools?.map(subTool => ({
+              name: subTool.name,
+              description: subTool.description || ''
+            })) || []
+          }
+        })
+        
+        toolsCacheRef.current = {...toolsCacheRef.current, ...newCache}
+        localStorage.setItem("toolsCache", JSON.stringify(toolsCacheRef.current))
       } else {
         showToast({
           message: data.message || t("tools.fetchFailed"),
@@ -140,6 +244,23 @@ const Tools = () => {
         type: "error"
       })
     }
+  }
+
+  const updateMCPConfig = async (newConfig: Record<string, any> | string) => {
+    return await fetch("/api/config/mcpserver", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: typeof newConfig === "string" ? newConfig : JSON.stringify(newConfig),
+    })
+      .then(async (response) => await response.json())
+      .catch((error) => {
+        showToast({
+          message: error instanceof Error ? error.message : t("tools.configFetchFailed"),
+          type: "error"
+        })
+      })
   }
 
   const fetchMCPConfig = async () => {
@@ -155,9 +276,22 @@ const Tools = () => {
         })
       }
     } catch (error) {
+    }
+  }
+  
+  const handleUpdateConfigResponse = (data: { errors: { error: string; serverName: string }[] }) => {
+    if (data.errors && data.errors.length && Array.isArray(data.errors)) {
+      data.errors.forEach(({ error, serverName }: { error: string; serverName: string }) => {
+        showToast({
+          message: t("tools.updateFailed", { serverName, error }),
+          type: "error",
+          closable: true
+        })
+      })
+    } else {
       showToast({
-        message: error instanceof Error ? error.message : t("tools.configFetchFailed"),
-        type: "error"
+        message: t("tools.saveSuccess"),
+        type: "success"
       })
     }
   }
@@ -165,22 +299,12 @@ const Tools = () => {
   const handleConfigSubmit = async (newConfig: Record<string, any>) => {
     try {
       const filledConfig = await window.ipcRenderer.fillPathToConfig(JSON.stringify(newConfig))
-      const response = await fetch("/api/config/mcpserver", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: filledConfig,
-      })
-      const data = await response.json()
+      const data = await updateMCPConfig(filledConfig)
       if (data.success) {
         setMcpConfig(newConfig)
         setShowConfigModal(false)
         fetchTools()
-        showToast({
-          message: t("tools.saveSuccess"),
-          type: "success"
-        })
+        handleUpdateConfigResponse(data)
       }
     } catch (error) {
       console.error("Failed to update MCP config:", error)
@@ -191,30 +315,25 @@ const Tools = () => {
     }
   }
 
-  const toggleTool = async (toolIndex: number) => {
+  const toggleTool = async (tool: Tool) => {
     try {
       setIsLoading(true)
-      const tool = tools[toolIndex]
       const currentEnabled = tool.enabled
 
       const newConfig = JSON.parse(JSON.stringify(mcpConfig))
       newConfig.mcpServers[tool.name].enabled = !currentEnabled
 
-      const response = await fetch("/api/config/mcpserver", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newConfig),
-      })
-
-      const data = await response.json()
+      const data = await updateMCPConfig(newConfig)
       if (data.success) {
         setMcpConfig(newConfig)
         await fetchTools()
+        handleUpdateConfigResponse(data)
       }
     } catch (error) {
-      console.error("Failed to toggle tool:", error)
+      showToast({
+        message: error instanceof Error ? error.message : t("tools.toggleFailed"),
+        type: "error"
+      })
     } finally {
       setIsLoading(false)
     }
@@ -254,8 +373,53 @@ const Tools = () => {
     setShowAddModal(false)
   }
 
+  const onClose = () => {
+    closeOverlay("Tools")
+  }
+
+  const sortedTools = useMemo(() => {
+    const configOrder = mcpConfig.mcpServers ? Object.keys(mcpConfig.mcpServers) : []
+    const toolMap = new Map(tools.map(tool => [tool.name, tool]))
+    
+    return configOrder.map(name => {
+      if (toolMap.has(name)) {
+        return toolMap.get(name)!
+      }
+      
+      const cachedTool = toolsCacheRef.current[name]
+      if (cachedTool) {
+        return {
+          name,
+          description: cachedTool.description,
+          icon: cachedTool.icon,
+          enabled: false,
+          tools: cachedTool.subTools.map(subTool => ({
+            name: subTool.name,
+            description: subTool.description,
+            enabled: false
+          }))
+        }
+      }
+
+      return {
+        name,
+        description: "",
+        enabled: false
+      }
+    })
+  }, [tools, mcpConfig.mcpServers])
+
   return (
-    <div className="tools-page">
+    <div className="tools-page overlay-page">
+      <button
+        className="close-btn"
+        onClick={onClose}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
       <div className="tools-container">
         <div className="tools-header">
           <div>
@@ -291,7 +455,7 @@ const Tools = () => {
         </div>
 
         <div className="tools-list">
-          {tools.map((tool, index) => (
+          {sortedTools.map((tool, index) => (
             <div key={index} id={`tool-${index}`} onClick={() => toggleToolSection(index)} className="tool-section">
               <div className="tool-header">
                 <div className="tool-header-content">
@@ -304,14 +468,12 @@ const Tools = () => {
                   )}
                   <span className="tool-name">{tool.name}</span>
                 </div>
-                <label onClick={(e) => e.stopPropagation()} className="switch">
-                  <input
-                    type="checkbox"
+                <div className="tool-switch-container">
+                  <Switch
                     checked={tool.enabled}
-                    onChange={() => toggleTool(index)}
+                    onChange={() => toggleTool(tool)}
                   />
-                  <span className="slider round"></span>
-                </label>
+                </div>
                 <span className="tool-toggle">▼</span>
               </div>
               <div className="tool-content">
@@ -359,7 +521,6 @@ const Tools = () => {
         <ConfigModal
           title={t("tools.addServerTitle")}
           subtitle={t("tools.addServerSubtitle")}
-          config={{}}
           onSubmit={handleAddSubmit}
           onCancel={() => setShowAddModal(false)}
         />

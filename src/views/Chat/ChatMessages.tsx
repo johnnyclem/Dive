@@ -16,13 +16,14 @@ export interface Message {
 interface Props {
   messages: Message[]
   isLoading?: boolean
+  onRetry: (messageId: string) => void
 }
 
-const ChatMessages = ({ messages, isLoading }: Props) => {
+const ChatMessages = ({ messages, isLoading, onRetry }: Props) => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    messagesEndRef.current?.scrollIntoView()
   }
 
   useEffect(() => {
@@ -42,6 +43,8 @@ const ChatMessages = ({ messages, isLoading }: Props) => {
           isLoading={!message.isSent && index === messages.length - 1 && isLoading}
           toolCalls={message.toolCalls}
           toolResults={message.toolResults}
+          messageId={message.id}
+          onRetry={() => onRetry(message.id)}
         />
       ))}
       <div ref={messagesEndRef} />

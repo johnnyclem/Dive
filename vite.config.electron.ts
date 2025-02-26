@@ -4,6 +4,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import electron from 'vite-plugin-electron/simple'
 import pkg from './package.json'
+import jotaiDebugLabel from 'jotai/babel/plugin-debug-label'
+import jotaiReactRefresh from 'jotai/babel/plugin-react-refresh'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -20,14 +22,62 @@ export default defineConfig(({ command }) => {
     resolve: {
       alias: {
         '@': path.join(__dirname, 'src'),
-        '@services': path.join(__dirname, 'services')
+        '@services': path.join(__dirname, 'services'),
+        '@codemirror/state': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/state/dist/index.js'
+        ),
+        '@codemirror/view': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/view/dist/index.js'
+        ),
+        '@codemirror/lint': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/lint/dist/index.js'
+        ),
+        '@codemirror/lang-json': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/lang-json/dist/index.js'
+        ),
+        '@codemirror/linter': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/linter/dist/index.js'
+        ),
+        '@codemirror/theme-one-dark': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/theme-one-dark/dist/index.js'
+        ),
+        '@codemirror/autocomplete': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/autocomplete/dist/index.js'
+        ),
+        '@codemirror/commands': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/commands/dist/index.js'
+        ),
+        '@codemirror/language': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/language/dist/index.js'
+        ),
+        '@codemirror/search': path.resolve(
+          __dirname,
+          './node_modules/@codemirror/search/dist/index.js'
+        ),
+        '@uiw/react-codemirror': path.resolve(
+          __dirname,
+          'node_modules/@uiw/react-codemirror/esm/index.js',
+        ),
+        '@uiw/codemirror-extensions-basic-setup': path.resolve(
+          __dirname,
+          'node_modules/@uiw/codemirror-extensions-basic-setup/esm/index.js'
+        ),
       },
     },
     optimizeDeps: {
       exclude: ['services/__tests__']
     },
     plugins: [
-      react(),
+      react({babel: { plugins: [jotaiDebugLabel, jotaiReactRefresh] }}),
       electron({
         main: {
           // Shortcut of `build.lib.entry`

@@ -80,3 +80,9 @@ export function getNvmPath(): string {
 
   return ""
 }
+
+export function getLatestVersion(): Promise<string> {
+  return fetch("https://api.github.com/repos/OpenAgentPlatform/Dive/releases/latest")
+    .then(res => res.json())
+    .then(data => data.tag_name.slice(1))
+}

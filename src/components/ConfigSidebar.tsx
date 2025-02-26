@@ -1,36 +1,36 @@
 import React, { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useAtom, useAtomValue } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import { configSidebarVisibleAtom } from "../atoms/sidebarState"
 import ModelConfigForm from "./ModelConfigForm"
 import { defaultInterface, interfaceAtom, ModelProvider } from "../atoms/interfaceState"
 import { activeProviderAtom, configAtom } from "../atoms/configState"
-import CustomInstructions from "./CustomInstructions"
 import { showToastAtom } from "../atoms/toastState"
+import { useSidebarLayer } from "../hooks/useLayer"
 
 const ConfigSidebar = () => {
   const { t } = useTranslation()
-  const [isVisible, setIsVisible] = useAtom(configSidebarVisibleAtom)
   const activeProvider = useAtomValue(activeProviderAtom)
-  const [{ fields }] = useAtom(interfaceAtom)
+  const { fields } = useAtomValue(interfaceAtom)
   const [localProvider, setLocalProvider] = useState<ModelProvider>(activeProvider || "openai")
-  const [config] = useAtom(configAtom)
-  const [, showToast] = useAtom(showToastAtom)
-  
+  const config = useAtomValue(configAtom)
+  const showToast = useSetAtom(showToastAtom)
+  const [isVisible, setVisible] = useSidebarLayer(configSidebarVisibleAtom)
+
   useEffect(() => {
     if (!isVisible) {
       setLocalProvider(activeProvider || "openai")
     }
   }, [isVisible, activeProvider, fields])
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: Record<string, any>) => {
     try {
       if (data.success) {
         showToast({
           message: t("setup.saveSuccess"),
           type: "success"
         })
-        setIsVisible(false)
+        setVisible(false)
       }
     } catch (error) {
       console.error("Failed to save config:", error)
@@ -44,14 +44,14 @@ const ConfigSidebar = () => {
   return (
     <>
       {isVisible && (
-        <div className="modal-overlay" onClick={() => setIsVisible(false)} />
+        <div className="modal-overlay" onClick={() => setVisible(false)} />
       )}
       <div className={`config-sidebar ${isVisible ? "visible" : ""}`}>
         <div className="config-header">
           <h2>{t("modelConfig.title")}</h2>
           <button 
             className="close-btn"
-            onClick={() => setIsVisible(false)}
+            onClick={() => setVisible(false)}
             title={t("common.close")}
           >
             <svg viewBox="0 0 24 24">
@@ -67,9 +67,8 @@ const ConfigSidebar = () => {
               initialData={config?.configs[localProvider] || null}
               onProviderChange={setLocalProvider}
               onSubmit={handleSubmit}
+              showParameters={true}
             />
-            <div className="divider" />
-            <CustomInstructions />
           </div>
         )}
       </div>

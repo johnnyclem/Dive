@@ -3,25 +3,33 @@ import { useLocation, useNavigate, useParams } from "react-router-dom"
 import ChatMessages, { Message } from "./ChatMessages"
 import ChatInput from "./ChatInput"
 import CodeModal from './CodeModal'
-import { useSetAtom } from 'jotai'
-import { updateStreamingCodeAtom } from '../../atoms/codeStreaming'
+import { useAtom, useSetAtom } from 'jotai'
+import { codeStreamingAtom } from '../../atoms/codeStreaming'
 import { ToolCall, ToolResult } from "./ToolPanel"
+import useHotkeyEvent from "../../hooks/useHotkeyEvent"
+import { showToastAtom } from "../../atoms/toastState"
+import { useTranslation } from "react-i18next"
+import { currentChatIdAtom, isChatStreamingAtom, lastMessageAtom } from "../../atoms/chatState"
 
 const ChatWindow = () => {
   const { chatId } = useParams()
   const location = useLocation()
   const [messages, setMessages] = useState<Message[]>([])
-  const [isAiStreaming, setAiStreaming] = useState(false)
   const currentId = useRef(0)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const currentChatId = useRef<string | null>(null)
   const navigate = useNavigate()
   const isInitialMessageHandled = useRef(false)
-  const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
+  const showToast = useSetAtom(showToastAtom)
+  const { t } = useTranslation()
+  const updateStreamingCode = useSetAtom(codeStreamingAtom)
+  const setLastMessage = useSetAtom(lastMessageAtom)
+  const setCurrentChatId = useSetAtom(currentChatIdAtom)
+  const [isChatStreaming, setIsChatStreaming] = useAtom(isChatStreamingAtom)
 
   const loadChat = useCallback(async (id: string) => {
     try {
-      setAiStreaming(true)
+      setIsChatStreaming(true)
       const response = await fetch(`/api/chat/${id}`)
       const data = await response.json()
 
@@ -29,9 +37,8 @@ const ChatWindow = () => {
         currentChatId.current = id
         document.title = `${data.data.chat.title} - Dive AI`
 
-        // 轉換訊息格式
         const convertedMessages = data.data.messages.map((msg: any) => ({
-          id: msg.id || String(currentId.current++),
+          id: msg.messageId || msg.id || String(currentId.current++),
           text: msg.content,
           isSent: msg.role === "user",
           timestamp: new Date(msg.createdAt).getTime(),
@@ -43,16 +50,33 @@ const ChatWindow = () => {
     } catch (error) {
       console.warn("Failed to load chat:", error)
     } finally {
-      setAiStreaming(false)
+      setIsChatStreaming(false)
     }
   }, [])
+  
+  useHotkeyEvent("chat-message:copy-last", async () => {
+    const lastMessage = messages[messages.length - 1]
+    if (lastMessage) {
+      await navigator.clipboard.writeText(lastMessage.text)
+      showToast({
+        message: t("toast.copiedToClipboard"),
+        type: "success"
+      })
+    }
+  })
+  
+  useEffect(() => {
+    if (messages.length > 0 && !isChatStreaming) {
+      setLastMessage(messages[messages.length - 1].text)
+    }
+  }, [messages, setLastMessage, isChatStreaming])
 
-  // 處理 URL 中的 chatId
   useEffect(() => {
     if (chatId && chatId !== currentChatId.current) {
       loadChat(chatId)
+      setCurrentChatId(chatId)
     }
-  }, [chatId, loadChat])
+  }, [chatId, loadChat, setCurrentChatId])
 
   const scrollToBottom = useCallback(() => {
     if (chatContainerRef.current) {
@@ -61,7 +85,7 @@ const ChatWindow = () => {
   }, [])
 
   const onSendMsg = useCallback(async (msg: string, files?: FileList) => {
-    if (isAiStreaming) return
+    if (isChatStreaming) return
 
     const formData = new FormData()
     if (msg) formData.append("message", msg)
@@ -88,13 +112,58 @@ const ChatWindow = () => {
     }
 
     setMessages(prev => [...prev, userMessage, aiMessage])
-    setAiStreaming(true)
+    setIsChatStreaming(true)
     scrollToBottom()
 
+    handlePost(formData, "formData", "/api/chat")
+  }, [isChatStreaming, scrollToBottom])
+
+  const onAbort = useCallback(async () => {
+    if (!isChatStreaming || !currentChatId.current) return
+
     try {
-      const response = await fetch("/api/chat", {
+      await fetch(`/api/chat/${currentChatId.current}/abort`, {
         method: "POST",
-        body: formData
+      })
+    } catch (error) {
+      console.error("Failed abort:", error)
+    }
+  }, [isChatStreaming, currentChatId.current, scrollToBottom])
+
+  const onRetry = useCallback(async (messageId: string) => {
+    if (isChatStreaming || !currentChatId.current) return
+
+    setMessages(prev => {
+      let newMessages = [...prev]
+      const messageIndex = newMessages.findIndex(msg => msg.id === messageId)
+      if (messageIndex !== -1) {
+        newMessages = newMessages.slice(0, messageIndex+1)
+      }
+      newMessages[newMessages.length - 1].text = ""
+      newMessages[newMessages.length - 1].toolCalls = undefined
+      newMessages[newMessages.length - 1].toolResults = undefined
+      newMessages[newMessages.length - 1].isError = false
+      return newMessages
+    })
+    setIsChatStreaming(true)
+    scrollToBottom()
+
+    const body = JSON.stringify({
+      chatId: currentChatId.current,
+      messageId: messageId,
+    })
+
+    handlePost(body, "json", "/api/chat/retry")
+  }, [isChatStreaming, currentChatId.current])
+
+  const handlePost = useCallback(async (body: any, type: "json" | "formData", url: string) => {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: type === "json" ? {
+          "Content-Type": "application/json",
+        } : {},
+        body: body
       })
 
       const reader = response.body!.getReader()
@@ -103,8 +172,9 @@ const ChatWindow = () => {
 
       while (true) {
         const { value, done } = await reader.read()
-        if (done)
+        if (done) {
           break
+        }
 
         const chunk = decoder.decode(value)
         const lines = chunk.split("\n")
@@ -112,7 +182,7 @@ const ChatWindow = () => {
         for (const line of lines) {
           if (line.trim() === "" || !line.startsWith("data: "))
             continue
-          
+
           const dataStr = line.slice(5)
           if (dataStr.trim() === "[DONE]")
             break
@@ -177,6 +247,19 @@ const ChatWindow = () => {
                 navigate(`/chat/${data.content.id}`, { replace: true })
                 break
 
+              case "message_info":
+                setMessages(prev => {
+                  const newMessages = [...prev]
+                  if(data.content.userMessageId) {
+                    newMessages[newMessages.length - 2].id = data.content.userMessageId
+                  }
+                  if(data.content.assistantMessageId) {
+                    newMessages[newMessages.length - 1].id = data.content.assistantMessageId
+                  }
+                  return newMessages
+                })
+                break
+
               case "error":
                 setMessages(prev => {
                   const newMessages = [...prev]
@@ -209,10 +292,11 @@ const ChatWindow = () => {
         return newMessages
       })
     } finally {
-      setAiStreaming(false)
+      setIsChatStreaming(false)
+      setLastMessage(messages[messages.length - 1].text)
       scrollToBottom()
     }
-  }, [isAiStreaming, scrollToBottom])
+  }, [])
 
   const handleInitialMessage = useCallback(async (message: string, files?: File[]) => {
     if (files && files.length > 0) {
@@ -241,7 +325,7 @@ const ChatWindow = () => {
   const lastChatId = useRef(chatId)
   useEffect(() => {
     if (lastChatId.current && lastChatId.current !== chatId) {
-      updateStreamingCode({ code: "", language: "" })
+      updateStreamingCode(null)
     }
 
     lastChatId.current = chatId
@@ -253,11 +337,13 @@ const ChatWindow = () => {
         <div className="chat-window">
           <ChatMessages
             messages={messages}
-            isLoading={isAiStreaming}
+            isLoading={isChatStreaming}
+            onRetry={onRetry}
           />
           <ChatInput
             onSendMessage={onSendMsg}
-            disabled={isAiStreaming}
+            disabled={isChatStreaming}
+            onAbort={onAbort}
           />
         </div>
       </div>

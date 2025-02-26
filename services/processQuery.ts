@@ -1,6 +1,14 @@
 import { BaseChatModel, BindToolsInput } from "@langchain/core/language_models/chat_models";
-import { AIMessage, BaseMessage, HumanMessage, MessageContentComplex, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessage,
+  HumanMessage,
+  MessageContentComplex,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { ModelManager } from "./models/index.js";
 import { imageToBase64 } from "./utils/image.js";
 import logger from "./utils/logger.js";
 import { iQueryInput, iStreamMessage } from "./utils/types.js";
@@ -14,6 +22,12 @@ export interface AbortedResponse {
 }
 
 export const abortedResponseMap = new Map<string, AbortedResponse>();
+
+interface TokenUsage {
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalTokens: number;
+}
 
 export async function handleProcessQuery(
   toolToClientMap: Map<string, Client>,
@@ -33,6 +47,15 @@ export async function handleProcessQuery(
   }
 
   let finalResponse = "";
+
+  const modelManager = ModelManager.getInstance();
+  const currentModelSettings = modelManager.currentModelSettings;
+
+  const tokenUsage = {
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
+    totalTokens: 0,
+  };
 
   try {
     // Handle input format
@@ -91,12 +114,12 @@ export async function handleProcessQuery(
 
     let hasToolCalls = true;
 
-    const runModel = model.bindTools?.(availableTools) || model;
+    const runModel = modelManager.enableTools ? model.bindTools?.(availableTools) || model : model;
 
-    const isOllama = model.lc_kwargs["defaultConfig"]?.modelProvider === "ollama";
+    const isOllama = currentModelSettings?.modelProvider === "ollama";
     const isDeepseek =
-      model.lc_kwargs["defaultConfig"]?.baseURL?.includes("deepseek") ||
-      model.lc_kwargs["defaultConfig"]?.model?.includes("deepseek-chat");
+      currentModelSettings?.configuration?.baseURL?.toLowerCase().includes("deepseek") ||
+      currentModelSettings?.model?.toLowerCase().includes("deepseek");
 
     logger.info(`Start to process query - ${chatId}`);
 
@@ -109,8 +132,10 @@ export async function handleProcessQuery(
       let toolCalls: any[] = [];
 
       try {
-        // Handle streaming response
+        // Track token usage if available
         for await (const chunk of stream) {
+          caculateTokenUsage(tokenUsage, chunk, currentModelSettings!.modelProvider!);
+
           if (chunk.content) {
             let chunkMessage = "";
             if (Array.isArray(chunk.content)) {
@@ -268,42 +293,106 @@ export async function handleProcessQuery(
       // Execute all tool calls in parallel
       const toolResults = await Promise.all(
         toolCalls.map(async (toolCall) => {
-          // Check if aborted
-          if (chatId && abortControllerMap.has(chatId)) {
-            const controller = abortControllerMap.get(chatId);
-            if (controller?.signal.aborted) {
-              logger.info(`[${chatId}] Aborted when tool call`);
-              throw new Error("ABORTED");
+          try {
+            // Check if already aborted
+            if (chatId && abortControllerMap.has(chatId)) {
+              const controller = abortControllerMap.get(chatId);
+              if (controller?.signal.aborted) {
+                logger.info(`[${chatId}] Aborted before tool call`);
+                throw new Error("ABORTED");
+              }
             }
+
+            const toolName = toolCall.function.name;
+            const toolArgs = JSON.parse(toolCall.function.arguments || "{}");
+            const client = toolToClientMap.get(toolName);
+
+            // Create an AbortSignal for this specific tool call
+            const abortController = new AbortController();
+
+            // If there's a chat ID, link this tool call's abort to the main abort
+            let mainAbortListener: (() => void) | undefined;
+            if (chatId && abortControllerMap.has(chatId)) {
+              const mainController = abortControllerMap.get(chatId);
+              if (mainController) {
+                // If already aborted, throw immediately
+                if (mainController.signal.aborted) {
+                  throw new Error("ABORTED");
+                }
+                // Listen for abort
+                mainAbortListener = () => {
+                  logger.info(`[${chatId}] Aborting tool call [${toolName}]`);
+                  abortController.abort();
+                };
+                mainController.signal.addEventListener("abort", mainAbortListener);
+              }
+            }
+
+            try {
+              const result = await (async () => {
+                const abortListener = () => {
+                  logger.info(`[${chatId}] Tool call [${toolName}] has been aborted`);
+                  abortPromiseReject?.(new Error("ABORTED"));
+                };
+
+                let abortPromiseReject: ((error: Error) => void) | undefined;
+
+                try {
+                  const raceResult = (await Promise.race([
+                    client?.callTool(
+                      {
+                        name: toolName,
+                        arguments: toolArgs,
+                      },
+                      undefined,
+                      {
+                        signal: abortController.signal,
+                        timeout: 99999000,
+                      }
+                    ),
+                    new Promise((_, reject) => {
+                      abortPromiseReject = reject;
+                      abortController.signal.addEventListener("abort", abortListener);
+                    }),
+                  ])) as { isError?: boolean };
+
+                  return raceResult;
+                } finally {
+                  abortController.signal.removeEventListener("abort", abortListener);
+                }
+              })();
+
+              if (result?.isError) logger.error(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
+              else logger.info(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
+
+              onStream?.(
+                JSON.stringify({
+                  type: "tool_result",
+                  content: {
+                    name: toolName,
+                    result: result,
+                  },
+                } as iStreamMessage)
+              );
+
+              return {
+                tool_call_id: toolCall.id,
+                role: "tool" as const,
+                content: JSON.stringify(result),
+              };
+            } finally {
+              if (mainAbortListener && chatId && abortControllerMap.has(chatId)) {
+                const mainController = abortControllerMap.get(chatId);
+                mainController?.signal.removeEventListener("abort", mainAbortListener);
+              }
+            }
+          } catch (error) {
+            if (error instanceof Error && error.message === "ABORTED") {
+              // logger.info(`[${chatId}] Tool call has been aborted`);
+              throw error; // Re-throw to be caught by the outer try-catch
+            }
+            throw error;
           }
-
-          const toolName = toolCall.function.name;
-          const toolArgs = JSON.parse(toolCall.function.arguments || "{}");
-          const client = toolToClientMap.get(toolName);
-
-          const result = await client?.callTool({
-            name: toolName,
-            arguments: toolArgs,
-          });
-
-          if (result?.isError) logger.error(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
-          else logger.info(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
-          // Send tool execution results
-          onStream?.(
-            JSON.stringify({
-              type: "tool_result",
-              content: {
-                name: toolName,
-                result: result,
-              },
-            } as iStreamMessage)
-          );
-
-          return {
-            tool_call_id: toolCall.id,
-            role: "tool" as const,
-            content: JSON.stringify(result),
-          };
         })
       );
 
@@ -312,6 +401,11 @@ export async function handleProcessQuery(
         messages.push(...toolResults.map((result) => new ToolMessage(result)));
       }
     }
+
+    // Log token usage at the end of processing
+    logger.info(
+      `Token usage for chat ${chatId}: Input tokens: ${tokenUsage.totalInputTokens}, Output tokens: ${tokenUsage.totalOutputTokens}, Total tokens: ${tokenUsage.totalTokens}`
+    );
 
     return finalResponse;
   } catch (error) {
@@ -330,5 +424,28 @@ export async function handleProcessQuery(
       abortControllerMap.delete(chatId);
       abortedResponseMap.delete(chatId);
     }
+  }
+}
+
+function caculateTokenUsage(tokenUsage: TokenUsage, chunk: AIMessageChunk, currentModelProvider: string) {
+  switch (currentModelProvider) {
+    case "openai":
+      if (chunk.response_metadata?.usage) {
+        const usage = chunk.response_metadata.usage;
+        tokenUsage.totalInputTokens += usage?.prompt_tokens || 0;
+        tokenUsage.totalOutputTokens += usage?.completion_tokens || 0;
+        tokenUsage.totalTokens += usage?.total_tokens || 0;
+      }
+      break;
+    case "anthropic":
+    case "ollama":
+      if (chunk.usage_metadata) {
+        const usage = chunk.usage_metadata;
+        tokenUsage.totalInputTokens += usage?.input_tokens || 0;
+        tokenUsage.totalOutputTokens += usage?.output_tokens || 0;
+        tokenUsage.totalTokens += usage?.total_tokens || 0;
+      }
+    default:
+      break;
   }
 }

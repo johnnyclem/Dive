@@ -27,7 +27,9 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
   anthropicModelList: (apiKey: string, baseURL: string) => ipcRenderer.invoke("api:anthropicModelList", apiKey, baseURL),
   ollamaModelList: (baseURL: string) => ipcRenderer.invoke("api:ollamaModelList", baseURL),
   showSelectionContextMenu: () => ipcRenderer.invoke("show-selection-context-menu"),
-  showInputContextMenu: () => ipcRenderer.invoke("show-input-context-menu")
+  showInputContextMenu: () => ipcRenderer.invoke("show-input-context-menu"),
+  checkNewVersion: () => ipcRenderer.invoke("api:checkNewVersion"),
+  getHotkeyMap: () => ipcRenderer.invoke("api:getHotkeyMap"),
 })
 
 // --------- Preload scripts loading ---------

@@ -16,18 +16,10 @@
   .sidebar-content {
     height: 100%;
     border-radius: 10px;
-    
-    @media (prefers-color-scheme: light) {
-      background: $light-bg;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-    
-    @media (prefers-color-scheme: dark) {
-      background: $dark-bg;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+    background: var(--bg);
+    border: 1px solid var(--border-weak);
   }
-  
+
   &.visible {
     transform: translateX(0);
     opacity: 1;
@@ -48,16 +40,10 @@
   border-radius: 50%;
   
   &:hover {
-    background: rgba(29, 161, 242, 0.1);
+    background: var(--bg-btn-hover);
   }
   
   svg {
-    @media (prefers-color-scheme: light) {
-      fill: $light-text;
-    }
-    
-    @media (prefers-color-scheme: dark) {
-      fill: $dark-text;
-    }
+    fill: var(--stroke-extremestrong);
   }
 } 

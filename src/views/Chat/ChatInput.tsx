@@ -1,9 +1,15 @@
 import React, { useState, useRef, useEffect } from "react"
 import { useTranslation } from 'react-i18next'
+import Tooltip from "../../components/Tooltip"
+import useHotkeyEvent from "../../hooks/useHotkeyEvent"
+import Textarea from "../../components/WrappedTextarea"
+import { lastMessageAtom } from "../../atoms/chatState"
+import { useAtomValue } from "jotai"
 
 interface Props {
   onSendMessage?: (message: string, files?: FileList) => void
   disabled?: boolean
+  onAbort: () => void
 }
 
 interface FilePreview {
@@ -14,19 +20,10 @@ interface FilePreview {
 }
 
 const ACCEPTED_FILE_TYPES = [
-  'image/*',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-  'application/vnd.oasis.opendocument.text', // .odt
-  'text/html',
-  'text/csv',
-  'text/plain',
-  'application/rtf',
-  'application/epub+zip'
+  '*/*'
 ].join(',')
 
-const ChatInput: React.FC<Props> = ({ onSendMessage, disabled }) => {
+const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const { t } = useTranslation()
   const [message, setMessage] = useState("")
   const [previews, setPreviews] = useState<FilePreview[]>([])
@@ -35,6 +32,8 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled }) => {
   const prevDisabled = useRef(disabled)
   const uploadedFiles = useRef<File[]>([])
   const isComposing = useRef(false)
+  const [isAborting, setIsAborting] = useState(false)
+  const lastMessage = useAtomValue(lastMessageAtom)
 
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B'
@@ -129,12 +128,33 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled }) => {
       return
 
     const imageItems = Array.from(items).filter(item => item.type.startsWith("image/"))
+    if (imageItems.length === 0)
+      return
+
     if (imageItems.length > 0) {
       e.preventDefault()
       const files = imageItems.map(item => item.getAsFile()).filter((file): file is File => file !== null)
       handleFiles(files)
     }
   }
+  
+  useHotkeyEvent("chat-input:upload-file", () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  })
+  
+  useHotkeyEvent("chat-input:focus", () => {
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  })
+  
+  useHotkeyEvent("chat-input:paste-last-message", () => {
+    if (lastMessage) {
+      setMessage(m => m + lastMessage)
+    }
+  })
 
   useEffect(() => {
     document.addEventListener("paste", handlePaste)
@@ -153,6 +173,20 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled }) => {
       textareaRef.current?.focus()
     }
     prevDisabled.current = disabled
+    setIsAborting(false)
+  }, [disabled])
+
+  useEffect(() => {
+    function handleKeydown(e: KeyboardEvent) {
+      if (e.key === "Escape" && disabled) {
+        setIsAborting(true)
+        onAbort()
+      }
+    }
+    window.addEventListener("keydown", handleKeydown);
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+    }
   }, [disabled])
   
   useEffect(() => {
@@ -242,7 +276,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled }) => {
   return (
     <footer className="chat-input">
       <div className="input-wrapper">
-        <textarea
+        <Textarea
           ref={textareaRef}
           value={message}
           onChange={adjustHeight}
@@ -273,21 +307,41 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled }) => {
             <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
           </svg>
         </button>
-        <button 
-          className="send-btn" 
-          onClick={handleSubmit} 
-          disabled={disabled}
-          title={t('chat.send')}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-          </svg>
-        </button>
+        {(disabled && !isAborting) ? (
+          <Tooltip type="controls" content={<>{t('chat.abort')}<span className="key">Esc</span></>}>
+            <button
+              className="abort-btn"
+              onClick={() => {
+                setIsAborting(true)
+                onAbort()
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                <circle cx="12" cy="12" r="12" fill="black"></circle>
+                <circle cx="12" cy="12" r="7" fill="white"></circle>
+                <circle cx="12" cy="12" r="6.5" fill="black"></circle>
+                <circle cx="12" cy="12" r="3" fill="white"></circle>
+              </svg>
+            </button>
+          </Tooltip>
+        ) : (
+          <Tooltip type="controls" content={t('chat.send')}>
+            <button
+              className="send-btn"
+              onClick={handleSubmit}
+              disabled={disabled}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              </svg>
+            </button>
+          </Tooltip>
+        )}
       </div>
       {previews.length > 0 && (
         <div className="file-previews">
           {previews.map((preview, index) => (
-            <div key={index} className="preview-item">
+            <div key={index} className={`preview-item ${preview.type}`}>
               {preview.type === 'image' ? (
                 <img src={preview.url} alt={preview.name} />
               ) : (

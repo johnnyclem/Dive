@@ -1,12 +1,15 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useSetAtom, useAtom } from "jotai"
-import { updateStreamingCodeAtom } from "../atoms/codeStreaming"
+import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import { hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { showToastAtom } from "../atoms/toastState"
+import { openOverlayAtom } from "../atoms/layerState"
+import useHotkeyEvent from "../hooks/useHotkeyEvent"
+import Textarea from "../components/WrappedTextarea"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -25,19 +28,60 @@ const Welcome = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [, showToast] = useAtom(showToastAtom)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const updateStreamingCode = useSetAtom(updateStreamingCodeAtom)
+  const updateStreamingCode = useSetAtom(codeStreamingAtom)
   const [histories] = useAtom(historiesAtom)
   const [, loadHistories] = useAtom(loadHistoriesAtom)
   const [hasConfig] = useAtom(hasConfigAtom)
   const isComposing = useRef(false)
+  const [toolsCnt, setToolsCnt] = useState<number>(0)
+  const [, openOverlay] = useAtom(openOverlayAtom)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    updateStreamingCode({ code: "", language: "" })
+    fetchTools()
+  }, [])
+
+  const fetchTools = async () => {
+    try {
+      const response = await fetch("/api/tools")
+      const data = await response.json()
+
+      if (data.success) {
+        setToolsCnt(data.tools?.length ?? 0)
+      } else {
+        setToolsCnt(0)
+        showToast({
+          message: data.message || t("tools.fetchFailed"),
+          type: "error"
+        })
+      }
+    } catch (error) {
+      showToast({
+        message: error instanceof Error ? error.message : t("tools.fetchFailed"),
+        type: "error"
+      })
+    }
+  }
+
+  useEffect(() => {
+    updateStreamingCode(null)
   }, [updateStreamingCode])
 
   useEffect(() => {
     loadHistories()
   }, [loadHistories])
+  
+  useHotkeyEvent("chat-input:upload-file", () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  })
+  
+  useHotkeyEvent("chat-input:focus", () => {
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,13 +123,6 @@ const Welcome = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    if (files.length + uploadedFiles.length > 5) {
-      showToast({
-        message: t("chat.uploadLimit"),
-        type: "warning"
-      })
-      return
-    }
     setUploadedFiles(prev => [...prev, ...files])
   }
 
@@ -105,14 +142,6 @@ const Welcome = () => {
     const imageItems = Array.from(items).filter(item => item.type.startsWith("image/"))
     if (imageItems.length === 0)
       return
-
-    if (uploadedFiles.length + imageItems.length > 5) {
-      showToast({
-        message: t("chat.uploadLimit"),
-        type: "warning"
-      })
-      return
-    }
 
     const newFiles = await Promise.all(
       imageItems.map(async item => {
@@ -142,7 +171,8 @@ const Welcome = () => {
         
         <form className="welcome-input" onSubmit={handleSubmit}>
           <div className="input-container">
-            <textarea
+            <Textarea
+              ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -158,7 +188,7 @@ const Welcome = () => {
                 type="file"
                 ref={fileInputRef}
                 multiple
-                accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.docx,.odt,.html,.csv,.txt,.rtf,.epub"
+                accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.*"
                 style={{ display: "none" }}
                 onChange={handleFileChange}
               />
@@ -172,11 +202,22 @@ const Welcome = () => {
                   <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
                 </svg>
               </button>
-              <button type="submit" className="send-btn" disabled={!message.trim() && uploadedFiles.length === 0}>
-                <svg width="24" height="24" viewBox="0 0 24 24">
-                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                </svg>
-              </button>
+              <div className="tools-container">
+                <button
+                  className="tools-btn"
+                  onClick={() => openOverlay("Tools")}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
+                  </svg>
+                  {`${toolsCnt} ${t("chat.tools")}`}
+                </button>
+                <button type="submit" className="send-btn" disabled={!message.trim() && uploadedFiles.length === 0}>
+                  <svg width="24" height="24" viewBox="0 0 24 24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </form>
