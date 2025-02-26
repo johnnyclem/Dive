@@ -11,6 +11,8 @@ interface Window {
     openaiCompatibleModelList: (apiKey: string, baseURL: string) => Promise<string[]>
     anthropicModelList: (apiKey: string, baseURL: string) => Promise<string[]>
     ollamaModelList: (baseURL: string) => Promise<string[]>
+    showSelectionContextMenu: () => Promise<void>
+    showInputContextMenu: () => Promise<void>
     checkNewVersion: () => Promise<string>
     getHotkeyMap: () => Promise<Record<string, any>>
   }
