@@ -28,6 +28,19 @@ export default function PopupConfirm({ title, children, zIndex, className, noBor
       document.activeElement.blur()
     }
   }, [])
+	
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Enter") {
+				e.preventDefault()
+				e.stopPropagation()
+				onConfirm?.()
+			}
+		}
+
+		window.addEventListener("keydown", handleKeyDown)
+		return () => window.removeEventListener("keydown", handleKeyDown)
+	}, [onConfirm])
   
   useLayer({
     type: "Modal",
