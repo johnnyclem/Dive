@@ -1,29 +1,58 @@
+import { useEffect } from "react";
+import { Behavior, useLayer } from "../hooks/useLayer";
 import PopupWindow from "./PopupWindow";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next"
 
-type TPopupConfirmProps = {
+type PopupConfirmProps = {
 	title?: string
 	children?: React.ReactNode
-	zIndex?: number,
-	className?: string,
-	isNoBorder?: boolean,
-	showClose?: boolean,
-	onClickOutside?: () => void,
-	onConfirm?: () => void,
-	onConfirmText?: string | React.ReactNode,
-	disabled?: boolean,
-	onCancel?: () => void,
-	onCancelText?: string | React.ReactNode,
-	footerHint?: React.ReactNode | string,
-	footerType?: "center" | "flex-end",
+	zIndex?: number
+	className?: string
+	noBorder?: boolean
+	showClose?: boolean
+	confirmText?: string | React.ReactNode
+	disabled?: boolean
+	cancelText?: string | React.ReactNode
+	footerHint?: React.ReactNode | string
+	footerType?: "center" | "flex-end"
+	onClickOutside?: () => void
+	onConfirm?: () => void
+	onCancel?: () => void
 }
 
-export default function PopupConfirm({ title, children, zIndex, className, isNoBorder, showClose, onClickOutside, onConfirm, onConfirmText, disabled, onCancel, onCancelText, footerHint, footerType }: TPopupConfirmProps) {
-	const { t } = useTranslation();
+export default function PopupConfirm({ title, children, zIndex, className, noBorder, showClose, onClickOutside, onConfirm, confirmText, disabled, onCancel, cancelText, footerHint, footerType }: PopupConfirmProps) {
+	const { t } = useTranslation()
+  
+  useEffect(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+  }, [])
+	
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Enter") {
+				e.preventDefault()
+				e.stopPropagation()
+				onConfirm?.()
+			}
+		}
+
+		window.addEventListener("keydown", handleKeyDown)
+		return () => window.removeEventListener("keydown", handleKeyDown)
+	}, [onConfirm])
+  
+  useLayer({
+    type: "Modal",
+    behavior: Behavior.autoPush,
+    onClose: () => {
+      onCancel?.()
+    }
+  })
 
 	return (
 		<PopupWindow onClickOutside={onClickOutside} zIndex={zIndex}>
-			<div className={`popup-confirm ${isNoBorder ? "no-border" : ""} ${className}`}>
+			<div className={`popup-confirm ${noBorder ? "no-border" : ""} ${className}`}>
 				{showClose && (
 					<div className="close-btn" onClick={onClickOutside}>
 						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -54,7 +83,7 @@ export default function PopupConfirm({ title, children, zIndex, className, isNoB
 								className="cancel-btn"
 								onClick={onCancel}
 							>
-								{onCancelText || t('cancel')}
+								{cancelText || t("cancel")}
 							</button>
 						}
 						{onConfirm &&
@@ -63,7 +92,7 @@ export default function PopupConfirm({ title, children, zIndex, className, isNoB
 								onClick={onConfirm}
 								disabled={disabled}
 							>
-								{onConfirmText || t('confirm')}
+								{confirmText || t("confirm")}
 							</button>
 						}
 					</div>
