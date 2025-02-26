@@ -103,7 +103,8 @@
       "chat-delete": "刪除對話",
       "global_new-chat": "開始新對話",
       "global_toggle-sidebar": "顯示/隱藏側邊欄",
-      "global_close-layer": "關閉視窗"
+      "global_close-layer": "關閉視窗",
+      "global_toggle-keymap-modal": "顯示/隱藏快捷鍵說明"
     }
   }
 }

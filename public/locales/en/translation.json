@@ -103,7 +103,8 @@
       "chat-delete": "Delete Chat",
       "global_new-chat": "New Chat",
       "global_toggle-sidebar": "Toggle Sidebar",
-      "global_close-layer": "Close Window"
+      "global_close-layer": "Close Window",
+      "global_toggle-keymap-modal": "Toggle Keyboard Shortcut Helper"
     }
   }
 }
