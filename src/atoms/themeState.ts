@@ -2,7 +2,7 @@ import { atom } from "jotai"
 
 export type ThemeType = "system" | "light" | "dark"
 
-export const systemThemeAtom = atom<ThemeType>(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+export const systemThemeAtom = atom<"light" | "dark">(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
 export const userThemeAtom = atom<ThemeType>(localStorage.getItem("theme") as ThemeType || "system")
 
 export const themeAtom = atom<ThemeType>(get => {
