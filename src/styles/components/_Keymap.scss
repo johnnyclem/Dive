@@ -6,15 +6,15 @@
   max-height: 70vh;
   overflow-y: auto;
   flex: 1;
-  
+
   .keymap-row {
     display: flex;
     gap: 24px;
-    
+
     &.single-item-row .keymap-item {
       max-width: calc(50% - 12px);
     }
-    
+
     .keymap-item {
       flex: 1;
       display: flex;
@@ -23,15 +23,16 @@
       gap: 16px;
       padding: 8px;
       border-radius: 6px;
-      
+
       &:hover {
         background: var(--bg-op-dark-extremeweak);
       }
-      
+
       .keymap-event {
         font-size: 14px;
+        text-align: justify;
       }
-      
+
       .keymap-shortcut {
         kbd {
           display: inline-block;
@@ -46,19 +47,19 @@
       }
     }
   }
-} 
+}
 
 .keymap-container {
   min-width: 720px;
-  
+
   .popup-confirm-content {
     background-color: var(--bg-medium);
   }
-  
+
   .popup-confirm-footer, .popup-confirm-header {
     background-color: var(--bg-ultraweak);
   }
-  
+
   h3 {
     margin: 0;
   }
