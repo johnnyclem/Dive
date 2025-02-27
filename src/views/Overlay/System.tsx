@@ -12,6 +12,7 @@ const System = () => {
 
   const languageOptions = [
     { label: "繁體中文", value: "zh-TW" },
+    { label: "简体中文", value: "zh-CN" },
     { label: "English", value: "en" },
   ]
 
