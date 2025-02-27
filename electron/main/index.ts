@@ -348,3 +348,7 @@ ipcMain.handle("api:checkNewVersion", async () => {
 ipcMain.handle("api:getHotkeyMap", async () => {
   return config.keymap
 })
+
+ipcMain.handle("api:getPlatform", async () => {
+  return process.platform
+})

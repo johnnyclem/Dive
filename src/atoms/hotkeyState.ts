@@ -4,6 +4,7 @@ import { closeAllSidebarsAtom, toggleSidebarAtom } from "./sidebarState"
 import { router } from "../router"
 import mitt from "mitt"
 import { closeAllOverlaysAtom, popLayerAtom } from "./layerState"
+import { toggleKeymapModalAtom } from "./modalState"
 
 export const ChatInputHotkeyEvent = [
     "chat-input:submit",
@@ -20,6 +21,7 @@ export const GlobalHotkeyEvent = [
   "global:new-chat",
   "global:toggle-sidebar",
   "global:close-layer",
+  "global:toggle-keymap-modal",
 ] as const
 export type GlobalHotkeyEvent = typeof GlobalHotkeyEvent[number]
 
@@ -140,7 +142,7 @@ function parseHotkeyTag(hotkey: string, event: HotkeyEvent): Record<string, any>
   } 
 
   const modifier: ModifierPressed = getModifierPressed(buffer as Modifier[])
-  if (key === key.toUpperCase()) {
+  if (key >= "A" && key <= "Z") {
     modifier.s = true
   }
   
@@ -177,6 +179,10 @@ export function handleGlobalHotkey(e: KeyboardEvent) {
     return
   }
   
+  if (event) {
+    e.preventDefault()
+  }
+  
   if (event && event.startsWith("global:")) {
     return store.set(handleGlobalEventAtom, event)
   }
@@ -201,25 +207,30 @@ const handleGlobalEventAtom = atom(
       case "global:toggle-sidebar":
         set(toggleSidebarAtom)
         break
+      case "global:toggle-keymap-modal":
+        set(toggleKeymapModalAtom)
+        break
     }
   }
 )
 
-export const hotkeyMapAtom = atom<Record<string, any>|null>(null)
+export const hotKeymapAtom = atom<Record<string, any>|null>(null)
+export const rawKeymapAtom = atom<Record<string, string>>({})
 
 export const loadHotkeyMapAtom = atom(
   null,
   async (get, set) => {
     const rawMap = await window.ipcRenderer.getHotkeyMap()
     const map = getHotkeyMap(rawMap)
-    set(hotkeyMapAtom, map)
+    set(rawKeymapAtom, rawMap)
+    set(hotKeymapAtom, map)
   }
 )
 
 export const getHotkeyEventAtom = atom(
   null,
   (get, set, keys: string[], modifierPressed: ModifierPressed) => {
-    const map = get(hotkeyMapAtom)
+    const map = get(hotKeymapAtom)
     if (!map) {
       return null
     }

@@ -9,4 +9,5 @@ export default {
   "global:new-chat": `<${mod}-O>`,
   "global:toggle-sidebar": `<${mod}-S>`,
   "global:close-layer": `<escape>`,
+  "global:toggle-keymap-modal": `<${mod}-/>`,
 }

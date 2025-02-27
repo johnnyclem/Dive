@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 import { Behavior, useLayer } from "../hooks/useLayer";
-import PopupWindow from "./PopupWindow";
+import PopupWindow, { PopupStylePorps } from "./PopupWindow";
 import { useTranslation } from "react-i18next"
 
-type PopupConfirmProps = {
+type PopupConfirmProps = PopupStylePorps & {
 	title?: string
 	children?: React.ReactNode
-	zIndex?: number
 	className?: string
 	noBorder?: boolean
 	showClose?: boolean
@@ -20,7 +19,7 @@ type PopupConfirmProps = {
 	onCancel?: () => void
 }
 
-export default function PopupConfirm({ title, children, zIndex, className, noBorder, showClose, onClickOutside, onConfirm, confirmText, disabled, onCancel, cancelText, footerHint, footerType }: PopupConfirmProps) {
+export default function PopupConfirm({ title, children, zIndex, noBackground, className, noBorder, showClose, onClickOutside, onConfirm, confirmText, disabled, onCancel, cancelText, footerHint, footerType }: PopupConfirmProps) {
 	const { t } = useTranslation()
   
   useEffect(() => {
@@ -46,13 +45,19 @@ export default function PopupConfirm({ title, children, zIndex, className, noBor
     type: "Modal",
     behavior: Behavior.autoPush,
     onClose: () => {
-      onCancel?.()
+      onCancel ? onCancel() : onClickOutside?.()
     }
   })
+	
+	const windowProps = {
+		onClickOutside,
+		zIndex,
+		noBackground,
+	}
 
 	return (
-		<PopupWindow onClickOutside={onClickOutside} zIndex={zIndex}>
-			<div className={`popup-confirm ${noBorder ? "no-border" : ""} ${className}`}>
+		<PopupWindow {...windowProps}>
+			<div className={`popup-confirm ${noBorder ? "no-border" : ""} ${className || ""}`}>
 				{showClose && (
 					<div className="close-btn" onClick={onClickOutside}>
 						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -8,6 +8,15 @@
   inset: 0;
   background-color: var(--bg-op-dark-strong);
   pointer-events: auto;
+  
+  &.transparent {
+    background-color: transparent;
+    pointer-events: none;
+    
+    > div {
+      pointer-events: auto;
+    }
+  }
 
   &.overlay {
     background-color: var(--bg-op-dark-ultrastrong);
