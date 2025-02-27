@@ -1,18 +1,18 @@
-import { useAtom } from 'jotai'
-import { themeAtom, ThemeType, setThemeAtom } from '../atoms/themeState'
+import { useAtomValue, useSetAtom } from "jotai"
+import { ThemeType, setThemeAtom, userThemeAtom } from "../atoms/themeState"
 
 const ThemeSwitch = () => {
-  const [theme] = useAtom(themeAtom)
-  const [, setTheme] = useAtom(setThemeAtom)
+  const theme = useAtomValue(userThemeAtom)
+  const setTheme = useSetAtom(setThemeAtom)
 
   const updateThemeColor = (theme: ThemeType) => {
     setTheme(theme)
-    const themeColor = theme === 'dark' ? '#1E1E28' : '#FFFFFF'
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor)
+    const themeColor = theme === "dark" ? "#1E1E28" : "#FFFFFF"
+    document.querySelector("meta[name='theme-color']")?.setAttribute("content", themeColor)
   }
 
   const Themes = [
-    {label: 'Default', value: 'system', icon:
+    {label: "Default", value: "system", icon:
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g id="system-mode">
           <rect id="Rectangle 5880" x="4" y="4" width="14" height="14" rx="7" stroke="currentColor" strokeWidth="2"/>
@@ -20,7 +20,7 @@ const ThemeSwitch = () => {
         </g>
       </svg>
     },
-    {label: 'Light', value: 'light',icon:
+    {label: "Light", value: "light",icon:
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g id="light-mode">
           <path id="Vector 80" d="M11 4L11 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -35,7 +35,7 @@ const ThemeSwitch = () => {
         </g>
       </svg>
       },
-    {label: 'Dark', value: 'dark',icon:
+    {label: "Dark", value: "dark",icon:
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g id="dark-mode">
           <g id="Subtract">
@@ -50,13 +50,13 @@ const ThemeSwitch = () => {
   ]
 
   return (
-    <div className='theme-switch-root'>
+    <div className="theme-switch-root">
       { Themes.map((item, index) => {
         return (
           <div
             key={index}
             onClick={() => updateThemeColor(item.value as ThemeType)}
-            className={`theme-button ${theme === item.value ? 'active' : ''}`}
+            className={`theme-button ${theme === item.value ? "active" : ""}`}
           >
             {item.icon}
           </div>
