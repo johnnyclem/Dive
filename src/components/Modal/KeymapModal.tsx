@@ -14,7 +14,7 @@ const KeymapModal = () => {
 
   const formatHotkey = (key: string): string => {
     if (platform.state === "loading" || platform.state === "hasError") {
-      return "" 
+      return ""
     }
 
     const metaKey = platform.data === "darwin" ? "Meta" : "Command"
@@ -22,14 +22,14 @@ const KeymapModal = () => {
     if (key.startsWith("<") && key.endsWith(">") && !key.slice(1, -1).includes("><")) {
       const parts = key.slice(1, -1).split("-")
       const lastPart = parts[parts.length - 1]
-      
+
       // Check if the last part is a single uppercase letter
       const isUpperCaseLetter =
-        lastPart.length === 1 && 
-        lastPart >= 'A' && 
+        lastPart.length === 1 &&
+        lastPart >= 'A' &&
         lastPart <= 'Z' &&
         // Avoid adding shift if it's already included
-        !parts.includes('s') 
+        !parts.includes('s')
 
       // If it's an uppercase letter, add shift to parts
       if (isUpperCaseLetter && !parts.includes('s')) {
@@ -47,16 +47,16 @@ const KeymapModal = () => {
             case "enter": return "Enter"
             case "tab": return "Tab"
             case "arrowup": case "up": return "↑"
-            case "arrowdown": case "down": return "↓" 
+            case "arrowdown": case "down": return "↓"
             case "arrowleft": case "left": return "←"
             case "arrowright": case "right": return "→"
             case " ": return "Space"
-            default: 
+            default:
               // Consistently display as uppercase
               return part.toUpperCase()
           }
         }
-        
+
         switch (part) {
           case "c": return "Ctrl"
           case "s": return "Shift"
@@ -76,11 +76,11 @@ const KeymapModal = () => {
       const regex = /<([^>]+)>|(.)/g
       let match
       const parts = []
-      
+
       while ((match = regex.exec(key)) !== null) {
         const specialKey = match[1]
         const normalKey = match[2]
-        
+
         if (specialKey) {
           // Handle special key names
           switch (specialKey.toLowerCase()) {
@@ -114,15 +114,15 @@ const KeymapModal = () => {
           }
         }
       }
-      
+
       return parts.join(" > ")
     }
   }
-  
+
   const formattedHotkeys = useMemo(() => {
     if (!keyMap)
       return []
-    
+
     return Object.entries(keyMap).map(([eventKey, hotkey]) => {
       return {
         event: eventKey.replace(":", "_"),
@@ -130,7 +130,7 @@ const KeymapModal = () => {
       }
     })
   }, [keyMap, platform])
-  
+
   const hotkeyRows = useMemo(() => {
     const rows = []
     for (let i = 0; i < formattedHotkeys.length; i += 2) {
@@ -138,11 +138,11 @@ const KeymapModal = () => {
     }
     return rows
   }, [formattedHotkeys])
-  
+
   const onClose = useCallback(() => {
     setIsVisible(false)
   }, [setIsVisible])
-  
+
   if (!isVisible)
     return null
 
@@ -158,10 +158,10 @@ const KeymapModal = () => {
           <div key={rowIndex} className={`keymap-row ${row.length === 1 ? 'single-item-row' : ''}`}>
             {row.map((item) => (
               <div key={item.event} className="keymap-item">
-                <div className="keymap-event">{t(`keymap.events.${item.event}`)}</div>
                 <div className="keymap-shortcut">
                   <kbd>{item.display}</kbd>
                 </div>
+                <div className="keymap-event">{t(`keymap.events.${item.event}`)}</div>
               </div>
             ))}
           </div>
