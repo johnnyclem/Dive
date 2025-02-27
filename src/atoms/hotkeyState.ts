@@ -5,6 +5,7 @@ import { router } from "../router"
 import mitt from "mitt"
 import { closeAllOverlaysAtom, popLayerAtom } from "./layerState"
 import { toggleKeymapModalAtom } from "./modalState"
+import { currentChatIdAtom } from "./chatState"
 
 export const ChatInputHotkeyEvent = [
     "chat-input:submit",
@@ -67,7 +68,7 @@ function parseStringWithOrder(str: string) {
   const result = []
   let current = ""
   let isInTag = false
-  
+
   for (let i = 0; i < str.length; i++) {
     if (str[i] === "<") {
       if (current) {
@@ -77,7 +78,7 @@ function parseStringWithOrder(str: string) {
       isInTag = true
       continue
     }
-    
+
     if (str[i] === ">") {
       if (current) {
         result.push({ type: "tag", content: current })
@@ -86,14 +87,14 @@ function parseStringWithOrder(str: string) {
       isInTag = false
       continue
     }
-    
+
     current += str[i]
   }
-    
+
   if (current) {
     result.push({ type: isInTag ? "tag" : "text", content: current })
   }
-  
+
   return result
 }
 
@@ -101,13 +102,13 @@ function parseHotkeyComponent(component: string, event: HotkeyEvent): Record<str
   const hotkey = parseStringWithOrder(component)
   if (!hotkey || !hotkey.length) {
     return {}
-  } 
+  }
 
   // TODO support <c-c><c-a>x in next time
   if (component.startsWith("<")) {
     return parseHotkeyTag(hotkey[0].content, event)
   }
-  
+
   return parseHotkeyText(hotkey[0].content, event)
 }
 
@@ -134,18 +135,18 @@ function parseHotkeyTag(hotkey: string, event: HotkeyEvent): Record<string, any>
   if (hotkey.includes("-") && hotkey.length < 3) {
     return {}
   }
-  
+
   const buffer = hotkey.split("-")
   let key = buffer.pop()!
   if (!key) {
     key = "-"
-  } 
+  }
 
   const modifier: ModifierPressed = getModifierPressed(buffer as Modifier[])
   if (key >= "A" && key <= "Z") {
     modifier.s = true
   }
-  
+
   return {
     [key.toLowerCase()]: {
       event,
@@ -170,7 +171,7 @@ export function handleGlobalHotkey(e: KeyboardEvent) {
   }
 
   const event = store.set(getHotkeyEventAtom, hotkeyBuffer, getModifierPressedFromEvent(e))
-  
+
   if (event !== undefined) {
     hotkeyBuffer = []
   }
@@ -178,15 +179,15 @@ export function handleGlobalHotkey(e: KeyboardEvent) {
   if (event === null) {
     return
   }
-  
+
   if (event) {
     e.preventDefault()
   }
-  
+
   if (event && event.startsWith("global:")) {
     return store.set(handleGlobalEventAtom, event)
   }
-  
+
   if (event) {
     emitter.emit(event)
   }
@@ -202,6 +203,7 @@ const handleGlobalEventAtom = atom(
       case "global:new-chat":
         set(closeAllSidebarsAtom)
         set(closeAllOverlaysAtom)
+        set(currentChatIdAtom, "")
         router.navigate("/")
         break
       case "global:toggle-sidebar":
@@ -234,7 +236,7 @@ export const getHotkeyEventAtom = atom(
     if (!map) {
       return null
     }
-    
+
     let _map
     for (const key of keys) {
       if (!_map) {
@@ -242,22 +244,22 @@ export const getHotkeyEventAtom = atom(
       } else {
         _map = _map[key]
       }
-      
+
       if (!_map) {
         return null
       }
-      
+
       if (!("event" in _map)) {
         continue
       }
-      
+
       if (!compareModifierPressed(_map.modifier, modifierPressed)) {
         return null
       }
-      
+
       return _map.event
     }
-    
+
     return undefined
   }
 )
