@@ -97,7 +97,7 @@
     "events": {
       "chat-input_submit": "提交輸入訊息",
       "chat-input_upload-file": "上傳檔案",
-      "chat-input_focus": "輸入視窗獲得焦點",
+      "chat-input_focus": "輸入框出現游標直接輸入內容",
       "chat-input_paste-last-message": "貼上最後一則的回應文字",
       "chat-message_copy-last": "複製最後一則回應",
       "chat_delete": "刪除對話",
