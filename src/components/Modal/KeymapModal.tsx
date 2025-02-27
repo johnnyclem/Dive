@@ -17,7 +17,7 @@ const KeymapModal = () => {
       return ""
     }
 
-    const metaKey = platform.data === "darwin" ? "Meta" : "Command"
+    const metaKey = platform.data === "darwin" ? "Command" : platform.data === "win32" ? "Windows" : "Super"
     // Check if it's a pure combination key format <c-o>
     if (key.startsWith("<") && key.endsWith(">") && !key.slice(1, -1).includes("><")) {
       const parts = key.slice(1, -1).split("-")
