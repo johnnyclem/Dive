@@ -151,6 +151,7 @@ const KeymapModal = () => {
       onClickOutside={onClose}
       title={t("keymap.title")}
       className="keymap-container"
+      zIndex={1100}
       noBackground>
       <div className="keymap-list">
         {hotkeyRows.map((row, rowIndex) => (
