@@ -1,0 +1,95 @@
+{
+  "header": {
+    "title": "Dive AI"
+  },
+  "chat": {
+    "placeholder": "发送任何消息...",
+    "newChat": "新对话",
+    "newChatTooltip": "开始新的对话",
+    "history": "历史记录",
+    "copyCode": "复制",
+    "previewCode": "点击预览",
+    "uploadFile": "上传文件",
+    "send": "发送",
+    "untitledChat": "未命名对话",
+    "deleteChat": "删除对话",
+    "deleteSuccess": "对话已删除",
+    "deleteFailed": "删除失败",
+    "confirmDelete": "确认删除",
+    "tools": "工具",
+    "abort": "停止生成回应",
+    "retry": "重试"
+  },
+  "welcome": {
+    "title": "欢迎使用 Dive AI",
+    "subtitle": "开始你的 AI 对话",
+    "startChat": "开始对话"
+  },
+  "setup": {
+    "title": "初始设置",
+    "subtitle": "请设置模型相关参数",
+    "required": "此字段为必填",
+    "submit": "保存设置",
+    "provider": "模型提供者",
+    "verify": "验证模型",
+    "verifySuccess": "模型验证成功",
+    "verifySuccessNoTool": "模型验证成功，但不支持MCP Tool Calls",
+    "verifyFailed": "模型验证失败",
+    "verifyError": "验证过程发生错误",
+    "saveSuccess": "设置已保存",
+    "saveFailed": "保存失败",
+    "back": "返回",
+    "parameters": "参数设置",
+    "topPDescription": "Top P 参数是一种用来控制 GPT 模型生成文本的多样性的参数。当 GPT 模型生成文本时，它会对每个生成的字或子字在词汇表中的概率分布进行计算。Top P 参数控制了有多少最高概率的字或子字被选择进入生成文本。例如，如果 top_p=0.9，那么阈值就设定为概率在最高概率的字或子字中排名第 90 的那个。",
+    "temperatureDescription": "Temperature 参数是一种用来控制GPT 模型生成文本的“创造性”或随机性的参数。一个较高的Temperature (例如 0.7) 会导致更多元和创新的输出，而一个较低的 Temperature (例如 0.2) 会使输出更确定和集中。"
+  },
+  "sidebar": {
+    "tools": "工具管理(MCP)",
+    "settings": "模型设置",
+    "update": "新版本升级",
+    "models": "模型设置",
+    "system": "系统设置"
+  },
+  "tools": {
+    "title": "工具管理(MCP)",
+    "subtitle": "管理 MCP Server 的工具与设置",
+    "editConfig": "编辑设置",
+    "configTitle": "MCP Server 设置",
+    "save": "保存",
+    "cancel": "取消",
+    "saveSuccess": "设置已保存",
+    "saveFailed": "保存失败",
+    "openConfigFolder": "打开设置文件夹",
+    "addServer": "新增 MCP Server",
+    "addServerTitle": "新增 MCP Server",
+    "addServerSubtitle": "请直接粘贴 MCP Server Json",
+    "fetchFailed": "加载工具列表失败",
+    "configFetchFailed": "加载设置失败",
+    "invalidJson": "无效的 JSON 格式",
+    "updateFailed": "{{serverName}} 启动失败：{{error}}"
+  },
+  "modelConfig": {
+    "title": "模型设置",
+    "customInstructions": "自定义指令",
+    "customInstructionsPlaceholder": "输入自定义的模型指令...",
+    "customInstructionsDescription": "这些指令会被添加到每个请求的系统提示中。",
+    "saveInstructions": "保存指令",
+    "customRulesSaved": "自定义指令已保存",
+    "customRulesFailed": "保存自定义指令失败",
+    "modelDescription": "要使用的模型名称",
+    "modelDescriptionHint": "要使用的模型名称（请先输入 API Key 以查看可用的模型）"
+  },
+  "common": {
+    "close": "关闭",
+    "confirm": "确认",
+    "cancel": "取消"
+  },
+  "system": {
+    "title": "系统设置",
+    "language": "系统语言",
+    "theme": "显示模式"
+  },
+  "toast": {
+    "copiedToClipboard": "已复制到剪贴板"
+  }
+} 
