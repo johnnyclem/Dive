@@ -41,7 +41,7 @@
     "back": "返回",
     "parameters": "参数设置",
     "topPDescription": "Top P 参数是一种用来控制 GPT 模型生成文本的多样性的参数。当 GPT 模型生成文本时，它会对每个生成的字或子字在词汇表中的概率分布进行计算。Top P 参数控制了有多少最高概率的字或子字被选择进入生成文本。例如，如果 top_p=0.9，那么阈值就设定为概率在最高概率的字或子字中排名第 90 的那个。",
-    "temperatureDescription": "Temperature 参数是一种用来控制GPT 模型生成文本的“创造性”或随机性的参数。一个较高的Temperature (例如 0.7) 会导致更多元和创新的输出，而一个较低的 Temperature (例如 0.2) 会使输出更确定和集中。"
+    "temperatureDescription": "Temperature 参数是一种用来控制GPT 模型生成文本的\"创造性\"或随机性的参数。一个较高的Temperature (例如 0.7) 会导致更多元和创新的输出，而一个较低的 Temperature (例如 0.2) 会使输出更确定和集中。"
   },
   "sidebar": {
     "tools": "工具管理(MCP)",
@@ -91,5 +91,20 @@
   },
   "toast": {
     "copiedToClipboard": "已复制到剪贴板"
+  },
+  "keymap": {
+    "title": "键盘快捷键",
+    "events": {
+      "chat-input_submit": "提交输入消息",
+      "chat-input_upload-file": "上传文件",
+      "chat-input_focus": "输入窗口获得焦点",
+      "chat-input_paste-last-message": "粘贴最后一条的回应文字",
+      "chat-message_copy-last": "复制最后一条回应",
+      "chat_delete": "删除对话",
+      "global_new-chat": "开始新对话",
+      "global_toggle-sidebar": "显示/隐藏侧边栏",
+      "global_close-layer": "关闭窗口",
+      "global_toggle-keymap-modal": "显示/隐藏快捷键说明"
+    }
   }
 } 

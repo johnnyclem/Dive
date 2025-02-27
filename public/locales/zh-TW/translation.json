@@ -100,7 +100,7 @@
       "chat-input_focus": "輸入視窗獲得焦點",
       "chat-input_paste-last-message": "貼上最後一則的回應文字",
       "chat-message_copy-last": "複製最後一則回應",
-      "chat-delete": "刪除對話",
+      "chat_delete": "刪除對話",
       "global_new-chat": "開始新對話",
       "global_toggle-sidebar": "顯示/隱藏側邊欄",
       "global_close-layer": "關閉視窗",
