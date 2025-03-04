@@ -17,8 +17,8 @@ const KeymapModal = () => {
       return ""
     }
 
-    const metaKey = platform.data === "darwin" ? "Cmd" : platform.data === "win32" ? "Win" : "Super"
-    // Check if it's a pure combination key format <c-o>
+    const metaKey = platform.data === "darwin" ? "⌘" : platform.data === "win32" ? "Win" : "Super"
+    // Check if it"s a pure combination key format <c-o>
     if (key.startsWith("<") && key.endsWith(">") && !key.slice(1, -1).includes("><")) {
       const parts = key.slice(1, -1).split("-")
       const lastPart = parts[parts.length - 1]
@@ -26,14 +26,14 @@ const KeymapModal = () => {
       // Check if the last part is a single uppercase letter
       const isUpperCaseLetter =
         lastPart.length === 1 &&
-        lastPart >= 'A' &&
-        lastPart <= 'Z' &&
-        // Avoid adding shift if it's already included
-        !parts.includes('s')
+        lastPart >= "A" &&
+        lastPart <= "Z" &&
+        // Avoid adding shift if it"s already included
+        !parts.includes("s")
 
-      // If it's an uppercase letter, add shift to parts
-      if (isUpperCaseLetter && !parts.includes('s')) {
-        parts.splice(parts.length - 1, 0, 's')
+      // If it"s an uppercase letter, add shift to parts
+      if (isUpperCaseLetter && !parts.includes("s")) {
+        parts.splice(parts.length - 1, 0, "s")
       }
 
       return parts.map((part, index) => {
@@ -42,8 +42,8 @@ const KeymapModal = () => {
           switch (part.toLowerCase()) {
             case "space": return "Space"
             case "escape": case "esc": return "Esc"
-            case "backspace": case "bs": return "Backspace"
-            case "delete": case "del": return "Delete"
+            case "backspace": case "bs": return "⌫"
+            case "delete": case "del": return "⌦"
             case "enter": return "Enter"
             case "tab": return "Tab"
             case "arrowup": case "up": return "↑"
@@ -66,8 +66,8 @@ const KeymapModal = () => {
           case "tab": return "Tab"
           case "enter": return "Enter"
           case "escape": case "esc": return "Esc"
-          case "backspace": case "bs": return "Backspace"
-          case "delete": case "del": return "Delete"
+          case "backspace": case "bs": return "⌫"
+          case "delete": case "del": return "⌦"
           default: return part.charAt(0).toUpperCase() + part.slice(1)
         }
       }).join(" + ")
@@ -92,8 +92,8 @@ const KeymapModal = () => {
             case "tab": parts.push("Tab"); break
             case "enter": parts.push("Enter"); break
             case "escape": case "esc": parts.push("Esc"); break
-            case "backspace": case "bs": parts.push("Backspace"); break
-            case "delete": case "del": parts.push("Delete"); break
+            case "backspace": case "bs": parts.push("⌫"); break
+            case "delete": case "del": parts.push("⌦"); break
             case "arrowup": case "up": parts.push("↑"); break
             case "arrowdown": case "down": parts.push("↓"); break
             case "arrowleft": case "left": parts.push("←"); break
@@ -155,11 +155,11 @@ const KeymapModal = () => {
       noBackground>
       <div className="keymap-list">
         {hotkeyRows.map((row, rowIndex) => (
-          <div key={rowIndex} className={`keymap-row ${row.length === 1 ? 'single-item-row' : ''}`}>
+          <div key={rowIndex} className={`keymap-row ${row.length === 1 ? "single-item-row" : ""}`}>
             {row.map((item) => (
               <div key={item.event} className="keymap-item">
                 <div className="keymap-shortcut">
-                  <kbd>{item.display}</kbd>
+                  <span className="kbd">{item.display}</span>
                 </div>
                 <div className="keymap-event">{t(`keymap.events.${item.event}`)}</div>
               </div>
