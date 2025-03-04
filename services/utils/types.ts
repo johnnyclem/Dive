@@ -44,10 +44,12 @@ export type iMessageInfoContent = {
 };
 
 export interface iServerConfig {
+  transport: "command" | "sse" | "websocket";
   enabled?: boolean;
-  command: string;
-  args: string[];
+  command?: string;
+  args?: string[];
   env?: Record<string, string>;
+  url?: string;
 }
 
 export interface iConfig {
@@ -82,4 +84,36 @@ export interface ModelSettings {
   maxTokens?: number; // Maximum output tokens
   // Support dynamic access
   [key: string]: string | number | undefined | { baseURL: string } | undefined;
+}
+
+
+export interface ModelVerificationResult {
+  modelName: string;
+  connectingStatus: "success" | "warning" | "error";
+  connectingResult: any;
+  supportToolsStatus: "success" | "warning" | "error";
+  supportToolsResult: any;
+}
+
+export interface ModelVerificationStreamResponse {
+  type: "progress" | "final" | "error";
+  step?: number;
+  totalSteps?: number;
+  modelName?: string;
+  testType?: "connection" | "tools";
+  status?: string;
+  error?: string;
+  results?: Array<{
+    modelName: string;
+    connection: {
+      status: string;
+      result: any;
+    };
+    tools: {
+      status: string;
+      result: any;
+    };
+  }>;
+  message?: string;
+  aborted?: boolean;
 }

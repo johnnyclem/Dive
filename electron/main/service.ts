@@ -1,11 +1,9 @@
 import { app } from "electron"
 import path from "node:path"
 import fse from "fs-extra"
-import { MCPClient, WebServer, setDatabase } from "../../services/index.js"
-import { drizzle } from "drizzle-orm/better-sqlite3"
-import Database from "better-sqlite3"
+import { MCPClient, WebServer, initDatabase } from "../../services/index.js"
+import { DatabaseMode, getDB } from "../../services/database/index.js"
 import { migrate } from "drizzle-orm/better-sqlite3/migrator"
-import * as schema from "../../services/database/schema.js"
 import { isPortInUse, npmInstall } from "./util.js"
 import { SystemCommandManager } from "../../services/syscmd/index.js"
 import { MCPServerManager } from "../../services/mcpServer/index.js"
@@ -34,8 +32,7 @@ async function initClient(): Promise<MCPClient> {
     fse.writeFileSync(customRulesPath, "")
   }
 
-  const db = initDb(configDir)
-  setDatabase(db as any)
+  initDb(configDir)
 
   const _client = new MCPClient({
     modelConfigPath: path.join(configDir, "model.json"),
@@ -54,9 +51,8 @@ async function initClient(): Promise<MCPClient> {
 }
 
 function initDb(configDir: string) {
-  const dbPath = path.join(configDir, "data.db")
-  const sqlite = new Database(dbPath)
-  const db = drizzle(sqlite, { schema })
+  initDatabase(DatabaseMode.DIRECT, { dbPath: path.join(configDir, "data.db") })
+  const db = getDB()
   migrate(db, { migrationsFolder: app.isPackaged ? path.join(process.resourcesPath, "drizzle") : "./drizzle" })
   return db
 }

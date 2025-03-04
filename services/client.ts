@@ -43,7 +43,9 @@ export class MCPClient {
     chatId: string | undefined,
     input: string | iQueryInput,
     onStream?: (text: string) => void,
-    regenerateMessageId?: string
+    regenerateMessageId?: string,
+    fingerprint?: string,
+    user_access_token?: string
   ) {
     let startTime = new Date();
     let chat_id = chatId || randomUUID();
@@ -100,15 +102,18 @@ export class MCPClient {
       const toolClientMap = serverManager.getToolToServerMap();
       const availableTools = serverManager.getAvailableTools();
 
-      const result = await handleProcessQuery(
+      const { result, tokenUsage } = await handleProcessQuery(
         toolClientMap,
         availableTools,
-        await ModelManager.getInstance().getModel(),
+        ModelManager.getInstance().getModel(),
         input,
         history,
         onStream,
-        chat_id,
+        chat_id
       );
+
+      const totalRunTime = Number(((new Date().getTime() - startTime.getTime()) / 1000).toFixed(2));
+      logger.debug(`[${chat_id}] Total run time: ${totalRunTime}s`);
 
       if (!onStream) {
         console.log("\nAssistant:\n", result);
@@ -131,7 +136,10 @@ export class MCPClient {
       // double check the chat exists and create to database if necessary
       const isChatExists = await checkChatExists(chat_id);
       if (!isChatExists) {
-        await createChat(chat_id, title || "New Chat");
+        await createChat(chat_id, title || "New Chat", {
+          fingerprint: fingerprint,
+          user_access_token: user_access_token,
+        });
       }
 
       // if retry then delete the messages after the regenerateMessageId firstly
@@ -141,24 +149,43 @@ export class MCPClient {
       const userMessageId = randomUUID();
       if (!regenerateMessageId) {
         const files = (typeof input === "object" && [...(input.images || []), ...(input.documents || [])]) || [];
-        await createMessage({
-          role: "user",
-          chatId: chat_id,
-          messageId: userMessageId,
-          content: userInput || "",
-          files: files,
-          createdAt: new Date().toISOString(),
-        });
+        await createMessage(
+          {
+            role: "user",
+            chatId: chat_id,
+            messageId: userMessageId,
+            content: userInput || "",
+            files: files,
+            createdAt: new Date().toISOString(),
+          },
+          {
+            fingerprint: fingerprint,
+            user_access_token: user_access_token,
+          }
+        );
       }
       const assistantMessageId = randomUUID();
-      await createMessage({
-        role: "assistant",
-        chatId: chat_id,
-        messageId: assistantMessageId,
-        content: result,
-        files: [],
-        createdAt: new Date().toISOString(),
-      });
+      await createMessage(
+        {
+          role: "assistant",
+          chatId: chat_id,
+          messageId: assistantMessageId,
+          content: result,
+          files: [],
+          createdAt: new Date().toISOString(),
+        },
+        {
+          LLM_Model: {
+            model: ModelManager.getInstance().currentModelSettings?.model || "",
+            total_input_tokens: tokenUsage.totalInputTokens,
+            total_output_tokens: tokenUsage.totalOutputTokens,
+            total_run_time: totalRunTime,
+          },
+          fingerprint: fingerprint,
+          user_access_token: user_access_token,
+        }
+      );
+
       if (onStream) {
         onStream(
           JSON.stringify({

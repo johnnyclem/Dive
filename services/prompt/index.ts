@@ -40,7 +40,7 @@ export class PromptManager {
   }
 
   loadCustomRules() {
-    const customRulesPath = this.customRulesPath ||  path.resolve(process.cwd(), ".customrules");
+    const customRulesPath = this.customRulesPath || path.resolve(process.cwd(), ".customrules");
     try {
       const customRules = fs.readFileSync(customRulesPath, "utf-8");
       return customRules;
