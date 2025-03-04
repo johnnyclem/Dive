@@ -101,6 +101,21 @@ export function configRouter() {
     }
   });
 
+  router.post("/model/replaceAll", async (req, res) => {
+    try {
+      const uploadModelSettings = req.body;
+      await ModelManager.getInstance().replaceAllModelConfig(uploadModelSettings);
+      res.json({
+        success: true,
+      });
+    } catch (error: any) {
+      res.json({
+        success: false,
+        message: error.message,
+      });
+    }
+  });
+
   router.get("/customrules", async (req, res) => {
     try {
       const customRules = await PromptManager.getInstance().loadCustomRules();

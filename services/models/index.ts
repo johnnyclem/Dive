@@ -136,6 +136,10 @@ export class ModelManager {
     await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), "utf-8");
   }
 
+  async replaceAllModelConfig(uploadModelSettings: iModelConfig) {
+    await fs.writeFile(this.configPath, JSON.stringify(uploadModelSettings, null, 2), "utf-8");
+  }
+
   public async generateTitle(content: string) {
     if (!this.cleanModel) {
       logger.error("Model not initialized");
