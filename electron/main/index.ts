@@ -3,16 +3,13 @@ import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
 import os from "node:os"
-import { update } from "./update"
-import { cleanup, initMCPClient, port } from "./service"
-import Anthropic from "@anthropic-ai/sdk"
 import fse from "fs-extra"
-import OpenAI from "openai"
-import { Ollama } from "ollama"
-import { getLatestVersion, getNvmPath, modifyPath } from "./util"
 import semver from "semver"
-import { binDirList, cacheDir, scriptsDir } from "./constant"
-import config from "../config"
+import { cleanup, initMCPClient } from "./service"
+import { getLatestVersion, getNvmPath, modifyPath } from "./util"
+import { binDirList, cacheDir, darwinPathList } from "./constant"
+import { update } from "./update"
+import { ipcHandler } from "./ipc"
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -27,18 +24,6 @@ protocol.registerSchemesAsPrivileged([
       stream: true,
     }
   }
-])
-
-const selectionMenu = Menu.buildFromTemplate([
-  { role: "copy" },
-  { role: "selectAll" }
-])
-
-const inputMenu = Menu.buildFromTemplate([
-  { role: "copy" },
-  { role: "paste" },
-  { role: "cut" },
-  { role: "selectAll" }
 ])
 
 // The built directory structure
@@ -82,12 +67,7 @@ async function onReady() {
   if (process.platform === "win32") {
     binDirList.forEach(modifyPath)
   } else if (process.platform === "darwin") {
-    // modifyPath(path.join(process.resourcesPath, `bin/node/bin`))
-    // modifyPath(path.join(process.resourcesPath, `bin/uv`))
-
-    modifyPath("/opt/homebrew/bin")
-    modifyPath("/usr/local/bin")
-    modifyPath("/usr/bin")
+    darwinPathList.forEach(modifyPath)
 
     const nvmPath = getNvmPath()
     if (nvmPath) {
@@ -162,6 +142,9 @@ async function createWindow() {
 
   // Auto update
   update(win)
+
+  // ipc handler
+  ipcHandler(win)
 }
 
 app.whenReady().then(onReady)
@@ -210,103 +193,6 @@ ipcMain.handle("open-win", (_, arg) => {
   }
 })
 
-ipcMain.handle("api:port", async () => {
-  return port
-})
-
-ipcMain.handle("api:getResources", async (_, p: string) => {
-  return app.isPackaged ? path.join(process.resourcesPath, p) : p
-})
-
-ipcMain.handle("fs:openScriptsDir", async () => {
-  shell.openPath(scriptsDir)
-})
-
-ipcMain.handle("api:fillPathToConfig", async (_, _config: string) => {
-  try {
-    const { mcpServers: servers } = JSON.parse(_config) as {mcpServers: Record<string, {enabled: boolean, command: string, args: string[]}>}
-    const mcpServers = Object.keys(servers).reduce((acc, server) => {
-      const { args } = servers[server]
-      const pathToScript = args.find((arg) => arg.endsWith("js") || arg.endsWith("ts"))
-      if (!pathToScript)
-        return acc
-
-      const isScriptsExist = fse.existsSync(pathToScript)
-      if (isScriptsExist)
-        return acc
-
-      const argsIndex = args.reduce((acc, arg, index) => pathToScript === arg ? index : acc, -1)
-      if (fse.existsSync(path.join(scriptsDir, pathToScript))) {
-        args[argsIndex] = path.join(scriptsDir, pathToScript)
-      }
-
-      const filename = path.parse(pathToScript).base
-      if (fse.existsSync(path.join(scriptsDir, filename))) {
-        args[argsIndex] = path.join(scriptsDir, filename)
-      }
-
-      acc[server] = {
-        ...servers[server],
-        args,
-      }
-
-      return acc
-    }, servers)
-
-    return JSON.stringify({ mcpServers })
-  } catch (error) {
-    return _config
-  }
-})
-
-ipcMain.handle("api:openaiModelList", async (_, apiKey: string) => {
-  try {
-    const client = new OpenAI({ apiKey })
-    const models = await client.models.list()
-    return models.data.map((model) => model.id)
-  } catch (error) {
-    return []
-  }
-})
-
-ipcMain.handle("api:anthropicModelList", async (_, apiKey: string, baseURL: string) => {
-  try {
-    const client = new Anthropic({ apiKey, baseURL })
-    const models = await client.models.list()
-    return models.data.map((model) => model.id)
-  } catch (error) {
-    return []
-  }
-})
-
-ipcMain.handle("api:ollamaModelList", async (_, baseURL: string) => {
-  try {
-    const ollama = new Ollama({ host: baseURL })
-    const list = await ollama.list()
-    return list.models.map((model) => model.name)
-  } catch (error) {
-    return []
-  }
-})
-
-ipcMain.handle("api:openaiCompatibleModelList", async (_, apiKey: string, baseURL: string) => {
-  try {
-    const client = new OpenAI({ apiKey, baseURL })
-    const list = await client.models.list()
-    return list.data.map((model) => model.id)
-  } catch (error) {
-    return []
-  }
-})
-
-ipcMain.handle("show-selection-context-menu", () => {
-  selectionMenu.popup()
-})
-
-ipcMain.handle("show-input-context-menu", () => {
-  inputMenu.popup()
-})
-
 ipcMain.handle("api:checkNewVersion", async () => {
   try {
     fse.mkdirSync(cacheDir, { recursive: true })
@@ -325,7 +211,7 @@ ipcMain.handle("api:checkNewVersion", async () => {
     if (lastQueryTime && +lastQueryTime > Date.now() + 1000 * 60 * 60) {
       return ""
     }
-    
+
     if (lastVersion && semver.gt(lastVersion, currentVersion)) {
       return lastVersion
     }
@@ -341,14 +227,6 @@ ipcMain.handle("api:checkNewVersion", async () => {
   } catch (e) {
     console.error(e)
   }
-  
+
   return ""
-})
-
-ipcMain.handle("api:getHotkeyMap", async () => {
-  return config.keymap
-})
-
-ipcMain.handle("api:getPlatform", async () => {
-  return process.platform
 })

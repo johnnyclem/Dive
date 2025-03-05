@@ -13,39 +13,46 @@ import { scriptsDir, configDir, appDir, DEF_MCP_SERVER_CONFIG } from "./constant
 
 export let client: Promise<MCPClient> | null = null
 async function initClient(): Promise<MCPClient> {
+  // create dirs
   fse.mkdirSync(configDir, { recursive: true })
   fse.mkdirSync(appDir, { recursive: true })
 
+  // copy scripts
   if(!fse.existsSync(scriptsDir)) {
     fse.mkdirSync(scriptsDir, { recursive: true })
     const source = path.join(app.isPackaged ? process.resourcesPath : process.cwd(), "prebuilt/scripts")
     fse.copySync(source, scriptsDir)
   }
 
+  // install dependencies for prebuilt scripts
   await npmInstall(scriptsDir).catch(console.error)
 
+  // create config file if not exists
   const mcpServerConfigPath = path.join(configDir, "config.json")
   if (!fse.existsSync(mcpServerConfigPath)) {
     fse.writeFileSync(mcpServerConfigPath, JSON.stringify(DEF_MCP_SERVER_CONFIG, null, 2));
   }
 
+  // create custom rules file if not exists
   const customRulesPath = path.join(configDir, ".customrules")
   if (!fse.existsSync(customRulesPath)) {
     fse.writeFileSync(customRulesPath, "")
   }
 
+  // init sqlite
   const db = initDb(configDir)
   setDatabase(db as any)
 
+  // init mcp client
   const _client = new MCPClient({
     modelConfigPath: path.join(configDir, "model.json"),
     mcpServerConfigPath: mcpServerConfigPath,
     customRulesPath: customRulesPath,
   })
 
+  // init system command manager and set command path if needed
   const systemCommandManager = SystemCommandManager.getInstance()
   systemCommandManager.initialize(process.platform === "win32" && app.isPackaged ? {
-    // "node": path.join(process.resourcesPath, "node", "node.exe"),
     "npx": path.join(process.resourcesPath, "node", "npx.cmd"),
     "npm": path.join(process.resourcesPath, "node", "npm.cmd"),
   } : {})
@@ -78,11 +85,10 @@ async function getFreePort(): Promise<number> {
 }
 
 export let port = Promise.resolve(0)
-export let server: WebServer | null = null
 async function initService(): Promise<number> {
   const _client = await client!
   await _client.init().catch(console.error)
-  server = new WebServer(_client)
+  const server = new WebServer(_client)
   await server.start(await getFreePort())
   return server.port!
 }
