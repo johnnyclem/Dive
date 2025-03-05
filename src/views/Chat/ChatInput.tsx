@@ -5,6 +5,7 @@ import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import Textarea from "../../components/WrappedTextarea"
 import { lastMessageAtom } from "../../atoms/chatState"
 import { useAtomValue } from "jotai"
+import { activeProviderAtom } from "../../atoms/configState"
 
 interface Props {
   onSendMessage?: (message: string, files?: FileList) => void
@@ -34,6 +35,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const isComposing = useRef(false)
   const [isAborting, setIsAborting] = useState(false)
   const lastMessage = useAtomValue(lastMessageAtom)
+  const activeProvider = useAtomValue(activeProviderAtom)
 
   const formatFileSize = useCallback((bytes: number): string => {
     if (bytes < 1024) return bytes + ' B'
@@ -227,7 +229,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if ((!message.trim() && !uploadedFiles.current.length) || !onSendMessage || disabled)
+    if ((!message.trim() && !uploadedFiles.current.length) || !onSendMessage || disabled || activeProvider === "none")
       return
 
     onSendMessage(message, fileInputRef.current?.files || undefined)
@@ -332,7 +334,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
             <button
               className="send-btn"
               onClick={handleSubmit}
-              disabled={disabled}
+              disabled={disabled || activeProvider === "none"}
             >
               <svg width="24" height="24" viewBox="0 0 24 24">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>

@@ -19,7 +19,7 @@ const Layout = () => {
     <div className="app-container" data-theme={theme === "system" ? systemTheme : theme}>
       {hasConfig &&
         <>
-          <Header showHelpButton />
+          <Header showHelpButton showModelSelect />
           <HistorySidebar />
           <ConfigSidebar />
         </>

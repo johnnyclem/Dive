@@ -84,10 +84,28 @@
     "confirm": "確認",
     "cancel": "取消"
   },
+  "models": {
+    "title": "模型設定",
+    "parameters": "參數設定",
+    "instructionsSetting": "提示詞設定",
+    "listTitle": "服務提供者配置",
+    "deleteTitle": "確定刪除 {{count}} 筆 Provider Authentication？",
+    "deleteDescription": "Authentication一經刪除即無法復原。",
+    "verifying": "驗證 API Key 與模型中...",
+    "apiKeyError": "API Key 無效，請檢查您的 API Key 並重新輸入。",
+    "closeAllTitle": "確定關閉？",
+    "closeAllDescription": "關閉後無可用模型，無法進行對話",
+    "deleteAllTitle": "確定刪除？",
+    "deleteAllDescription": "刪除後無可用模型，無法進行對話",
+    "noModelAlertTitle": "未啟用任何Models！",
+    "noModelAlertDescription": "無可用模型，無法進行對話",
+    "noModelAlertOption": "無可用模型"
+  },
   "system": {
     "title": "系統設定",
     "language": "系統語言",
-    "theme": "顯示模式"
+    "theme": "顯示模式",
+    "defaultInstructions": "以繁體中文回應"
   },
   "toast": {
     "copiedToClipboard": "已複製到剪貼簿"

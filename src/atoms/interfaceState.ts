@@ -1,3 +1,4 @@
+import React from 'react';
 import { atom } from "jotai"
 
 export type ModelProvider = "openai" | "openai_compatible" | "ollama" | "anthropic"
@@ -7,6 +8,13 @@ export const PROVIDER_LABELS: Record<ModelProvider, string> = {
   openai_compatible: "OpenAI Compatible",
   ollama: "Ollama",
   anthropic: "Anthropic"
+}
+
+export const PROVIDER_ICONS: Record<ModelProvider, string> = {
+  ollama: "/image/model_ollama.svg",
+  openai_compatible: "/image/model_openai_compatible.svg",
+  openai: "/image/model_openai.svg",
+  anthropic: "/image/model_anthropic.svg"
 }
 
 export type InputType = "text" | "password"

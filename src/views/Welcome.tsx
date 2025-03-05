@@ -1,10 +1,10 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { useSetAtom, useAtom } from "jotai"
+import { useSetAtom, useAtom, useAtomValue } from "jotai"
 import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
-import { hasConfigAtom } from "../atoms/configState"
+import { activeProviderAtom, hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { showToastAtom } from "../atoms/toastState"
 import { openOverlayAtom } from "../atoms/layerState"
@@ -36,6 +36,7 @@ const Welcome = () => {
   const [toolsCnt, setToolsCnt] = useState<number>(0)
   const [, openOverlay] = useAtom(openOverlayAtom)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const activeProvider = useAtomValue(activeProviderAtom)
 
   useEffect(() => {
     fetchTools()
@@ -85,6 +86,8 @@ const Welcome = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (activeProvider === "none")
+      return
     if (message.trim() || uploadedFiles.length > 0) {
       navigate("/chat", { 
         state: { 
@@ -101,15 +104,7 @@ const Welcome = () => {
         return
       }
 
-      e.preventDefault()
-      if (message.trim() || uploadedFiles.length > 0) {
-        navigate("/chat", { 
-          state: { 
-            initialMessage: message,
-            files: uploadedFiles
-          } 
-        })
-      }
+      handleSubmit(e)
     }
   }
 
@@ -212,7 +207,7 @@ const Welcome = () => {
                   </svg>
                   {`${toolsCnt} ${t("chat.tools")}`}
                 </button>
-                <button type="submit" className="send-btn" disabled={!message.trim() && uploadedFiles.length === 0}>
+                <button type="submit" className="send-btn" disabled={(!message.trim() && uploadedFiles.length === 0) || activeProvider === "none"}>
                   <svg width="24" height="24" viewBox="0 0 24 24">
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                   </svg>

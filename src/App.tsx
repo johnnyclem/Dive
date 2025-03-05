@@ -5,6 +5,7 @@ import { loadConfigAtom } from './atoms/configState'
 import { useEffect, useState } from "react"
 import { handleGlobalHotkey, loadHotkeyMapAtom } from "./atoms/hotkeyState"
 import { systemThemeAtom } from "./atoms/themeState"
+import ModelsProvider from "./views/Overlay/Model/ModelsProvider"
 
 function App() {
   const [, loadConfig] = useAtom(loadConfigAtom)
@@ -45,7 +46,9 @@ function App() {
 
   return (
     <>
-      <RouterProvider router={router} />
+      <ModelsProvider>
+        <RouterProvider router={router} />
+      </ModelsProvider>
     </>
   )
 }

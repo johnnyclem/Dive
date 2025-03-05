@@ -84,10 +84,28 @@
     "confirm": "Confirm",
     "cancel": "Cancel"
   },
+  "models": {
+    "title": "Model Settings",
+    "parameters": "Parameter Settings",
+    "instructionsSetting": "Prompt Settings",
+    "listTitle": "Provider Configuration",
+    "deleteTitle": "Confirm deletion of {{count}} Provider Authentication(s)?",
+    "deleteDescription": "Authentication cannot be recovered once deleted.",
+    "verifying": "Verifying key & model ...",
+    "apiKeyError": "API Key is invalid, please check your API Key and re-enter.",
+    "closeAllTitle": "Confirm Close?",
+    "closeAllDescription": "Closing will disable all models, and you will not be able to chat.",
+    "deleteAllTitle": "Confirm Delete?",
+    "deleteAllDescription": "Deleting will disable all models, and you will not be able to chat.",
+    "noModelAlertTitle": "No Models Enabled!",
+    "noModelAlertDescription": "No available models, you will not be able to chat.",
+    "noModelAlertOption": "No available models"
+  },
   "system": {
     "title": "System Settings",
     "language": "System Language",
-    "theme": "Display Mode"
+    "theme": "Display Mode",
+    "defaultInstructions": "speak in English"
   },
   "toast": {
     "copiedToClipboard": "Copied to clipboard"
