@@ -6,9 +6,13 @@ import { scriptsDir } from "../constant"
 export function ipcUtilHandler() {
   ipcMain.handle("util:fillPathToConfig", async (_, _config: string) => {
     try {
-      const { mcpServers: servers } = JSON.parse(_config) as {mcpServers: Record<string, {enabled: boolean, command: string, args: string[]}>}
+      const { mcpServers: servers } = JSON.parse(_config) as {mcpServers: Record<string, {enabled: boolean, command?: string, args?: string[]}>}
       const mcpServers = Object.keys(servers).reduce((acc, server) => {
         const { args } = servers[server]
+
+        if (!args)
+          return acc
+
         const pathToScript = args.find((arg) => arg.endsWith("js") || arg.endsWith("ts"))
         if (!pathToScript)
           return acc
