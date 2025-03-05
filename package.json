@@ -9,6 +9,10 @@
       "VITE_DEV_SERVER_URL": "http://127.0.0.1:7777/"
     }
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OpenAgentPlatform/Dive"
+  },
   "scripts": {
     "dev": "vite --config vite.config.ts",
     "dev:electron": "vite --config vite.config.electron.ts",
