@@ -2,7 +2,7 @@ import net from "node:net"
 import path from "node:path"
 import { spawn } from "cross-spawn"
 import { app } from "electron"
-import fs from "fs"
+import fse from "fs-extra"
 
 export function isPortInUse(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -64,8 +64,8 @@ export function getNvmPath(): string {
   const nvmPath = path.join(home, ".nvm", "versions", "node")
 
   try {
-    if (fs.existsSync(nvmPath)) {
-      const currentVersion = fs.readdirSync(nvmPath)
+    if (fse.existsSync(nvmPath)) {
+      const currentVersion = fse.readdirSync(nvmPath)
         .filter(dir => dir.startsWith("v"))
         .sort()
         .pop()
@@ -85,4 +85,34 @@ export function getLatestVersion(): Promise<string> {
   return fetch("https://api.github.com/repos/OpenAgentPlatform/Dive/releases/latest")
     .then(res => res.json())
     .then(data => data.tag_name.slice(1))
+}
+
+export function compareFiles(filePath1: string, filePath2: string): boolean {
+  try {
+    const stat1 = fse.statSync(filePath1)
+    const stat2 = fse.statSync(filePath2)
+
+    // Compare size
+    if (stat1.size !== stat2.size) {
+      return false
+    }
+
+    // Compare modification time
+    if (stat1.mtimeMs !== stat2.mtimeMs) {
+      return false
+    }
+
+    // Files might be identical
+    return true
+  }
+  catch (error) {
+    console.error("Error comparing files:", error);
+    return false
+  }
+}
+
+export function compareFilesAndReplace(filePath1: string, filePath2: string) {
+  if (!compareFiles(filePath1, filePath2)) {
+    fse.copyFileSync(filePath2, filePath1)
+  }
 }
