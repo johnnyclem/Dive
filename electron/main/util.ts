@@ -112,7 +112,7 @@ export function compareFiles(filePath1: string, filePath2: string): boolean {
 }
 
 export function compareFilesAndReplace(filePath1: string, filePath2: string) {
-  if (!compareFiles(filePath1, filePath2)) {
-    fse.copyFileSync(filePath2, filePath1)
+  if (fse.existsSync(filePath1) && !compareFiles(filePath1, filePath2)) {
+    fse.copyFileSync(filePath1, filePath2)
   }
 }
