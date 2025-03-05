@@ -75,9 +75,10 @@ const ModelPopup = ({
     }
     setCheckboxState(State)
 
-    listOptions.forEach((model) => {
-      handleModelChange(model.name, "checked", !!State)
+    const newModelList = listOptions?.map((model: ListOption) => {
+      return { ...model, "checked": !!State }
     })
+    setListOptions(newModelList)
   }
 
   const handleModelChange = (name: string, key: string, value: any) => {
