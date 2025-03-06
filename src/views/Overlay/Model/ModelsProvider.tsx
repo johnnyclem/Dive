@@ -12,6 +12,8 @@ export type ListOption = {
 type ContextType = {
   multiModelConfigList?: MultiModelConfig[]
   setMultiModelConfigList: (multiModelConfigList: MultiModelConfig[]) => void
+  parameter: Record<string, number>
+  setParameter: (parameter: Record<string, number>) => void
   currentIndex: number
   setCurrentIndex: (currentIndex: number) => void
   listOptions: ListOption[]
@@ -37,7 +39,7 @@ export default function ModelsProvider({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [listOptions, setListOptions] = useState<ListOption[]>([])
   const [multiModelConfigList, setMultiModelConfigList] = useState<MultiModelConfig[]>([])
-
+  const [parameter, setParameter] = useState<Record<string, number>>(JSON.parse(localStorage.getItem("ConfigParameter") || "{}"))
   const getMultiModelConfigList = () => {
     return new Promise((resolve, reject) => {
       setMultiModelConfigList(prev => {
@@ -46,21 +48,55 @@ export default function ModelsProvider({
       })
     }) as Promise<MultiModelConfig[]>
   }
+  const getParameter = () => {
+    return new Promise((resolve, reject) => {
+      setParameter(prev => {
+        resolve(prev)
+        return prev
+      })
+    }) as Promise<Record<string, number>>
+  }
 
   useEffect(() => {
     const fetchData = async () => {
       const data = await loadConfig()
-      if (!data) return
+      if (!data || Object.keys(data.configs).length === 0) {
+        const _parameter = localStorage.getItem("ConfigParameter")
+        if(_parameter){
+          setParameter(JSON.parse(_parameter))
+        }
+        return
+      }
       let providerConfigList: MultiModelConfig[] = []
       providerConfigList = extractData(data.configs)
       setMultiModelConfigList(providerConfigList)
+      if(providerConfigList){
+        const _topP = providerConfigList.find(config => config.topP)
+        const _temperature = providerConfigList.find(config => config.temperature)
+        setParameter({
+          topP: _topP?.topP ?? 0,
+          temperature: _temperature?.temperature ?? 0
+        })
+      } else {
+        const parameter = localStorage.getItem("ConfigParameter")
+        if(parameter){
+          setParameter(JSON.parse(parameter))
+        }
+        return
+      }
     }
     fetchData()
   }, [config?.activeProvider])
 
+  useEffect(() => {
+    if(multiModelConfigList && multiModelConfigList?.length > 0){
+      localStorage.removeItem("ConfigParameter")
+    }
+  }, [multiModelConfigList])
+
   const prepareModelConfig = useCallback((config: ModelConfig, provider: ModelProvider) => {
     const _config = {...config}
-    if (provider === "openai") {
+    if (provider === "openai" && config.baseURL) {
       delete (_config as any).baseURL
     }
 
@@ -73,7 +109,7 @@ export default function ModelsProvider({
     }
 
     return Object.keys(_config).reduce((acc, key) => {
-      if (ignoreFieldsForModel.some(item => item.fields.includes(key))) {
+      if (ignoreFieldsForModel.some(item => (item.model === _config.model || _config.model?.startsWith(item.prefix)) && item.fields.includes(key))) {
         return acc
       }
 
@@ -152,7 +188,9 @@ export default function ModelsProvider({
   const saveConfig = async (newActiveProvider?: ModelProvider) => {
     let compressedData: Record<string, ModelConfig> = {}
     const _multiModelConfigList = await getMultiModelConfigList()
+    const _parameter = await getParameter()
     _multiModelConfigList.forEach((multiModelConfig, index) => {
+      multiModelConfig = Object.assign(multiModelConfig, _parameter)
       compressedData = Object.assign(compressedData, compressData(multiModelConfig, index))
     })
     Object.entries(compressedData).forEach(([key, value]) => {
@@ -165,6 +203,11 @@ export default function ModelsProvider({
     const model = configList?.[_activeProvider]?.model
     _activeProvider = Object.keys(compressedData).find(key => compressedData[key].model === model) as ModelProvider ?? "none"
 
+    if(!_multiModelConfigList?.length){
+      const _parameter = await getParameter()
+      localStorage.setItem("ConfigParameter", JSON.stringify(_parameter))
+    }
+
     const data = await saveAllConfig({ providerConfigs: compressedData, activeProvider: _activeProvider as ModelProvider })
     return data
   }
@@ -173,6 +216,8 @@ export default function ModelsProvider({
     <context.Provider value={{
       multiModelConfigList,
       setMultiModelConfigList,
+      parameter,
+      setParameter,
       currentIndex,
       setCurrentIndex,
       listOptions,

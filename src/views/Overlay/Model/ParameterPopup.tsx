@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { ModelConfig } from "../../../atoms/configState"
 import { useTranslation } from "react-i18next"
 import { useAtom } from "jotai"
 import PopupConfirm from "../../../components/PopupConfirm"
@@ -17,18 +16,17 @@ const ParameterPopup = ({
   const { t } = useTranslation()
   const [, showToast] = useAtom(showToastAtom)
   const { setMultiModelConfigList, multiModelConfigList, saveConfig } = useModelsProvider()
-  const [params, setParams] = useState<Pick<ModelConfig, "topP" | "temperature">>({topP: 0, temperature: 0})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [instructions, setInstructions] = useState("")
+  const [initialParams, setInitialParams] = useState<Record<string, number>>({})
   const [initialInstructions, setInitialInstructions] = useState("")
-  const changed = instructions !== initialInstructions || params.topP !== multiModelConfigList[0]?.topP || params.temperature !== multiModelConfigList[0]?.temperature
+  const { parameter, setParameter } = useModelsProvider()
+  const changed = instructions !== initialInstructions || parameter.topP !== initialParams.topP || parameter.temperature !== initialParams.temperature
 
   useEffect(() => {
+    if(!multiModelConfigList) return
     fetchInstructions()
-    setParams({
-      topP: multiModelConfigList[0]?.topP ?? 0,
-      temperature: multiModelConfigList[0]?.temperature ?? 0
-    })
+    setInitialParams({ ...parameter })
   }, [])
 
   const fetchInstructions = async () => {
@@ -44,8 +42,8 @@ const ParameterPopup = ({
     }
   }
 
-  const handleParameterChange = (key: string, value: any) => {
-    setParams(prev => ({
+  const handleParameterChange = (key: string, value: number) => {
+    setInitialParams(prev => ({
       ...prev,
       [key]: value
     }))
@@ -56,6 +54,10 @@ const ParameterPopup = ({
   }
 
   const onConfirm = async () => {
+    setParameter(initialParams)
+    if(!multiModelConfigList?.length){
+      localStorage.setItem("ConfigParameter", JSON.stringify(initialParams))
+    }
     const _multiModelConfigList = JSON.parse(JSON.stringify(multiModelConfigList))
     try {
       setIsSubmitting(true)
@@ -64,13 +66,6 @@ const ParameterPopup = ({
         body: instructions
       })
       const data = await response.json()
-
-      const newList = multiModelConfigList.map(config => ({
-        ...config,
-        topP: params.topP,
-        temperature: params.temperature
-      }))
-      setMultiModelConfigList(newList)
       const _data = await saveConfig()
 
       if (data.success && _data.success) {
@@ -137,10 +132,9 @@ const ParameterPopup = ({
                   </svg>
                 </div>
               </InfoTooltip>
-              {/* <input type="number" value={params.topP ?? 0} min={0} max={1} step={0.1} onChange={e => handleParameterChange("topP", validateNumber(parseFloat(e.target.value), 0, 1))} /> */}
               <WrappedInput
                 type="number"
-                value={params.topP ?? 0}
+                value={initialParams.topP ?? 0}
                 min={0}
                 max={1}
                 step={0.1}
@@ -168,7 +162,7 @@ const ParameterPopup = ({
                   </svg>
                 </div>
               </InfoTooltip>
-              <input type="number" value={params.temperature ?? 0} min={0} max={1} step={0.1} onChange={e => handleParameterChange("temperature", validateNumber(parseFloat(e.target.value), 0, 1))} />
+              <input type="number" value={initialParams.temperature ?? 0} min={0} max={1} step={0.1} onChange={e => handleParameterChange("temperature", validateNumber(parseFloat(e.target.value), 0, 1))} />
             </div>
           </div>
         </div>

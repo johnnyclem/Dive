@@ -118,6 +118,10 @@ const ModelPopup = ({
 
   const onConfirm = async () => {
     const _multiModelConfigList = JSON.parse(JSON.stringify(multiModelConfigList))
+    if(!multiModelConfigList){
+      handleSubmit({ success: true })
+      return
+    }
     try {
       setIsSubmitting(true)
       const newModelConfigList = multiModelConfigList

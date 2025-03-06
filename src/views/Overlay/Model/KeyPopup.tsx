@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next"
-import { formatData, ModelConfig, MultiModelConfig } from "../../../atoms/configState"
+import { formatData, ModelConfig } from "../../../atoms/configState"
 import { defaultInterface, FieldDefinition, ModelProvider, PROVIDER_LABELS } from "../../../atoms/interfaceState"
 import PopupConfirm from "../../../components/PopupConfirm"
 import { useEffect, useRef, useState } from "react"
@@ -120,8 +120,8 @@ const KeyPopup = ({
       }
       sessionStorage.setItem(`model-list-${multiModelConfig.apiKey.slice(-5)}`, JSON.stringify(verifiedList))
       setListOptions(verifiedList)
-      setMultiModelConfigList([...multiModelConfigList, multiModelConfig])
-      setCurrentIndex(multiModelConfigList.length)
+      setMultiModelConfigList([...(multiModelConfigList ?? []), multiModelConfig])
+      setCurrentIndex((multiModelConfigList?.length ?? 0))
       const data = await saveConfig()
       await handleSubmit(data)
     } catch (error) {

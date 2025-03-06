@@ -22,6 +22,7 @@ const PageLayout = () => {
   const [showDeleteAll, setShowDeleteAll] = useState(false)
   const [showCloseConfirm, setShowCloseConfirm] = useState(false)
   const [showNoModelAlert, setShowNoModelAlert] = useState(false)
+  const [stopAlert, setStopAlert] = useState(false)
   const [showParameterPopup, setShowParameterPopup] = useState(false)
   const [checkboxState, setCheckboxState] = useState("")
   const showToast = useSetAtom(showToastAtom)
@@ -133,6 +134,7 @@ const PageLayout = () => {
   const handleNewKeySubmit = () => {
     setShowKeyPopup(false)
     setShowModelPopup(true)
+    setStopAlert(true)
   }
 
   const openModelPopup = async (index: number) => {
@@ -142,9 +144,10 @@ const PageLayout = () => {
 
   const handleModelSubmit = () => {
     setShowModelPopup(false)
-    if(multiModelConfigList?.filter(config => config.active && config.models.length > 0).length === 0) {
+    if(!stopAlert && multiModelConfigList?.filter(config => config.active && config.models.length > 0).length === 0) {
       setShowNoModelAlert(true)
     }
+    setStopAlert(false)
   }
 
   const deleteConfig = async () => {
@@ -167,13 +170,7 @@ const PageLayout = () => {
         })
         setMultiModelConfigList(_multiModelConfigList)
       }
-      if (newMultiModelConfigList.every(multiModelConfig => multiModelConfig.checked)) {
-        setCheckboxState("all")
-      } else if (newMultiModelConfigList.some(multiModelConfig => multiModelConfig.checked)) {
-        setCheckboxState("-")
-      } else {
-        setCheckboxState("")
-      }
+      setCheckboxState("")
     } catch (error) {
       console.error("Failed to save config:", error)
       setMultiModelConfigList(_multiModelConfigList)
@@ -401,7 +398,10 @@ const PageLayout = () => {
         )}
         {showModelPopup && (
           <ModelPopup
-            onClose={() => setShowModelPopup(false)}
+            onClose={() => {
+              setShowModelPopup(false)
+              setStopAlert(false)
+            }}
             onSuccess={handleModelSubmit}
           />
         )}
