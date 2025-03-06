@@ -121,7 +121,7 @@ const PageLayout = () => {
     const newMultiModelConfigList = multiModelConfigList as any ?? []
     newMultiModelConfigList[index][key] = value
 
-    if(!value &&newMultiModelConfigList.filter((config: MultiModelConfig) => config.active && config.models.length > 0).length === 0) {
+    if(key !== "checked" && !value && newMultiModelConfigList.filter((config: MultiModelConfig) => config.active && config.models.length > 0).length === 0) {
       setCurrentIndex(index)
       newMultiModelConfigList[index][key] = !value
       setShowCloseConfirm(true)
