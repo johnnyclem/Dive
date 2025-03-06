@@ -5,6 +5,13 @@
   "copyright": "Copyright © 2025 Open Agent Platform",
   "asar": true,
   "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "OpenAgentPlatform",
+      "repo": "Dive"
+    }
+  ],
   "asarUnpack": [
     "**/node_modules/sharp/**/*",
     "**/node_modules/@img/**/*",
