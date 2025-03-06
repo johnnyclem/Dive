@@ -1,6 +1,8 @@
 import { ToolDefinition } from "@langchain/core/language_models/base";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 import path from "path";
 import { handleConnectToServer } from "../connectServer.js";
 import { SystemCommandManager } from "../syscmd/index.js";
@@ -12,10 +14,12 @@ import { IMCPServerManager } from "./interface.js";
 export class MCPServerManager implements IMCPServerManager {
   private static instance: MCPServerManager;
   private servers: Map<string, Client> = new Map();
-  private transports: Map<string, StdioClientTransport> = new Map();
+  private transports: Map<string, StdioClientTransport | SSEClientTransport | WebSocketClientTransport> = new Map();
   private toolToServerMap: Map<string, Client> = new Map();
   private availableTools: ToolDefinition[] = [];
   private toolInfos: iTool[] = [];
+  // SSE/Websocket 開起來的Client
+  private tempClients: Map<string, Client> = new Map();
   public configPath: string;
 
   private constructor(configPath?: string) {
@@ -42,6 +46,7 @@ export class MCPServerManager implements IMCPServerManager {
     this.toolToServerMap.clear();
     this.availableTools = [];
     this.toolInfos = [];
+    this.tempClients.clear();
 
     // Load and connect all servers
     await this.connectAllServers();
@@ -52,7 +57,7 @@ export class MCPServerManager implements IMCPServerManager {
     const { config, servers } = await loadConfigAndServers(this.configPath);
     // only connect enabled servers
     const enabledServers = Object.keys(config.mcpServers).filter((serverName) => config.mcpServers[serverName].enabled);
-    logger.info(`Connect to ${servers.length} enabled servers...`);
+    logger.info(`Connect to ${enabledServers.length} enabled servers...`);
 
     const allEnabledSpecificEnv = enabledServers.reduce((acc, serverName) => {
       return { ...acc, ...config.mcpServers[serverName].env };
@@ -101,9 +106,16 @@ export class MCPServerManager implements IMCPServerManager {
     allSpecificEnv: any
   ): Promise<{ success: boolean; serverName: string; error?: unknown }> {
     try {
-      const { client, transport } = await handleConnectToServer(serverName, config, allSpecificEnv);
+      const updatedConfig = { ...config };
+      if (!updatedConfig.transport) {
+        updatedConfig.transport = "command";
+        logger.debug(`No transport specified for server ${serverName}, defaulting to "command" transport`);
+      }
+
+      const { client, transport, tempClient } = await handleConnectToServer(serverName, updatedConfig, allSpecificEnv);
       this.servers.set(serverName, client);
       this.transports.set(serverName, transport);
+      tempClient && this.tempClients.set(serverName, tempClient)
 
       // Load server tools and capabilities
       const response = await client.listTools();
@@ -148,12 +160,12 @@ export class MCPServerManager implements IMCPServerManager {
     }
   }
 
-async syncServersWithConfig(): Promise<{ serverName: string; error: unknown }[]> {
+  async syncServersWithConfig(): Promise<{ serverName: string; error: unknown }[]> {
     logger.info("Syncing servers with configuration...");
     // const errorArray: { serverName: string; error: unknown }[] = [];
 
     try {
-      this.disconnectAllServers();
+      await this.disconnectAllServers();
       const errorArray = await this.connectAllServers();
       // // Get configuration differences
       // const { config: newConfig } = await loadConfigAndServers(this.configPath);
@@ -241,7 +253,11 @@ async syncServersWithConfig(): Promise<{ serverName: string; error: unknown }[]>
         // Close transport and clean up server
         const transport = this.transports.get(serverName);
         if (transport) {
-          transport.close();
+          await transport.close();
+        }
+        const tempClient = this.tempClients.get(serverName)
+        if (tempClient){
+          await tempClient.close()
         }
         this.transports.delete(serverName);
         this.servers.delete(serverName);
@@ -287,11 +303,33 @@ async syncServersWithConfig(): Promise<{ serverName: string; error: unknown }[]>
     const client = this.servers.get(serverName);
     if (!client) return true;
     const currentParams = (client?.transport as any)._serverParams as iServerConfig;
-    return (
-      currentParams.command !== (SystemCommandManager.getInstance().getValue(config.command) || config.command) ||
-      currentParams.args.join(",") !== config.args.join(",") ||
-      JSON.stringify(currentParams.env) !== JSON.stringify(config.env)
-    );
+
+    // check transport type changed
+    if (currentParams.transport !== config.transport) return true;
+
+    // if command transport, check command, args and env
+    if (config.transport === "command" && currentParams.transport === "command") {
+      const currentCommand = currentParams.command || "";
+      const newCommand = SystemCommandManager.getInstance().getValue(config.command || "") || config.command || "";
+      const currentArgs = currentParams.args || [];
+      const newArgs = config.args || [];
+
+      return (
+        currentCommand !== newCommand ||
+        currentArgs.join(",") !== newArgs.join(",") ||
+        JSON.stringify(currentParams.env) !== JSON.stringify(config.env)
+      );
+    }
+
+    // if sse or websocket transport, check url
+    if (
+      (config.transport === "sse" || config.transport === "websocket") &&
+      (currentParams.transport === "sse" || currentParams.transport === "websocket")
+    ) {
+      return currentParams.url !== config.url;
+    }
+
+    return true;
   }
 
   getAvailableTools(): ToolDefinition[] {
@@ -312,6 +350,13 @@ async syncServersWithConfig(): Promise<{ serverName: string; error: unknown }[]>
       const transport = this.transports.get(serverName);
       if (transport) {
         await transport.close();
+      }
+    }
+    for (const serverName of this.tempClients.keys()){
+      logger.debug(`[${serverName}] Disconnecting temp client`);
+      const client = this.tempClients.get(serverName)
+      if (client){
+        await client.close()
       }
     }
     this.servers.clear();
