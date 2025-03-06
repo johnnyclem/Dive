@@ -253,7 +253,7 @@ export class MCPServerManager implements IMCPServerManager {
         // Close transport and clean up server
         const transport = this.transports.get(serverName);
         if (transport) {
-          transport.close();
+          await transport.close();
         }
         const tempClient = this.tempClients.get(serverName)
         if (tempClient){
@@ -353,6 +353,7 @@ export class MCPServerManager implements IMCPServerManager {
       }
     }
     for (const serverName of this.tempClients.keys()){
+      logger.debug(`[${serverName}] Disconnecting temp client`);
       const client = this.tempClients.get(serverName)
       if (client){
         await client.close()

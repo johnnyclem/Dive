@@ -29,39 +29,39 @@ export async function handleConnectToServer(serverName: string, serverConfig: iS
     let isPortAvailable = true;
 
     // check if the url is a local port
-    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
-      const port = parseInt(url.port);
-      if (!isNaN(port)) {
-        try {
-          // create a test TCP server to check if the port is in use
-          const testServer = net.createServer();
+    // if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    //   const port = parseInt(url.port);
+    //   if (!isNaN(port)) {
+    //     try {
+    //       // create a test TCP server to check if the port is in use
+    //       const testServer = net.createServer();
 
-          await new Promise<void>((resolve, reject) => {
-            testServer.once('error', (err: any) => {
-              if (err.code === 'EADDRINUSE') {
-                logger.debug(`[${serverName}] Port ${port} is already in use`);
-                isPortAvailable = false;
-                resolve();
-              } else {
-                reject(err);
-              }
-            });
+    //       await new Promise<void>((resolve, reject) => {
+    //         testServer.once('error', (err: any) => {
+    //           if (err.code === 'EADDRINUSE') {
+    //             logger.debug(`[${serverName}] Port ${port} is already in use`);
+    //             isPortAvailable = false;
+    //             resolve();
+    //           } else {
+    //             reject(err);
+    //           }
+    //         });
 
-            testServer.once('listening', () => {
-              testServer.close();
-              logger.debug(`[${serverName}] Port ${port} is available`);
-              resolve();
-            });
-            testServer.listen(port);
-          });
-        } catch (error) {
-          logger.error(`[${serverName}] Error checking port ${port}: ${error instanceof Error ? error.message : String(error)}`);
-          throw error;
-        }
-      }
-    }
+    //         testServer.once('listening', () => {
+    //           testServer.close();
+    //           logger.debug(`[${serverName}] Port ${port} is available`);
+    //           resolve();
+    //         });
+    //         testServer.listen(port);
+    //       });
+    //     } catch (error) {
+    //       logger.error(`[${serverName}] Error checking port ${port}: ${error instanceof Error ? error.message : String(error)}`);
+    //       throw error;
+    //     }
+    //   }
+    // }
 
-    if (serverConfig.command && isPortAvailable){
+    if (serverConfig.command){
       const command = SystemCommandManager.getInstance().getValue(serverConfig.command) || serverConfig.command;
       const allSpecificEnv_ =
         process.platform === "win32" ? { ...allSpecificEnv, PYTHONIOENCODING: "utf-8" } : allSpecificEnv;
