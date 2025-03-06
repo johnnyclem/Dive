@@ -100,9 +100,7 @@ export class WebServer {
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
     return (text: string) => {
-      setImmediate(() => {
-        res.write(`data: ${JSON.stringify({ message: text })}\n\n`);
-      });
+      res.write(`data: ${JSON.stringify({ message: text })}\n\n`);
     };
   }
 
