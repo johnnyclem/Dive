@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain, protocol, net, Menu } from "electron"
+import { app, BrowserWindow, shell, ipcMain, protocol, net } from "electron"
 import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
@@ -10,6 +10,7 @@ import { getLatestVersion, getNvmPath, modifyPath } from "./util"
 import { binDirList, cacheDir, darwinPathList } from "./constant"
 import { update } from "./update"
 import { ipcHandler } from "./ipc"
+import { initTray } from "./tray"
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -142,6 +143,9 @@ async function createWindow() {
 
   // Auto update
   update(win)
+
+  // Tray
+  initTray(win)
 
   // ipc handler
   ipcHandler(win)
