@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { configSidebarVisibleAtom, sidebarVisibleAtom } from "../atoms/sidebarState"
+import { sidebarVisibleAtom } from "../atoms/sidebarState"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
@@ -25,12 +25,12 @@ interface DeleteConfirmProps {
 const DeleteConfirmModal: React.FC<DeleteConfirmProps> = ({ onConfirm, onCancel }) => {
   const { t } = useTranslation()
   const setCurrentChatId = useSetAtom(currentChatIdAtom)
-  
+
   const _onConfirm = useCallback(() => {
     onConfirm()
     setCurrentChatId("")
   }, [onConfirm, setCurrentChatId])
-  
+
   return (
     <PopupConfirm
       title={t("chat.confirmDelete")}
@@ -52,7 +52,6 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const location = useLocation()
   const histories = useAtomValue(historiesAtom)
   const loadHistories = useSetAtom(loadHistoriesAtom)
-  const setConfigSidebarVisible = useSetAtom(configSidebarVisibleAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const showToast = useSetAtom(showToastAtom)
   const openOverlay = useSetAtom(openOverlayAtom)
@@ -66,11 +65,11 @@ const HistorySidebar = ({ onNewChat }: Props) => {
       loadHistories()
     }
   }, [isVisible, loadHistories])
-  
+
   useHotkeyEvent("chat:delete", () => {
     currentChatId && setDeletingChatId(currentChatId)
   })
-  
+
   // check new version
   const lastQueryTime = useRef(0)
   useEffect(() => {
@@ -153,10 +152,6 @@ const HistorySidebar = ({ onNewChat }: Props) => {
     openOverlay("System")
   }
 
-  const handleSettings = () => {
-    setConfigSidebarVisible(true)
-  }
-
   return (
     <>
       <div className={`history-sidebar ${isVisible ? "visible" : ""}`}>
@@ -172,7 +167,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
         </div>
         <div className="history-list">
           {histories.map(chat => (
-            <div 
+            <div
               key={chat.id}
               className={`history-item ${chat.id === currentChatId ? "active" : ""}`}
               onClick={() => loadChat(chat.id)}
@@ -183,7 +178,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
                   {new Date(chat.createdAt).toLocaleString()}
                 </div>
               </div>
-              <button 
+              <button
                 className="delete-btn"
                 onClick={(e) => confirmDelete(e, chat.id)}
                 title={t("chat.deleteChat")}
@@ -196,7 +191,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
           ))}
         </div>
         <div className="sidebar-footer">
-          <button 
+          <button
             className="sidebar-footer-btn"
             onClick={handleTools}
           >
@@ -205,7 +200,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
             </svg>
             {t("sidebar.tools")}
           </button>
-          <button 
+          <button
             className="sidebar-footer-btn"
             onClick={handleModels}
           >
@@ -216,7 +211,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
             </svg>
             {t("sidebar.models")}
           </button>
-          <button 
+          <button
             className="sidebar-footer-btn system-btn"
             onClick={handleSystem}
           >
@@ -227,7 +222,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
             {t("sidebar.system")}
           </button>
           {newVersion && (
-            <button 
+            <button
               className="sidebar-footer-btn update-btn"
               onClick={() => window.open("https://github.com/OpenAgentPlatform/Dive/releases/latest", "_blank")}
             >
@@ -252,4 +247,4 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   )
 }
 
-export default React.memo(HistorySidebar) 
+export default React.memo(HistorySidebar)

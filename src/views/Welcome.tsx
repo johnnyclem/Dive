@@ -4,7 +4,7 @@ import { useSetAtom, useAtom, useAtomValue } from "jotai"
 import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
-import { activeProviderAtom, hasConfigAtom } from "../atoms/configState"
+import { hasActiveConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { showToastAtom } from "../atoms/toastState"
 import { openOverlayAtom } from "../atoms/layerState"
@@ -31,12 +31,12 @@ const Welcome = () => {
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
   const [histories] = useAtom(historiesAtom)
   const [, loadHistories] = useAtom(loadHistoriesAtom)
-  const [hasConfig] = useAtom(hasConfigAtom)
+  const [hasConfig] = useAtom(hasActiveConfigAtom)
   const isComposing = useRef(false)
   const [toolsCnt, setToolsCnt] = useState<number>(0)
   const [, openOverlay] = useAtom(openOverlayAtom)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const activeProvider = useAtomValue(activeProviderAtom)
+  const hasActiveConfig = useAtomValue(hasActiveConfigAtom)
 
   useEffect(() => {
     fetchTools()
@@ -71,13 +71,13 @@ const Welcome = () => {
   useEffect(() => {
     loadHistories()
   }, [loadHistories])
-  
+
   useHotkeyEvent("chat-input:upload-file", () => {
     if (fileInputRef.current) {
       fileInputRef.current.click()
     }
   })
-  
+
   useHotkeyEvent("chat-input:focus", () => {
     if (textareaRef.current) {
       textareaRef.current.focus()
@@ -86,14 +86,15 @@ const Welcome = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (activeProvider === "none")
+    if (!hasActiveConfig)
       return
+
     if (message.trim() || uploadedFiles.length > 0) {
-      navigate("/chat", { 
-        state: { 
+      navigate("/chat", {
+        state: {
           initialMessage: message,
           files: uploadedFiles
-        } 
+        }
       })
     }
   }
@@ -143,7 +144,7 @@ const Welcome = () => {
         const blob = item.getAsFile()
         if (!blob)
           return null
-        
+
         const ext = blob.type.split("/")[1]
         const filename = `pasted_image_${Date.now()}.${ext}`
         return new File([blob], filename, { type: blob.type })
@@ -163,7 +164,7 @@ const Welcome = () => {
       <div className="welcome-content">
         <h1>{t("welcome.title")}</h1>
         <p className="subtitle">{t("welcome.subtitle")}</p>
-        
+
         <form className="welcome-input" onSubmit={handleSubmit}>
           <div className="input-container">
             <Textarea
@@ -187,9 +188,9 @@ const Welcome = () => {
                 style={{ display: "none" }}
                 onChange={handleFileChange}
               />
-              <button 
-                type="button" 
-                className="upload-btn" 
+              <button
+                type="button"
+                className="upload-btn"
                 onClick={() => fileInputRef.current?.click()}
                 title={t("chat.uploadFile")}
               >
@@ -207,7 +208,7 @@ const Welcome = () => {
                   </svg>
                   {`${toolsCnt} ${t("chat.tools")}`}
                 </button>
-                <button type="submit" className="send-btn" disabled={(!message.trim() && uploadedFiles.length === 0) || activeProvider === "none"}>
+                <button type="submit" className="send-btn" disabled={(!message.trim() && uploadedFiles.length === 0) || !hasActiveConfig}>
                   <svg width="24" height="24" viewBox="0 0 24 24">
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                   </svg>
@@ -238,8 +239,8 @@ const Welcome = () => {
                     </div>
                   </div>
                 )}
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="remove-btn"
                   onClick={() => removeFile(index)}
                 >
@@ -254,9 +255,9 @@ const Welcome = () => {
 
         <div className="suggestions">
           {histories.length > 0 && histories.slice(0, 3).map(history => (
-            <div 
-              key={history.id} 
-              className="suggestion-item" 
+            <div
+              key={history.id}
+              className="suggestion-item"
               onClick={() => navigate(`/chat/${history.id}`)}
             >
               <div className="content-wrapper">

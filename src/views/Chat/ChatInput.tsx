@@ -5,7 +5,7 @@ import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import Textarea from "../../components/WrappedTextarea"
 import { lastMessageAtom } from "../../atoms/chatState"
 import { useAtomValue } from "jotai"
-import { activeProviderAtom } from "../../atoms/configState"
+import { hasActiveConfigAtom } from "../../atoms/configState"
 
 interface Props {
   onSendMessage?: (message: string, files?: FileList) => void
@@ -35,7 +35,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const isComposing = useRef(false)
   const [isAborting, setIsAborting] = useState(false)
   const lastMessage = useAtomValue(lastMessageAtom)
-  const activeProvider = useAtomValue(activeProviderAtom)
+  const hasActiveConfig = useAtomValue(hasActiveConfigAtom)
 
   const formatFileSize = useCallback((bytes: number): string => {
     if (bytes < 1024) return bytes + ' B'
@@ -45,21 +45,21 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
 
   const handleFiles = (files: File[]) => {
     const existingFiles = uploadedFiles.current
-    
+
     const newFiles = files.filter(newFile => {
       const isDuplicate = existingFiles.some(existingFile => {
         if (existingFile.name !== newFile.name)
           return false
-        
+
         if (existingFile.size !== newFile.size)
           return false
-        
+
         if (existingFile.lastModified !== newFile.lastModified)
           return false
-        
+
         return true
       })
-      
+
       return !isDuplicate
     })
 
@@ -72,17 +72,17 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
         name: file.name,
         size: formatFileSize(file.size)
       }
-      
+
       if (preview.type === 'image') {
         preview.url = URL.createObjectURL(file)
       }
-      
+
       return preview
     })
-    
+
     setPreviews(prev => [...prev, ...newPreviews])
     uploadedFiles.current = [...existingFiles, ...newFiles]
-    
+
     if (fileInputRef.current) {
       const dataTransfer = new DataTransfer()
       uploadedFiles.current.forEach(file => {
@@ -97,13 +97,13 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
     e?.stopPropagation()
 
     uploadedFiles.current = uploadedFiles.current.filter((_, i) => i !== index)
-    
+
     if (fileInputRef.current) {
       const dataTransfer = new DataTransfer()
       uploadedFiles.current.forEach(file => {
         dataTransfer.items.add(file)
       })
-      
+
       if (uploadedFiles.current.length === 0) {
         fileInputRef.current.value = ''
       } else {
@@ -139,19 +139,19 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
       handleFiles(files)
     }
   }
-  
+
   useHotkeyEvent("chat-input:upload-file", () => {
     if (fileInputRef.current) {
       fileInputRef.current.click()
     }
   })
-  
+
   useHotkeyEvent("chat-input:focus", () => {
     if (textareaRef.current) {
       textareaRef.current.focus()
     }
   })
-  
+
   useHotkeyEvent("chat-input:paste-last-message", () => {
     if (lastMessage) {
       setMessage(m => m + lastMessage)
@@ -193,7 +193,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
       window.removeEventListener("keydown", handleKeydown)
     }
   }, [disabled])
-  
+
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault()
@@ -229,18 +229,18 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if ((!message.trim() && !uploadedFiles.current.length) || !onSendMessage || disabled || activeProvider === "none")
+    if ((!message.trim() && !uploadedFiles.current.length) || !onSendMessage || disabled || !hasActiveConfig)
       return
 
     onSendMessage(message, fileInputRef.current?.files || undefined)
     setMessage("")
     resetTextareaHeight()
-    
+
     uploadedFiles.current = []
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
-    
+
     setPreviews(prev => {
       prev.forEach(preview => {
         if (preview.type === 'image' && preview.url) {
@@ -302,8 +302,8 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
           style={{ display: "none" }}
           onChange={handleFileChange}
         />
-        <button 
-          className="upload-btn" 
+        <button
+          className="upload-btn"
           onClick={handleFileClick}
           disabled={disabled}
           title={t('chat.uploadFile')}
@@ -334,7 +334,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
             <button
               className="send-btn"
               onClick={handleSubmit}
-              disabled={disabled || activeProvider === "none"}
+              disabled={disabled || !hasActiveConfig}
             >
               <svg width="24" height="24" viewBox="0 0 24 24">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
@@ -362,8 +362,8 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
                   </div>
                 </div>
               )}
-              <button 
-                className="remove-preview" 
+              <button
+                className="remove-preview"
                 onClick={(e) => removeFile(index, e)}
                 type="button"
               >

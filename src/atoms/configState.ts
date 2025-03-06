@@ -34,17 +34,17 @@ export const configAtom = atom<ActiveProviderConfig | null>(null)
 
 export const configListAtom = atom<Record<string, ModelConfig> | null>(null)
 
-export const hasConfigAtom = atom(
+export const hasActiveConfigAtom = atom(
   (get) => {
     const config = get(configAtom)
-    return config !== null && config.activeProvider !== ""
+    return config !== null && config.activeProvider !== "" && config.activeProvider !== "none" as any
   }
 )
 
-export const activeProviderAtom = atom(
+export const activeProviderAtom = atom<ModelProvider>(
   (get) => {
     const config = get(configAtom)
-    return config?.activeProvider || "none"
+    return config?.activeProvider || "none" as any
   }
 )
 
@@ -82,9 +82,9 @@ export const loadConfigAtom = atom(
 
 export const saveConfigAtom = atom(
   null,
-  async (get, set, params: { 
+  async (get, set, params: {
     formData: ModelConfig
-    provider: ModelProvider 
+    provider: ModelProvider
   }) => {
     const { formData, provider } = params
     const modelProvider = provider.startsWith("openai") ? "openai" : provider
