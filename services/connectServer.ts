@@ -6,6 +6,7 @@ import { EventSource } from "eventsource";
 import { SystemCommandManager } from "./syscmd/index.js";
 import logger from "./utils/logger.js";
 import { iServerConfig } from "./utils/types.js";
+import net from "net";
 
 // add EventSource to global scope
 if (typeof globalThis.EventSource === "undefined") {
@@ -24,9 +25,43 @@ export async function handleConnectToServer(serverName: string, serverConfig: iS
 
   if (serverConfig.transport === "sse" && serverConfig.url) {
     logger.debug(`Using SSE transport with URL: ${serverConfig.url}`);
-    const SSE_CONNECTION_TIMEOUT = 10000; // 10 seconds
+    const url = new URL(serverConfig.url);
+    let isPortAvailable = true;
 
-    if (serverConfig.command){
+    // check if the url is a local port
+    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+      const port = parseInt(url.port);
+      if (!isNaN(port)) {
+        try {
+          // create a test TCP server to check if the port is in use
+          const testServer = net.createServer();
+
+          await new Promise<void>((resolve, reject) => {
+            testServer.once('error', (err: any) => {
+              if (err.code === 'EADDRINUSE') {
+                logger.debug(`[${serverName}] Port ${port} is already in use`);
+                isPortAvailable = false;
+                resolve();
+              } else {
+                reject(err);
+              }
+            });
+
+            testServer.once('listening', () => {
+              testServer.close();
+              logger.debug(`[${serverName}] Port ${port} is available`);
+              resolve();
+            });
+            testServer.listen(port);
+          });
+        } catch (error) {
+          logger.error(`[${serverName}] Error checking port ${port}: ${error instanceof Error ? error.message : String(error)}`);
+          throw error;
+        }
+      }
+    }
+
+    if (serverConfig.command && isPortAvailable){
       const command = SystemCommandManager.getInstance().getValue(serverConfig.command) || serverConfig.command;
       const allSpecificEnv_ =
         process.platform === "win32" ? { ...allSpecificEnv, PYTHONIOENCODING: "utf-8" } : allSpecificEnv;
@@ -37,25 +72,16 @@ export async function handleConnectToServer(serverName: string, serverConfig: iS
         env: { ...defaultEnv, ...allSpecificEnv_ },
       });
       tempClient = new Client({ name: "mcp-client", version: "1.0.0" }, { capabilities: {} });
-      await tempClient.connect(tempTransport);
+
+      try {
+        await tempClient.connect(tempTransport);
+      } catch (error) {
+        logger.error(`[${serverName}][SSE] Failed to connect to server but SSE will still try to connect: ${error instanceof Error ? error.message : String(error)}`);
+      }
     }
 
     try {
-      const url = new URL(serverConfig.url);
       transport = new SSEClientTransport(url);
-      const connectionTimeoutPromise = new Promise<void>((_, reject) => {
-        setTimeout(() => {
-          reject(new Error(`SSE connection timed out after ${SSE_CONNECTION_TIMEOUT}ms`));
-        }, SSE_CONNECTION_TIMEOUT);
-      });
-
-      await Promise.race([
-        new Promise<void>((resolve) => {
-          setImmediate(resolve);
-        }),
-        connectionTimeoutPromise,
-      ]);
-
       logger.debug(`SSE transport created successfully for URL: ${serverConfig.url}`);
     } catch (error) {
       logger.error(`Failed to create SSE transport: ${error instanceof Error ? error.message : String(error)}`);
@@ -63,25 +89,11 @@ export async function handleConnectToServer(serverName: string, serverConfig: iS
     }
   } else if (serverConfig.transport === "websocket" && serverConfig.url) {
     logger.debug(`Using WebSocket transport with URL: ${serverConfig.url}`);
-    const WS_CONNECTION_TIMEOUT = 10000; // 10 seconds
 
     try {
       const url = new URL(serverConfig.url);
       transport = new WebSocketClientTransport(url);
-      const connectionTimeoutPromise = new Promise<void>((_, reject) => {
-        setTimeout(() => {
-          reject(new Error(`WebSocket connection timed out after ${WS_CONNECTION_TIMEOUT}ms`));
-        }, WS_CONNECTION_TIMEOUT);
-      });
-
-      await Promise.race([
-        new Promise<void>((resolve) => {
-          setImmediate(resolve);
-        }),
-        connectionTimeoutPromise,
-      ]);
-
-      logger.debug(`WebSocket transport created successfully for URL: ${serverConfig.url}`);
+      logger.debug(`WebSocket transport created for URL: ${serverConfig.url}`);
     } catch (error) {
       logger.error(`Failed to create WebSocket transport: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
@@ -91,7 +103,7 @@ export async function handleConnectToServer(serverName: string, serverConfig: iS
     // Check specific command 'node'
     const command = SystemCommandManager.getInstance().getValue(serverConfig.command) || serverConfig.command;
     const allSpecificEnv_ =
-      process.platform === "win32" ? { ...allSpecificEnv, PYTHONIOENCODING: "utf-8" } : serverConfig.env;
+      process.platform === "win32" ? { ...serverConfig.env, PYTHONIOENCODING: "utf-8" } : serverConfig.env;
     const defaultEnv = getDefaultEnvironment();
 
     // Establish transport
