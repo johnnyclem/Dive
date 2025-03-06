@@ -34,10 +34,16 @@ export const configAtom = atom<ActiveProviderConfig | null>(null)
 
 export const configListAtom = atom<Record<string, ModelConfig> | null>(null)
 
-export const hasActiveConfigAtom = atom(
+export const hasConfigAtom = atom(
   (get) => {
     const config = get(configAtom)
-    return config !== null && config.activeProvider !== "" && config.activeProvider !== "none" as any
+    return config !== null && config.activeProvider !== ""
+  }
+)
+
+export const hasActiveConfigAtom = atom(
+  (get) => {
+    return get(hasConfigAtom) && get(activeProviderAtom) !== "none" as any
   }
 )
 

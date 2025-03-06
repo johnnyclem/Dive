@@ -4,7 +4,7 @@ import { useSetAtom, useAtom, useAtomValue } from "jotai"
 import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
-import { hasActiveConfigAtom } from "../atoms/configState"
+import { hasActiveConfigAtom, hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { showToastAtom } from "../atoms/toastState"
 import { openOverlayAtom } from "../atoms/layerState"
@@ -29,9 +29,9 @@ const Welcome = () => {
   const [, showToast] = useAtom(showToastAtom)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
-  const [histories] = useAtom(historiesAtom)
-  const [, loadHistories] = useAtom(loadHistoriesAtom)
-  const [hasConfig] = useAtom(hasActiveConfigAtom)
+  const histories = useAtomValue(historiesAtom)
+  const loadHistories = useSetAtom(loadHistoriesAtom)
+  const hasConfig = useAtomValue(hasConfigAtom)
   const isComposing = useRef(false)
   const [toolsCnt, setToolsCnt] = useState<number>(0)
   const [, openOverlay] = useAtom(openOverlayAtom)
