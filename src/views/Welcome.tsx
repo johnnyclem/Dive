@@ -1,15 +1,15 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { useSetAtom, useAtom } from "jotai"
+import { useSetAtom, useAtom, useAtomValue } from "jotai"
 import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import { hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
-import { showToastAtom } from "../atoms/toastState"
 import { openOverlayAtom } from "../atoms/layerState"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
 import Textarea from "../components/WrappedTextarea"
+import { loadToolsAtom, toolsAtom } from "../atoms/toolState"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -26,42 +26,20 @@ const Welcome = () => {
   const navigate = useNavigate()
   const [message, setMessage] = useState("")
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
-  const [, showToast] = useAtom(showToastAtom)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
   const [histories] = useAtom(historiesAtom)
-  const [, loadHistories] = useAtom(loadHistoriesAtom)
+  const loadHistories = useSetAtom(loadHistoriesAtom)
   const [hasConfig] = useAtom(hasConfigAtom)
   const isComposing = useRef(false)
-  const [toolsCnt, setToolsCnt] = useState<number>(0)
-  const [, openOverlay] = useAtom(openOverlayAtom)
+  const openOverlay = useSetAtom(openOverlayAtom)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const loadTools = useSetAtom(loadToolsAtom)
+  const tools = useAtomValue(toolsAtom)
 
   useEffect(() => {
-    fetchTools()
+    loadTools()
   }, [])
-
-  const fetchTools = async () => {
-    try {
-      const response = await fetch("/api/tools")
-      const data = await response.json()
-
-      if (data.success) {
-        setToolsCnt(data.tools?.length ?? 0)
-      } else {
-        setToolsCnt(0)
-        showToast({
-          message: data.message || t("tools.fetchFailed"),
-          type: "error"
-        })
-      }
-    } catch (error) {
-      showToast({
-        message: error instanceof Error ? error.message : t("tools.fetchFailed"),
-        type: "error"
-      })
-    }
-  }
 
   useEffect(() => {
     updateStreamingCode(null)
@@ -70,13 +48,13 @@ const Welcome = () => {
   useEffect(() => {
     loadHistories()
   }, [loadHistories])
-  
+
   useHotkeyEvent("chat-input:upload-file", () => {
     if (fileInputRef.current) {
       fileInputRef.current.click()
     }
   })
-  
+
   useHotkeyEvent("chat-input:focus", () => {
     if (textareaRef.current) {
       textareaRef.current.focus()
@@ -86,11 +64,11 @@ const Welcome = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (message.trim() || uploadedFiles.length > 0) {
-      navigate("/chat", { 
-        state: { 
+      navigate("/chat", {
+        state: {
           initialMessage: message,
           files: uploadedFiles
-        } 
+        }
       })
     }
   }
@@ -103,11 +81,11 @@ const Welcome = () => {
 
       e.preventDefault()
       if (message.trim() || uploadedFiles.length > 0) {
-        navigate("/chat", { 
-          state: { 
+        navigate("/chat", {
+          state: {
             initialMessage: message,
             files: uploadedFiles
-          } 
+          }
         })
       }
     }
@@ -148,7 +126,7 @@ const Welcome = () => {
         const blob = item.getAsFile()
         if (!blob)
           return null
-        
+
         const ext = blob.type.split("/")[1]
         const filename = `pasted_image_${Date.now()}.${ext}`
         return new File([blob], filename, { type: blob.type })
@@ -168,7 +146,7 @@ const Welcome = () => {
       <div className="welcome-content">
         <h1>{t("welcome.title")}</h1>
         <p className="subtitle">{t("welcome.subtitle")}</p>
-        
+
         <form className="welcome-input" onSubmit={handleSubmit}>
           <div className="input-container">
             <Textarea
@@ -192,9 +170,9 @@ const Welcome = () => {
                 style={{ display: "none" }}
                 onChange={handleFileChange}
               />
-              <button 
-                type="button" 
-                className="upload-btn" 
+              <button
+                type="button"
+                className="upload-btn"
                 onClick={() => fileInputRef.current?.click()}
                 title={t("chat.uploadFile")}
               >
@@ -210,7 +188,7 @@ const Welcome = () => {
                   <svg width="20" height="20" viewBox="0 0 24 24">
                     <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
                   </svg>
-                  {`${toolsCnt} ${t("chat.tools")}`}
+                  {`${tools.length} ${t("chat.tools")}`}
                 </button>
                 <button type="submit" className="send-btn" disabled={!message.trim() && uploadedFiles.length === 0}>
                   <svg width="24" height="24" viewBox="0 0 24 24">
@@ -243,8 +221,8 @@ const Welcome = () => {
                     </div>
                   </div>
                 )}
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="remove-btn"
                   onClick={() => removeFile(index)}
                 >
@@ -259,9 +237,9 @@ const Welcome = () => {
 
         <div className="suggestions">
           {histories.length > 0 && histories.slice(0, 3).map(history => (
-            <div 
-              key={history.id} 
-              className="suggestion-item" 
+            <div
+              key={history.id}
+              className="suggestion-item"
               onClick={() => navigate(`/chat/${history.id}`)}
             >
               <div className="content-wrapper">
