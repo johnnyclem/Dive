@@ -5,13 +5,14 @@ import Switch from "../../../components/Switch"
 import CheckBox from "../../../components/CheckBox"
 import { closeOverlayAtom } from "../../../atoms/layerState"
 import PopupConfirm from "../../../components/PopupConfirm"
-import { MultiModelConfig } from "../../../atoms/configState"
+import { ModelConfig, MultiModelConfig } from "../../../atoms/configState"
 import KeyPopup from "./KeyPopup"
 import ModelPopup from "./ModelPopup"
 import ParameterPopup from "./ParameterPopup"
 import { useModelsProvider } from "./ModelsProvider"
 import { showToastAtom } from "../../../atoms/toastState"
 import { ModelProvider } from "../../../atoms/interfaceState"
+import { getModelPrefix } from "../../../util"
 
 const PageLayout = () => {
   const { t } = useTranslation()
@@ -37,7 +38,7 @@ const PageLayout = () => {
 
   useEffect(() => {
     if(!showModelPopup) {
-      sessionStorage.removeItem(`model-list-${multiModelConfigList?.[currentIndex]?.apiKey?.slice(-5)}`)
+      sessionStorage.removeItem(`model-list-${multiModelConfigList?.[currentIndex]?.apiKey || multiModelConfigList?.[currentIndex]?.baseURL}`)
     }
   }, [showModelPopup])
 
@@ -367,7 +368,7 @@ const PageLayout = () => {
                     </div>
                   </div>
                   <div className="api-key">
-                    ...{multiModelConfig?.apiKey?.slice(-5)}
+                    ...{multiModelConfig ? getModelPrefix(multiModelConfig as any, 5) : ""}
                   </div>
                   <div>
                     <Switch

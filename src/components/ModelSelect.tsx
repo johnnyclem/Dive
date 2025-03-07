@@ -9,6 +9,7 @@ import { openOverlayAtom } from "../atoms/layerState"
 import { useModelsProvider } from "../views/Overlay/Model/ModelsProvider"
 import { showToastAtom } from "../atoms/toastState"
 import { record } from "zod"
+import { getModelPrefix } from "../util"
 
 interface ModelSelectProps {
   key: string
@@ -34,7 +35,7 @@ const ModelSelect = () => {
       if(!config.model || !config.active) return
       _modelsList.push({
         key: key,
-        name: `${config?.apiKey?.slice(-5)}/${config.model}`,
+        name: `${getModelPrefix(config, 4)}/${config.model}`,
         model: config.modelProvider
       })
     })
@@ -71,7 +72,7 @@ const ModelSelect = () => {
               <img
                 src={PROVIDER_ICONS[model.model]}
                 alt={model.model}
-                className="model-select-label-icon"
+                className={`model-select-label-icon ${model.model === "ollama" ? "no-filter" : ""}`}
               />
               <span className="model-select-label-text">
                 {model.name}

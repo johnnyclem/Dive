@@ -72,5 +72,9 @@
 
   .model-select-label-icon {
     filter: var(--filter-dark);
+
+    &.no-filter {
+      filter: none;
+    }
   }
 }
