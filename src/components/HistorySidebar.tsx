@@ -155,8 +155,10 @@ const HistorySidebar = ({ onNewChat }: Props) => {
     setConfigSidebarVisible(true)
   }
 
-  const onBlur = () => {
-    setVisible(false)
+  const onBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    if (containerRef.current && !containerRef.current.contains(e.relatedTarget as Node)) {
+      setVisible(false)
+    }
   }
 
   return (
