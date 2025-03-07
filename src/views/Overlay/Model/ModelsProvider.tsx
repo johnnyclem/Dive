@@ -1,6 +1,6 @@
-import { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react";
 import { activeProviderAtom, compressData, configAtom, configListAtom, extractData, loadConfigAtom, ModelConfig, MultiModelConfig, saveAllConfigAtom } from "../../../atoms/configState";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { FieldDefinition, ModelProvider } from "../../../atoms/interfaceState";
 import { ignoreFieldsForModel } from "../../../constants";
 
@@ -203,6 +203,7 @@ export default function ModelsProvider({
     let _activeProvider: ModelProvider | "" = newActiveProvider ?? config?.activeProvider ?? ""
     const model = configList?.[_activeProvider]?.model
     _activeProvider = Object.keys(compressedData).find(key => compressedData[key].model === model) as ModelProvider ?? "none"
+    _activeProvider = _multiModelConfigList?.filter(config => config.active && config.models.length == 1)?.length == 1 ? Object.keys(compressedData)[0] as ModelProvider : _activeProvider
 
     if(!_multiModelConfigList?.length){
       const _parameter = await getParameter()

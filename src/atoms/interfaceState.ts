@@ -1,4 +1,3 @@
-import React from 'react';
 import { atom } from "jotai"
 
 export type ModelProvider = "openai" | "openai_compatible" | "ollama" | "anthropic"

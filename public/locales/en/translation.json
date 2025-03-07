@@ -19,7 +19,8 @@
     "tools": "Tools",
     "abort": "Stop generating response",
     "retry": "Retry",
-    "noModelAlert": "No available model"
+    "noModelAlert": "No available model",
+    "modelSettings": "Model Settings"
   },
   "welcome": {
     "title": "Welcome to Dive AI",
