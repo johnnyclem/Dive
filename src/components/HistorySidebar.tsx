@@ -7,7 +7,7 @@ import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
 import Tooltip from "./Tooltip"
-import { closeAllOverlaysAtom, openOverlayAtom } from "../atoms/layerState"
+import { closeAllOverlaysAtom, openOverlayAtom, OverlayType } from "../atoms/layerState"
 import { useSidebarLayer } from "../hooks/useLayer"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
 import { currentChatIdAtom } from "../atoms/chatState"
@@ -55,12 +55,17 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const setConfigSidebarVisible = useSetAtom(configSidebarVisibleAtom)
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const showToast = useSetAtom(showToastAtom)
-  const openOverlay = useSetAtom(openOverlayAtom)
+  const _openOverlay = useSetAtom(openOverlayAtom)
   const [newVersion, setNewVersion] = useState("")
   const closeAllOverlays = useSetAtom(closeAllOverlaysAtom)
   const [isVisible, setVisible] = useSidebarLayer(sidebarVisibleAtom)
   const [currentChatId, setCurrentChatId] = useAtom(currentChatIdAtom)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const openOverlay = useCallback((overlay: OverlayType) => {
+    _openOverlay(overlay)
+    setVisible(false)
+  }, [_openOverlay, setVisible])
 
   useEffect(() => {
     if (isVisible) {
