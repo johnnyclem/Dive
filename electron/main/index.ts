@@ -29,6 +29,18 @@ protocol.registerSchemesAsPrivileged([
   }
 ])
 
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "img",
+    privileges: {
+      secure: true,
+      supportFetchAPI: true,
+      bypassCSP: true,
+      stream: true,
+    }
+  }
+])
+
 const selectionMenu = Menu.buildFromTemplate([
   { role: "copy" },
   { role: "selectAll" }
@@ -98,6 +110,13 @@ async function onReady() {
   protocol.handle("local-file", (req) => {
     const url = req.url.replace("local-file:///", process.platform === "win32" ? "file:///" : "file://")
     return net.fetch(url)
+  })
+
+  protocol.handle("img", (req) => {
+    // Remove 'img://'
+    const url = req.url.substring(6);
+    const assetPath = path.join(process.env.VITE_PUBLIC, "image", url)
+    return net.fetch(`file://${assetPath}`)
   })
 
   initMCPClient()
@@ -325,7 +344,7 @@ ipcMain.handle("api:checkNewVersion", async () => {
     if (lastQueryTime && +lastQueryTime > Date.now() + 1000 * 60 * 60) {
       return ""
     }
-    
+
     if (lastVersion && semver.gt(lastVersion, currentVersion)) {
       return lastVersion
     }
@@ -341,7 +360,7 @@ ipcMain.handle("api:checkNewVersion", async () => {
   } catch (e) {
     console.error(e)
   }
-  
+
   return ""
 })
 

@@ -11,10 +11,10 @@ export const PROVIDER_LABELS: Record<ModelProvider, string> = {
 }
 
 export const PROVIDER_ICONS: Record<ModelProvider, string> = {
-  ollama: "/image/model_ollama.svg",
-  openai_compatible: "/image/model_openai_compatible.svg",
-  openai: "/image/model_openai.svg",
-  anthropic: "/image/model_anthropic.svg"
+  ollama: "img://model_ollama.svg",
+  openai_compatible: "img://model_openai_compatible.svg",
+  openai: "img://model_openai.svg",
+  anthropic: "img://model_anthropic.svg"
 }
 
 export type InputType = "text" | "password"
