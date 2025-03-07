@@ -42,7 +42,7 @@ const KeyPopup = ({
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newProvider = e.target.value as ModelProvider
     setProvider(newProvider)
-    setFormData({} as ModelConfig)
+    setFormData({active: true} as ModelConfig)
     setFields(defaultInterface[newProvider])
   }
 
