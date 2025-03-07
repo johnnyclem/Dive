@@ -35,7 +35,7 @@ const ModelPopup = ({
       if(!multiModelConfig)
         return
       setListOptions([])
-      const text = sessionStorage.getItem(`model-list-${multiModelConfig.apiKey.slice(-5)}`)
+      const text = sessionStorage.getItem(`model-list-${multiModelConfig.apiKey || multiModelConfig.baseURL}`)
       let verifiedList: ListOption[] = []
       if(text){
         verifiedList = JSON.parse(text)
@@ -50,7 +50,7 @@ const ModelPopup = ({
             verifiedList.push(options[index])
           }
         }
-        // sessionStorage.setItem(`model-list-${multiModelConfig.apiKey.slice(-5)}`, JSON.stringify(verifiedList))
+        // sessionStorage.setItem(`model-list-${multiModelConfig.apiKey || multiModelConfig.baseURL}`, JSON.stringify(verifiedList))
       }
       verifiedList = verifiedList.map(option => ({
         ...option,

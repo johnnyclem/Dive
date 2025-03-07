@@ -118,7 +118,7 @@ const KeyPopup = ({
         }
         setVerifiedCnt(Number(index) / listOptions.length)
       }
-      sessionStorage.setItem(`model-list-${multiModelConfig.apiKey.slice(-5)}`, JSON.stringify(verifiedList))
+      sessionStorage.setItem(`model-list-${multiModelConfig.apiKey || multiModelConfig.baseURL}`, JSON.stringify(verifiedList))
       setListOptions(verifiedList)
       setMultiModelConfigList([...(multiModelConfigList ?? []), multiModelConfig])
       setCurrentIndex((multiModelConfigList?.length ?? 0))
