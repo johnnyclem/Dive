@@ -16,5 +16,7 @@ interface Window {
     checkNewVersion: () => Promise<string>
     getHotkeyMap: () => Promise<Record<string, any>>
     getPlatform: () => Promise<string>
+    getAutoLaunch: () => Promise<boolean>
+    setAutoLaunch: (enable: boolean) => Promise<void>
   }
 }

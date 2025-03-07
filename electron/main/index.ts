@@ -12,6 +12,7 @@ import { binDirList, cacheDir, darwinPathList } from "./constant"
 import { update } from "./update"
 import { ipcHandler } from "./ipc"
 import { initTray } from "./tray"
+import { store } from "./store"
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -162,6 +163,13 @@ async function createWindow() {
 
   // ipc handler
   ipcHandler(win)
+
+  const shouldAutoLaunch = store.get("autoLaunch")
+  console.log("shouldAutoLaunch", shouldAutoLaunch)
+  app.setLoginItemSettings({
+    openAtLogin: shouldAutoLaunch,
+    openAsHidden: false
+  })
 }
 
 app.whenReady().then(onReady)

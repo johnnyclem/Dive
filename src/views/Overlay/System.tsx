@@ -2,13 +2,24 @@ import { useAtom } from "jotai"
 import { useTranslation } from "react-i18next"
 import Select from "../../components/Select"
 import { closeOverlayAtom } from "../../atoms/layerState"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import ThemeSwitch from "../../components/ThemeSwitch"
+import Switch from "../../components/Switch"
 
 const System = () => {
   const { t, i18n } = useTranslation()
   const [, closeOverlay] = useAtom(closeOverlayAtom)
   const [language, setLanguage] = useState(i18n.language)
+  const [autoLaunch, setAutoLaunch] = useState(false)
+
+  useEffect(() => {
+    window.ipcRenderer.getAutoLaunch().then(setAutoLaunch)
+  }, [])
+
+  const handleAutoLaunchChange = (value: boolean) => {
+    setAutoLaunch(value)
+    window.ipcRenderer.setAutoLaunch(value)
+  }
 
   const languageOptions = [
     { label: "繁體中文", value: "zh-TW" },
@@ -62,6 +73,18 @@ const System = () => {
             </div>
             <div className="system-list-switch-container">
               <ThemeSwitch />
+            </div>
+          </div>
+
+          <div className="system-list-section">
+            <div className="system-list-content">
+              <span className="system-list-name">{t("system.autoLaunch")}：</span>
+            </div>
+            <div className="system-list-switch-container">
+              <Switch
+                checked={autoLaunch}
+                onChange={e => handleAutoLaunchChange(e.target.checked)}
+              />
             </div>
           </div>
         </div>

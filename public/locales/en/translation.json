@@ -87,7 +87,8 @@
   "system": {
     "title": "System Settings",
     "language": "System Language",
-    "theme": "Display Mode"
+    "theme": "Display Mode",
+    "autoLaunch": "Run Dive AI on system startup"
   },
   "toast": {
     "copiedToClipboard": "Copied to clipboard"

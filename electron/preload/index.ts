@@ -24,6 +24,8 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
 
   // system
   openScriptsDir: () => ipcRenderer.invoke("system:openScriptsDir"),
+  getAutoLaunch: () => ipcRenderer.invoke("system:getAutoLaunch"),
+  setAutoLaunch: (enable: boolean) => ipcRenderer.invoke("system:setAutoLaunch", enable),
 
   // llm
   openaiModelList: (apiKey: string) => ipcRenderer.invoke("llm:openaiModelList", apiKey),

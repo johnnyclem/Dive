@@ -87,7 +87,8 @@
   "system": {
     "title": "系統設定",
     "language": "系統語言",
-    "theme": "顯示模式"
+    "theme": "顯示模式",
+    "autoLaunch": "開機自動啟動Dive AI"
   },
   "toast": {
     "copiedToClipboard": "已複製到剪貼簿"

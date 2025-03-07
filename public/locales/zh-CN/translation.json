@@ -87,7 +87,8 @@
   "system": {
     "title": "系统设置",
     "language": "系统语言",
-    "theme": "显示模式"
+    "theme": "显示模式",
+    "autoLaunch": "开机自动启动Dive AI"
   },
   "toast": {
     "copiedToClipboard": "已复制到剪贴板"
@@ -107,4 +108,4 @@
       "global_toggle-keymap-modal": "显示/隐藏快捷键说明"
     }
   }
-} 
+}
