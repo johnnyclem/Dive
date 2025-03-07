@@ -120,7 +120,7 @@ const PageLayout = () => {
   }
 
   const handleMultiModelConfigChange = async (index: number, key: keyof MultiModelConfig, value: MultiModelConfig[keyof MultiModelConfig], ifSave: boolean = true) => {
-    const newMultiModelConfigList = multiModelConfigList as any ?? []
+    const newMultiModelConfigList = JSON.parse(JSON.stringify(multiModelConfigList)) ?? []
     newMultiModelConfigList[index][key] = value
 
     if(key !== "checked" && !value && newMultiModelConfigList.filter((config: MultiModelConfig) => config.active && config.models.length > 0).length === 0) {
@@ -160,13 +160,13 @@ const PageLayout = () => {
       const data = await saveConfig(_activeProvider as ModelProvider)
       if (data.success) {
         showToast({
-          message: t("setup.saveSuccess"),
+          message: t("models.deleteToast", { count: multiModelConfigList?.filter(config => config.checked).length ?? 0 }),
           type: "success"
         })
         setShowDelete(false)
       } else {
         showToast({
-          message: data.error ?? t("setup.saveFailed"),
+          message: data.error ?? t("models.deleteFailed"),
           type: "error"
         })
         setMultiModelConfigList(_multiModelConfigList)

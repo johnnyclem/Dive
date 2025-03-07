@@ -20,7 +20,7 @@ const KeyPopup = ({
   const [provider, setProvider] = useState(PROVIDERS[0])
   const [fields, setFields] = useState<Record<string, FieldDefinition>>(defaultInterface[provider])
 
-  const [formData, setFormData] = useState<ModelConfig>({} as ModelConfig)
+  const [formData, setFormData] = useState<ModelConfig>({active: true} as ModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [verifiedCnt, setVerifiedCnt] = useState(0)
   const isVerifying = useRef(false)
@@ -68,10 +68,6 @@ const KeyPopup = ({
   const handleSubmit = async (data: Record<string, any>) => {
     try {
       if (data.success) {
-        showToast({
-          message: t("setup.saveSuccess"),
-          type: "success"
-        })
         onSuccess()
       }
     } catch (error) {
@@ -114,7 +110,9 @@ const KeyPopup = ({
         if(!isVerifying.current)
           return
         if(verifyResult && verifyResult.success){
-          verifiedList.push(listOptions[index])
+          const options = JSON.parse(JSON.stringify(listOptions))
+          options[index].supportTools = verifyResult.supportTools
+          verifiedList.push(options[index])
         }
         setVerifiedCnt(Number(index) / listOptions.length)
       }
@@ -136,6 +134,16 @@ const KeyPopup = ({
     }
   }
 
+  const handleClose = () => {
+    if(isVerifying.current){
+      showToast({
+        message: t("models.verifyingAbort"),
+        type: "error"
+      })
+    }
+    onClose()
+  }
+
   return (
     <PopupConfirm
       noBorder={true}
@@ -146,8 +154,8 @@ const KeyPopup = ({
         <div className="loading-spinner"></div>
       ) : t("tools.save")}
       disabled={isVerifying.current || isSubmitting}
-      onCancel={onClose}
-      onClickOutside={onClose}
+      onCancel={handleClose}
+      onClickOutside={handleClose}
     >
       <div className="models-key-popup">
         <div className="models-key-form-group">

@@ -70,11 +70,7 @@ const ParameterPopup = ({
 
       if (data.success && _data.success) {
         showToast({
-          message: t("modelConfig.customRulesSaved"),
-          type: "success"
-        })
-        showToast({
-          message: t("setup.saveSuccess"),
+          message: t("models.parameterSaved"),
           type: "success"
         })
         setInitialInstructions(instructions)
@@ -84,7 +80,7 @@ const ParameterPopup = ({
     } catch (error) {
       console.error("Failed to save custom rules:", error)
       showToast({
-        message: t("modelConfig.customRulesFailed"),
+        message: t("models.parameterSaveFailed"),
         type: "error"
       })
       setMultiModelConfigList(_multiModelConfigList)

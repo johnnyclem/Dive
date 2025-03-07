@@ -10,6 +10,7 @@ import { showToastAtom } from "../atoms/toastState"
 import { openOverlayAtom } from "../atoms/layerState"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
 import Textarea from "../components/WrappedTextarea"
+import Tooltip from "../components/Tooltip"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -208,11 +209,15 @@ const Welcome = () => {
                   </svg>
                   {`${toolsCnt} ${t("chat.tools")}`}
                 </button>
-                <button type="submit" className="send-btn" disabled={(!message.trim() && uploadedFiles.length === 0) || !hasActiveConfig}>
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                  </svg>
-                </button>
+                <Tooltip
+                  content={!hasActiveConfig ? t("chat.noModelAlert") : t("chat.send")}
+                >
+                  <button type="submit" className="send-btn" disabled={(!message.trim() && uploadedFiles.length === 0) || !hasActiveConfig}>
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                  </button>
+                </Tooltip>
               </div>
             </div>
           </div>

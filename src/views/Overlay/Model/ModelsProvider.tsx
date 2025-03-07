@@ -7,6 +7,7 @@ import { ignoreFieldsForModel } from "../../../constants";
 export type ListOption = {
   name: string
   checked: boolean
+  supportTools?: boolean
 }
 
 type ContextType = {
@@ -20,7 +21,7 @@ type ContextType = {
   setListOptions: (listOptions: ListOption[]) => void
   fetchListOptions: (multiModelConfig: MultiModelConfig, fields: Record<string, FieldDefinition>) => Promise<ListOption[]>
   prepareModelConfig: (config: ModelConfig, provider: ModelProvider) => ModelConfig
-  verifyModel: (multiModelConfig: MultiModelConfig, model: string) => Promise<{ success: boolean }>
+  verifyModel: (multiModelConfig: MultiModelConfig, model: string) => Promise<{ success: boolean, supportTools?: boolean }>
   saveConfig: (activeProvider?: ModelProvider) => Promise<{ success: boolean, error?: string }>
 }
 

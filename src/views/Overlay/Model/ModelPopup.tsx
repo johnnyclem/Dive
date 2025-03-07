@@ -21,6 +21,7 @@ const ModelPopup = ({
   const [, showToast] = useAtom(showToastAtom)
   const [checkboxState, setCheckboxState] = useState<"" | "all" | "-">("")
   const isVerifying = useRef(false)
+  const [originalListOptions, setOriginalListOptions] = useState<ListOption[]>([])
 
   const { fetchListOptions, listOptions, setListOptions,
           multiModelConfigList, setMultiModelConfigList,
@@ -35,6 +36,7 @@ const ModelPopup = ({
       if(!multiModelConfig)
         return
       setListOptions([])
+      setOriginalListOptions([])
       const text = sessionStorage.getItem(`model-list-${multiModelConfig.apiKey || multiModelConfig.baseURL}`)
       let verifiedList: ListOption[] = []
       if(text){
@@ -43,11 +45,13 @@ const ModelPopup = ({
         isVerifying.current = true
         const options = await fetchListOptions(multiModelConfig, defaultInterface[multiModelConfig.name])
         for(const index in options){
-          const verifyResult = await verifyModel(multiModelConfig, options[index].name)
+          const option = JSON.parse(JSON.stringify(options[index]))
+          const verifyResult = await verifyModel(multiModelConfig, option.name)
           if(!isVerifying.current)
             return
           if(verifyResult && verifyResult.success){
-            verifiedList.push(options[index])
+            option.supportTools = verifyResult.supportTools
+            verifiedList.push(option)
           }
         }
         // sessionStorage.setItem(`model-list-${multiModelConfig.apiKey || multiModelConfig.baseURL}`, JSON.stringify(verifiedList))
@@ -56,6 +60,7 @@ const ModelPopup = ({
         ...option,
         checked: multiModelConfig.models.includes(option.name)
       }))
+      setOriginalListOptions(verifiedList)
       setListOptions(verifiedList)
       setCheckboxState(verifiedList.every(option => option.checked) ? "all" : verifiedList.some(option => option.checked) ? "-" : "")
       isVerifying.current = false
@@ -102,7 +107,7 @@ const ModelPopup = ({
     try {
       if (data.success) {
         showToast({
-          message: t("setup.saveSuccess"),
+          message: t("models.modelSaved"),
           type: "success"
         })
         onSuccess()
@@ -110,7 +115,7 @@ const ModelPopup = ({
     } catch (error) {
       console.error("Failed to save config:", error)
       showToast({
-        message: t("setup.saveFailed"),
+        message: t("models.modelSaveFailed"),
         type: "error"
       })
     }
@@ -136,17 +141,27 @@ const ModelPopup = ({
     }
   }
 
+  const handleClose = () => {
+    if(isVerifying.current){
+      showToast({
+        message: t("models.verifyingAbort"),
+        type: "error"
+      })
+    }
+    onClose()
+  }
+
   return (
     <PopupConfirm
       zIndex={900}
       className="model-popup"
-      disabled={isVerifying.current || isSubmitting}
+      disabled={isVerifying.current || isSubmitting || JSON.stringify(originalListOptions) === JSON.stringify(listOptions)}
       confirmText={(isVerifying.current || isSubmitting) ? (
         <div className="loading-spinner"></div>
       ) : t("tools.save")}
       onConfirm={onConfirm}
-      onCancel={onClose}
-      onClickOutside={onClose}
+      onCancel={handleClose}
+      onClickOutside={handleClose}
     >
       {isVerifying.current ?
         <div className="loading-spinner"></div> :
@@ -166,7 +181,12 @@ const ModelPopup = ({
                   checked={option.checked}
                     onChange={() => handleModelChange(option.name, "checked", !option.checked)}
                   />
-                  {option.name}
+                  <div className="model-option-name">
+                    {option.name}
+                  </div>
+                  <div className="model-option-hint">
+                    {!option.supportTools ? t("models.unToolCallsSupport") : ""}
+                  </div>
               </label>
             ))}
           </div>

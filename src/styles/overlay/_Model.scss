@@ -188,6 +188,8 @@
 
       .provider {
         @include line-clamp(1);
+
+        user-select: none;
       }
     }
   }
@@ -463,7 +465,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        justify-content: flex-start;
+        justify-content: space-between;
         min-height: 65px;
         padding: 10px;
         border-radius: 12px;
@@ -472,6 +474,18 @@
 
         &:hover {
           background: var(--bg-btn-hover);
+        }
+
+        .model-option-name {
+          width: 100%;
+
+          @include line-clamp(1);
+        }
+
+        .model-option-hint {
+          color: var(--text-weak);
+          font-size: 14px;
+          white-space: nowrap;
         }
       }
     }

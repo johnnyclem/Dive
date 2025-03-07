@@ -330,7 +330,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
             </button>
           </Tooltip>
         ) : (
-          <Tooltip type="controls" content={t('chat.send')}>
+          <Tooltip type="controls" content={!hasActiveConfig ? t("chat.noModelAlert") : t('chat.send')}>
             <button
               className="send-btn"
               onClick={handleSubmit}
