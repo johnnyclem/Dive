@@ -5,6 +5,7 @@ import path from "node:path"
 import os from "node:os"
 import fse from "fs-extra"
 import semver from "semver"
+import AppState from "./state"
 import { cleanup, initMCPClient } from "./service"
 import { getLatestVersion, getNvmPath, modifyPath } from "./util"
 import { binDirList, cacheDir, darwinPathList } from "./constant"
@@ -141,11 +142,23 @@ async function createWindow() {
     return { action: "deny" }
   })
 
+  win.on("close", (event) => {
+    if (!AppState.isQuitting) {
+      event.preventDefault()
+      win?.hide()
+      return false
+    }
+
+    return true
+  })
+
   // Auto update
   update(win)
 
   // Tray
-  initTray(win)
+  if (process.platform !== "darwin") {
+    initTray(win)
+  }
 
   // ipc handler
   ipcHandler(win)
@@ -171,12 +184,20 @@ app.on("second-instance", () => {
   }
 })
 
+app.on("before-quit", () => {
+  AppState.setIsQuitting(true)
+})
+
 app.on("activate", () => {
   const allWindows = BrowserWindow.getAllWindows()
   if (allWindows.length) {
     allWindows[0].focus()
   } else {
-    createWindow()
+    if (win) {
+      win.show()
+    } else {
+      createWindow()
+    }
   }
 })
 
