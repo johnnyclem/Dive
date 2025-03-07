@@ -83,6 +83,22 @@ Add this JSON configuration to your Dive MCP settings to enable both tools:
   }
 ```
 
+### Using SSE Server for MCP
+
+You can also connect to an external MCP server via SSE (Server-Sent Events). Add this configuration to your Dive MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "MCP_SERVER_NAME": {
+      "enabled": true,
+      "transport": "sse",
+      "url": "YOUR_SSE_SERVER_URL"
+    }
+  }
+}
+```
+
 ### Additional Setup for yt-dlp-mcp
 
 yt-dlp-mcp requires the yt-dlp package. Install it based on your operating system:
