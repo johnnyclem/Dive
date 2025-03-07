@@ -3,14 +3,14 @@ import { Outlet } from "react-router-dom"
 import HistorySidebar from "../components/HistorySidebar"
 import Header from "../components/Header"
 import { useAtom } from "jotai"
-import { hasActiveConfigAtom } from "../atoms/configState"
+import { hasConfigAtom } from "../atoms/configState"
 import GlobalToast from "../components/GlobalToast"
 import { themeAtom, systemThemeAtom } from "../atoms/themeState"
 import Overlay from "./Overlay"
 import KeymapModal from "../components/Modal/KeymapModal"
 
 const Layout = () => {
-  const [hasConfig] = useAtom(hasActiveConfigAtom)
+  const [hasConfig] = useAtom(hasConfigAtom)
   const [theme] = useAtom(themeAtom)
   const [systemTheme] = useAtom(systemThemeAtom)
 
