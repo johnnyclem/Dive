@@ -113,7 +113,7 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
       type: "list",
       label: "Model ID",
       description: "modelConfig.modelDescription",
-      required: true,
+      required: false,
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
