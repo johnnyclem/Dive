@@ -202,7 +202,7 @@ export default function ModelsProvider({
 
     let _activeProvider: ModelProvider | "" = newActiveProvider ?? config?.activeProvider ?? ""
     const model = configList?.[_activeProvider]?.model
-    const existModel = Object.keys(compressedData).find(key => compressedData[key].model === model) as ModelProvider
+    const existModel = Object.keys(compressedData).find(key => compressedData[key].active && compressedData[key].model === model) as ModelProvider
     const activeModel = Object.keys(compressedData).filter(key => compressedData[key].active)
     _activeProvider = existModel ?? "none"
     _activeProvider = activeModel?.length == 1 ? activeModel[0] as ModelProvider : _activeProvider

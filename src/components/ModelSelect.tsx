@@ -4,9 +4,8 @@ import Select from "./Select"
 import { useEffect, useState } from "react"
 import { ModelProvider, PROVIDER_ICONS } from "../atoms/interfaceState"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { configAtom, configListAtom, ModelConfig } from "../atoms/configState"
+import { configAtom, configListAtom, ModelConfig, saveAllConfigAtom } from "../atoms/configState"
 import { openOverlayAtom } from "../atoms/layerState"
-import { useModelsProvider } from "../views/Overlay/Model/ModelsProvider"
 import { showToastAtom } from "../atoms/toastState"
 import { getModelPrefix } from "../util"
 import Tooltip from "./Tooltip"
@@ -21,11 +20,11 @@ const ModelSelect = () => {
   const { t } = useTranslation()
   const config = useAtomValue(configAtom)
   const configList = useAtomValue(configListAtom)
+  const saveAllConfig = useSetAtom(saveAllConfigAtom)
   const [modelList, setModelList] = useState<ModelSelectProps[]>([])
   const [model, setModel] = useState<string>(config?.activeProvider ?? "")
   const openOverlay = useSetAtom(openOverlayAtom)
   const [, showToast] = useAtom(showToastAtom)
-  const { saveConfig } = useModelsProvider()
 
   useEffect(() => {
     if (!configList) return
@@ -50,7 +49,7 @@ const ModelSelect = () => {
     const _model = model
     setModel(value)
     try {
-      const data = await saveConfig(value as ModelProvider)
+      const data = await saveAllConfig({ providerConfigs: configList as Record<string, ModelConfig>, activeProvider: value as ModelProvider })
       if (data.success) {
         showToast({
           message: t("setup.saveSuccess"),

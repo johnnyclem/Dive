@@ -1,9 +1,12 @@
 import PageLayout from "./Layout"
+import ModelsProvider from "./ModelsProvider"
 
 
 const Models = () => {
   return (
-    <PageLayout />
+    <ModelsProvider>
+      <PageLayout />
+    </ModelsProvider>
   )
 }
 
