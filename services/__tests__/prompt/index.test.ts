@@ -96,9 +96,23 @@ describe("PromptManager", () => {
 
       const rules = promptManager.loadCustomRules();
       expect(rules).toBe(mockRules);
+      expect(fs.readFileSync).toHaveBeenCalledWith(expect.stringContaining(".customrules"), "utf-8");
     });
 
-    it("當檔案不存在時應該返回空字串", () => {
+    it("should use customRulesPath set in instance", () => {
+      const customPath = "/custom/path/rules.txt";
+      const mockRules = "custom rules from specific path";
+      promptManager = PromptManager.getInstance(customPath);
+      (fs.readFileSync as jest.Mock).mockReturnValue(mockRules);
+
+      const rules = promptManager.loadCustomRules();
+
+      expect(rules).toBe(mockRules);
+      // Verify whether the correct path is used
+      expect(fs.readFileSync).toHaveBeenCalledWith(customPath, "utf-8");
+    });
+
+    it("should return empty string when file doesn't exist", () => {
       (fs.readFileSync as jest.Mock).mockImplementation(() => {
         throw new Error("File not found");
       });

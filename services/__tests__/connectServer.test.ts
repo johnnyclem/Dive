@@ -4,13 +4,7 @@ setupMcpSdkMocks();
 setupUtilsMocks();
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { handleConnectToServer } from "../connectServer.js";
-
-jest.mock("../utils/modelHandler", () => ({
-  __esModule: true,
-  loadModelConfig: jest.fn(),
-}));
 
 describe("ConnectServer", () => {
   beforeEach(() => {

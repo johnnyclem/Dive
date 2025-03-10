@@ -1,12 +1,10 @@
 import { app } from "electron"
 import path from "node:path"
 import fse from "fs-extra"
-import { MCPClient, WebServer, setDatabase } from "../../services/index.js"
-import { drizzle } from "drizzle-orm/better-sqlite3"
-import Database from "better-sqlite3"
+import { MCPClient, WebServer, initDatabase } from "../../services/index.js"
+import { DatabaseMode, getDB } from "../../services/database/index.js"
 import { migrate } from "drizzle-orm/better-sqlite3/migrator"
-import * as schema from "../../services/database/schema.js"
-import { isPortInUse, npmInstall } from "./util.js"
+import { compareFilesAndReplace, isPortInUse, npmInstall } from "./util.js"
 import { SystemCommandManager } from "../../services/syscmd/index.js"
 import { MCPServerManager } from "../../services/mcpServer/index.js"
 import { scriptsDir, configDir, appDir, DEF_MCP_SERVER_CONFIG } from "./constant.js"
@@ -18,11 +16,14 @@ async function initClient(): Promise<MCPClient> {
   fse.mkdirSync(appDir, { recursive: true })
 
   // copy scripts
+  const rebuiltScriptsPath = path.join(app.isPackaged ? process.resourcesPath : process.cwd(), "prebuilt/scripts")
   if(!fse.existsSync(scriptsDir)) {
     fse.mkdirSync(scriptsDir, { recursive: true })
-    const source = path.join(app.isPackaged ? process.resourcesPath : process.cwd(), "prebuilt/scripts")
-    fse.copySync(source, scriptsDir)
+    fse.copySync(rebuiltScriptsPath, scriptsDir)
   }
+
+  // update prebuilt scripts
+  compareFilesAndReplace(path.join(rebuiltScriptsPath, "echo.cjs"), path.join(scriptsDir, "echo.cjs"))
 
   // install dependencies for prebuilt scripts
   await npmInstall(scriptsDir).catch(console.error)
@@ -39,9 +40,7 @@ async function initClient(): Promise<MCPClient> {
     fse.writeFileSync(customRulesPath, "")
   }
 
-  // init sqlite
-  const db = initDb(configDir)
-  setDatabase(db as any)
+  initDb(configDir)
 
   // init mcp client
   const _client = new MCPClient({
@@ -61,9 +60,8 @@ async function initClient(): Promise<MCPClient> {
 }
 
 function initDb(configDir: string) {
-  const dbPath = path.join(configDir, "data.db")
-  const sqlite = new Database(dbPath)
-  const db = drizzle(sqlite, { schema })
+  initDatabase(DatabaseMode.DIRECT, { dbPath: path.join(configDir, "data.db") })
+  const db = getDB()
   migrate(db, { migrationsFolder: app.isPackaged ? path.join(process.resourcesPath, "drizzle") : "./drizzle" })
   return db
 }

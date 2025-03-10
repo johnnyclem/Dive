@@ -40,10 +40,17 @@ export async function handleProcessQuery(
 ) {
   // If chatId exists, create a new AbortController
   if (chatId) {
+    const existingController = abortControllerMap.get(chatId);
+    if (existingController) {
+      existingController.abort();
+      abortControllerMap.delete(chatId);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      logger.debug(`[${chatId}] Abort previous chat and delete abortController`);
+    }
+
     const controller = new AbortController();
     abortControllerMap.set(chatId, controller);
-    // Clean up any previous aborted responses
-    abortedResponseMap.delete(chatId);
+    logger.debug(`[${chatId}] Set new abortController`);
   }
 
   let finalResponse = "";
@@ -121,7 +128,7 @@ export async function handleProcessQuery(
       currentModelSettings?.configuration?.baseURL?.toLowerCase().includes("deepseek") ||
       currentModelSettings?.model?.toLowerCase().includes("deepseek");
 
-    logger.info(`Start to process query - ${chatId}`);
+    logger.debug(`[${chatId}] Start to process LLM query`);
 
     while (hasToolCalls) {
       const stream = await runModel.stream(messages, {
@@ -329,38 +336,42 @@ export async function handleProcessQuery(
             }
 
             try {
-              const result = await (async () => {
-                const abortListener = () => {
-                  logger.info(`[${chatId}] Tool call [${toolName}] has been aborted`);
-                  abortPromiseReject?.(new Error("ABORTED"));
+              const result = await new Promise<any>((resolve, reject) => {
+                const executeToolCall = async () => {
+                  try {
+                    const abortListener = () => {
+                      logger.info(`[${chatId}] Tool call [${toolName}] has been aborted`);
+                      reject(new Error("ABORTED"));
+                    };
+
+                    abortController.signal.addEventListener("abort", abortListener);
+
+                    try {
+                      const result = await client?.callTool(
+                        {
+                          name: toolName,
+                          arguments: toolArgs,
+                        },
+                        undefined,
+                        {
+                          signal: abortController.signal,
+                          timeout: 99999000,
+                        }
+                      );
+
+                      resolve(result);
+                    } catch (error) {
+                      reject(error);
+                    } finally {
+                      abortController.signal.removeEventListener("abort", abortListener);
+                    }
+                  } catch (error) {
+                    reject(error);
+                  }
                 };
 
-                let abortPromiseReject: ((error: Error) => void) | undefined;
-
-                try {
-                  const raceResult = (await Promise.race([
-                    client?.callTool(
-                      {
-                        name: toolName,
-                        arguments: toolArgs,
-                      },
-                      undefined,
-                      {
-                        signal: abortController.signal,
-                        timeout: 99999000,
-                      }
-                    ),
-                    new Promise((_, reject) => {
-                      abortPromiseReject = reject;
-                      abortController.signal.addEventListener("abort", abortListener);
-                    }),
-                  ])) as { isError?: boolean };
-
-                  return raceResult;
-                } finally {
-                  abortController.signal.removeEventListener("abort", abortListener);
-                }
-              })();
+                setImmediate(executeToolCall);
+              });
 
               if (result?.isError) logger.error(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
               else logger.info(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
@@ -403,25 +414,24 @@ export async function handleProcessQuery(
     }
 
     // Log token usage at the end of processing
-    logger.info(
-      `Token usage for chat ${chatId}: Input tokens: ${tokenUsage.totalInputTokens}, Output tokens: ${tokenUsage.totalOutputTokens}, Total tokens: ${tokenUsage.totalTokens}`
+    logger.debug(
+      `[${chatId}] Input tokens: ${tokenUsage.totalInputTokens}, Output tokens: ${tokenUsage.totalOutputTokens}, Total tokens: ${tokenUsage.totalTokens}`
     );
 
-    return finalResponse;
+    return { result: finalResponse, tokenUsage };
   } catch (error) {
     const err = error as Error;
     if (err.message.toLowerCase().includes("abort")) {
       // If aborted, return saved response
       logger.info(`[${chatId}] has been aborted`);
       const abortedResponse = abortedResponseMap.get(chatId || "");
-      return abortedResponse?.content || finalResponse || "";
+      return { result: abortedResponse?.content || finalResponse || "", tokenUsage };
     }
     logger.error(`Error in handleProcessQuery: ${err.message}`);
     throw err;
   } finally {
     // Clean up AbortController
     if (chatId) {
-      abortControllerMap.delete(chatId);
       abortedResponseMap.delete(chatId);
     }
   }

@@ -1,13 +1,12 @@
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
-import logger from "./logger.js";
 import envPaths from "env-paths";
 
 const envPath = envPaths("dive", {suffix: ""})
-const PROJECT_ROOT = envPath.data;
+const PROJECT_ROOT = envPath.data
 
-const OFFLINE_MODE = process.env.OFFLINE_MODE === "true";
+const OFFLINE_MODE = true
 
 export const SUPPORTED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 export const SUPPORTED_DOCUMENT_EXTENSIONS = [".pdf", ".docx", ".txt", ".rtf", ".odt", ".html", ".csv", ".epub"];
@@ -59,15 +58,12 @@ export async function handleUploadFiles({ files, filepaths }: { files: Express.M
 
     const ext = path.extname(file.filename).toLowerCase();
     if (SUPPORTED_IMAGE_EXTENSIONS.includes(ext)) {
-
-      if (!OFFLINE_MODE) images.push(path.join(PROJECT_ROOT, "uploads", file.filename));
+      // local mode support custom PROJECT_ROOT
+      if (OFFLINE_MODE) images.push(path.join(PROJECT_ROOT, "uploads", file.filename));
       else images.push(`uploads/${file.filename}`);
-
     } else {//(SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
-
-      if (!OFFLINE_MODE) documents.push(path.join(PROJECT_ROOT, "uploads", file.filename));
+      if (OFFLINE_MODE) documents.push(path.join(PROJECT_ROOT, "uploads", file.filename));
       else documents.push(`uploads/${file.filename}`);
-
     }
     // else {
     //   logger.error(`Unsupported file type: ${file.filename}`);
@@ -78,7 +74,7 @@ export async function handleUploadFiles({ files, filepaths }: { files: Express.M
     const ext = path.extname(filepath).toLowerCase();
     if (SUPPORTED_IMAGE_EXTENSIONS.includes(ext)) {
       images.push(filepath);
-    } else {//(SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
+    } else {//if (SUPPORTED_DOCUMENT_EXTENSIONS.includes(ext)) {
       documents.push(filepath);
     }
     // else {

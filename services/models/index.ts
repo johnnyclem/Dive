@@ -1,11 +1,10 @@
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { initChatModel } from "langchain/chat_models/universal";
-import logger from "../utils/logger.js";
-import { loadModelConfig } from "../utils/modelHandler.js";
-import { iModelConfig, iOldModelConfig, ModelSettings } from "../utils/types.js";
-import path from "path";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import fs from "fs/promises";
+import { initChatModel } from "langchain/chat_models/universal";
+import path from "path";
+import logger from "../utils/logger.js";
+import { iModelConfig, iOldModelConfig, ModelSettings } from "../utils/types.js";
 const LANGCHAIN_SUPPORTED_PROVIDERS = [
   "openai",
   "anthropic",
@@ -56,7 +55,15 @@ export class ModelManager {
   }
 
   async getModelConfig(): Promise<iModelConfig | iOldModelConfig | null> {
-    return await loadModelConfig(this.configPath);
+    try {
+      const configPath = this.configPath || path.join(process.cwd(), "modelConfig.json");
+      const configContent = await fs.readFile(configPath, "utf-8");
+      const config = JSON.parse(configContent) as iModelConfig;
+      return config;
+    } catch (error) {
+      logger.error("Error loading model configuration:", error);
+      return null;
+    }
   }
 
   async initializeModel(): Promise<BaseChatModel | null> {
@@ -97,10 +104,7 @@ export class ModelManager {
     }
 
     const modelName = modelSettings.model;
-    const baseUrl =
-      modelSettings.configuration?.baseURL ||
-      modelSettings.baseURL ||
-      "";
+    const baseUrl = modelSettings.configuration?.baseURL || modelSettings.baseURL || "";
     this.model = await initChatModel(modelName, {
       ...modelSettings,
       baseUrl,
@@ -136,6 +140,10 @@ export class ModelManager {
     await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), "utf-8");
   }
 
+  async replaceAllModelConfig(uploadModelSettings: iModelConfig) {
+    await fs.writeFile(this.configPath, JSON.stringify(uploadModelSettings, null, 2), "utf-8");
+  }
+
   public async generateTitle(content: string) {
     if (!this.cleanModel) {
       logger.error("Model not initialized");
@@ -154,7 +162,7 @@ export class ModelManager {
         - If the input contains Traditional Chinese characters, use Traditional Chinese for the title.
         - For all other languages, generate the title in the same language as the input.`
       ),
-      new HumanMessage(`<user_input_query>${content}</user_input_query>`)
+      new HumanMessage(`<user_input_query>${content}</user_input_query>`),
     ]);
 
     const resContent = response?.content;

@@ -12,6 +12,7 @@ import { useSidebarLayer } from "../hooks/useLayer"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
 import { currentChatIdAtom } from "../atoms/chatState"
 import PopupConfirm from "./PopupConfirm"
+import { newVersionAtom } from "../atoms/globalState"
 
 interface Props {
   onNewChat?: () => void
@@ -56,7 +57,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const showToast = useSetAtom(showToastAtom)
   const _openOverlay = useSetAtom(openOverlayAtom)
-  const [newVersion, setNewVersion] = useState("")
+  const newVersion = useAtomValue(newVersionAtom)
   const closeAllOverlays = useSetAtom(closeAllOverlaysAtom)
   const [isVisible, setVisible] = useSidebarLayer(sidebarVisibleAtom)
   const [currentChatId, setCurrentChatId] = useAtom(currentChatIdAtom)
@@ -77,17 +78,6 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   useHotkeyEvent("chat:delete", () => {
     currentChatId && setDeletingChatId(currentChatId)
   })
-
-  // check new version
-  const lastQueryTime = useRef(0)
-  useEffect(() => {
-    if (Date.now() - lastQueryTime.current > 1000 * 60) {
-      window.ipcRenderer.checkNewVersion().then(v => {
-        setNewVersion(v)
-        lastQueryTime.current = Date.now()
-      })
-    }
-  }, [])
 
   const confirmDelete = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation()

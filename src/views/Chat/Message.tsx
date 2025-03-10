@@ -32,7 +32,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
   const [theme] = useAtom(themeAtom)
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
   const cacheCode = useRef<string>("")
-  
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -54,7 +54,10 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
 
     return (
       <ReactMarkdown
-        remarkPlugins={[remarkMath, remarkGfm]}
+        remarkPlugins={[[remarkMath, {
+          singleDollarTextMath: false,
+          inlineMathDouble: false
+        }], remarkGfm]}
         rehypePlugins={[rehypeKatex]}
         components={{
           a(props) {
@@ -75,7 +78,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
             }
 
             return <img src={imageSrc} alt={alt} className={className} />
-          }, 
+          },
           code({node, className, children, ...props}) {
             const match = /language-(\w+)/.exec(className || "")
             const language = match ? match[1] : ""
@@ -97,7 +100,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
               const handleClick = () => {
                 updateStreamingCode({ code, language })
               }
-              
+
               const diffLength = Math.abs(code.length - cacheCode.current.length)
               if ((!isBlockComplete && isLoading) || (diffLength < 10 && cacheCode.current !== code)) {
                 cacheCode.current = code
@@ -105,7 +108,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
               }
 
               return (
-                <button 
+                <button
                   className="code-block-button"
                   onClick={handleClick}
                 >
@@ -121,7 +124,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
               <div className="code-block">
                 <div className="code-header">
                   <span className="language">{language}</span>
-                  <button 
+                  <button
                     className="copy-btn"
                     onClick={() => copyToClipboard(code)}
                   >
