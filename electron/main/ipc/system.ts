@@ -1,4 +1,5 @@
-import { app, ipcMain, shell } from "electron"
+import { app, ipcMain, shell, BrowserWindow } from "electron"
+import AppState from "../state"
 import { scriptsDir } from "../constant"
 import { store } from "../store"
 
@@ -6,8 +7,9 @@ import {
   checkAppImageAutoLaunchStatus,
   setAppImageAutoLaunch,
 } from "../platform/appimage"
+import { destroyTray, initTray } from "../tray"
 
-export function ipcSystemHandler() {
+export function ipcSystemHandler(win: BrowserWindow) {
   ipcMain.handle("system:openScriptsDir", async () => {
     shell.openPath(scriptsDir)
   })
@@ -33,5 +35,20 @@ export function ipcSystemHandler() {
     }
 
     return enable
+  })
+
+  ipcMain.handle("system:getMinimalToTray", () => {
+    return store.get("minimalToTray")
+  })
+
+  ipcMain.handle("system:setMinimalToTray", (event, enable) => {
+    store.set("minimalToTray", enable)
+    AppState.setIsQuitting(!enable)
+
+    if (enable) {
+      initTray(win)
+    } else {
+      destroyTray()
+    }
   })
 }

@@ -116,7 +116,8 @@
     "language": "系統語言",
     "theme": "顯示模式",
     "autoLaunch": "開機自動啟動Dive AI",
-    "defaultInstructions": "以繁體中文回應"
+    "defaultInstructions": "以繁體中文回應",
+    "minimalToTray": "關閉按鈕會將Dive AI最小化到背景"
   },
   "toast": {
     "copiedToClipboard": "已複製到剪貼簿"

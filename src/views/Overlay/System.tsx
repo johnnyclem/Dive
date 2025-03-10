@@ -12,9 +12,11 @@ const System = () => {
   const [, closeOverlay] = useAtom(closeOverlayAtom)
   const [language, setLanguage] = useState(i18n.language)
   const [autoLaunch, setAutoLaunch] = useState(false)
+  const [minimalToTray, setMinimalToTray] = useState(false)
 
   useEffect(() => {
     window.ipcRenderer.getAutoLaunch().then(setAutoLaunch)
+    window.ipcRenderer.getMinimalToTray().then(setMinimalToTray)
   }, [])
 
   const handleAutoLaunchChange = (value: boolean) => {
@@ -53,6 +55,11 @@ const System = () => {
     }
   }
 
+  const handleMinimalToTrayChange = (value: boolean) => {
+    setMinimalToTray(value)
+    window.ipcRenderer.setMinimalToTray(value)
+  }
+
   return (
     <div className="system-page overlay-page">
       <button
@@ -71,6 +78,8 @@ const System = () => {
           </div>
         </div>
         <div className="system-content">
+
+          {/* language */}
           <div className="system-list-section">
             <div className="system-list-content">
               <span className="system-list-name">{t("system.language")}：</span>
@@ -84,6 +93,8 @@ const System = () => {
               />
             </div>
           </div>
+
+          {/* theme */}
           <div className="system-list-section">
             <div className="system-list-content">
               <span className="system-list-name">{t("system.theme")}：</span>
@@ -93,6 +104,7 @@ const System = () => {
             </div>
           </div>
 
+          {/* auto launch */}
           <div className="system-list-section">
             <div className="system-list-content">
               <span className="system-list-name">{t("system.autoLaunch")}：</span>
@@ -101,6 +113,19 @@ const System = () => {
               <Switch
                 checked={autoLaunch}
                 onChange={e => handleAutoLaunchChange(e.target.checked)}
+              />
+            </div>
+          </div>
+
+          {/* minimal to tray */}
+          <div className="system-list-section">
+            <div className="system-list-content">
+              <span className="system-list-name">{t("system.minimalToTray")}：</span>
+            </div>
+            <div className="system-list-switch-container">
+              <Switch
+                checked={minimalToTray}
+                onChange={e => handleMinimalToTrayChange(e.target.checked)}
               />
             </div>
           </div>

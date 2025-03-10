@@ -3,12 +3,10 @@ import { createRequire } from "node:module"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
 import os from "node:os"
-import fse from "fs-extra"
-import semver from "semver"
 import AppState from "./state"
 import { cleanup, initMCPClient } from "./service"
-import { getLatestVersion, getNvmPath, modifyPath } from "./util"
-import { binDirList, cacheDir, darwinPathList } from "./constant"
+import { getNvmPath, modifyPath } from "./util"
+import { binDirList, darwinPathList } from "./constant"
 import { update } from "./update"
 import { ipcHandler } from "./ipc"
 import { initTray } from "./tray"
@@ -39,18 +37,6 @@ protocol.registerSchemesAsPrivileged([
       stream: true,
     }
   }
-])
-
-const selectionMenu = Menu.buildFromTemplate([
-  { role: "copy" },
-  { role: "selectAll" }
-])
-
-const inputMenu = Menu.buildFromTemplate([
-  { role: "copy" },
-  { role: "paste" },
-  { role: "cut" },
-  { role: "selectAll" }
 ])
 
 // The built directory structure
@@ -188,15 +174,16 @@ async function createWindow() {
   update(win)
 
   // Tray
-  if (process.platform !== "darwin") {
+  const shouldminimalToTray = store.get("minimalToTray")
+  if (process.platform !== "darwin" && shouldminimalToTray) {
     initTray(win)
+    AppState.setIsQuitting(false)
   }
 
   // ipc handler
   ipcHandler(win)
 
   const shouldAutoLaunch = store.get("autoLaunch")
-  console.log("shouldAutoLaunch", shouldAutoLaunch)
   app.setLoginItemSettings({
     openAtLogin: shouldAutoLaunch,
     openAsHidden: false
@@ -207,7 +194,8 @@ app.whenReady().then(onReady)
 
 app.on("window-all-closed", async () => {
   win = null
-  if (process.platform !== "darwin") {
+
+  if (process.platform !== "darwin" && AppState.isQuitting) {
     await cleanup()
     app.quit()
   }

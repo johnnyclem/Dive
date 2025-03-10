@@ -116,7 +116,8 @@
     "language": "系统语言",
     "theme": "显示模式",
     "autoLaunch": "开机自动启动Dive AI",
-    "defaultInstructions": "以简体中文回答"
+    "defaultInstructions": "以简体中文回答",
+    "minimalToTray": "最小化到系统托盘"
   },
   "toast": {
     "copiedToClipboard": "已复制到剪贴板"

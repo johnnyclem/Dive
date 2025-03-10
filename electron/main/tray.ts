@@ -40,3 +40,8 @@ function updateTrayMenu(win: BrowserWindow) {
   const contextMenu = Menu.buildFromTemplate(menuTemplate)
   tray?.setContextMenu(contextMenu)
 }
+
+export function destroyTray() {
+  tray?.destroy()
+  tray = null
+}

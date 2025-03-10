@@ -1,5 +1,5 @@
 class AppState {
-  public isQuitting = false
+  public isQuitting = true
 
   public setIsQuitting(isQuitting: boolean) {
     this.isQuitting = isQuitting
