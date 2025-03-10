@@ -16,21 +16,8 @@ jobs:
       markdown_change: ${{ steps.filter_markdown.outputs.change }}
       markdown_files: ${{ steps.filter_markdown.outputs.change_files }}
     steps:
-
-      - name: Check Not Allowed File Changes
-        uses: dorny/paths-filter@v2
-        id: filter_not_allowed
-        with:
-          list-files: json
-          filters: |
-            change:
-              - 'package-lock.json'
-              - 'yarn.lock'
-              - 'pnpm-lock.yaml'
-
       # ref: https://github.com/github/docs/blob/main/.github/workflows/triage-unallowed-contributions.yml
       - name: Comment About Changes We Can't Accept
-        if: ${{ steps.filter_not_allowed.outputs.change == 'true' }}
         uses: actions/github-script@v6
         with:
           script: |
