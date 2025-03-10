@@ -153,10 +153,13 @@ export const saveAllConfigAtom = atom(
 
       const data = await response.json()
       if (data.success) {
-        const config = get(configAtom)
+        let config = get(configAtom)
         if (config) {
-          config.configs = providerConfigs
-          config.activeProvider = activeProvider ?? get(activeProviderAtom)
+          config = {
+            ...config,
+            configs: providerConfigs,
+            activeProvider: activeProvider ?? get(activeProviderAtom)
+          }
         }
         set(configAtom, config)
         set(configListAtom, providerConfigs)
