@@ -105,6 +105,7 @@ export function configRouter() {
     try {
       const uploadModelSettings = req.body;
       await ModelManager.getInstance().replaceAllModelConfig(uploadModelSettings);
+      await ModelManager.getInstance().reloadModel();
       res.json({
         success: true,
       });
