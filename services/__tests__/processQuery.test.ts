@@ -26,6 +26,12 @@ describe("ProcessQuery", () => {
       invoke: jest.fn(),
       bind: jest.fn(),
       bindTools: jest.fn().mockImplementation(() => mockModel),
+      lc_kwargs: {
+        defaultConfig: {
+          modelProvider: "openai",
+          baseURL: "https://api.openai.com/v1",
+        },
+      },
     } as any;
 
     // Mock client

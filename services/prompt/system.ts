@@ -107,11 +107,11 @@ export const systemPrompt = (customRules: string) => {
         <Math_Formatting>
           * All mathematical formulas must use KaTeX syntax:
           * For inline formulas:
-            - Use single dollar signs: $[formula]$
-            - Example: $E = mc^2$
+            - Use single dollar signs: \( [formula] \)
+            - Example: \( E = mc^2 \)
           * For block formulas:
-            - Use double dollar signs with displaystyle: $$ \displaystyle [formula] $$
-            - Example: $$ \displaystyle \int_{a}^{b} f(x) dx = F(b) - F(a) $$
+            - Use double dollar signs with displaystyle: \( \displaystyle [formula] \)
+            - Example: \( \displaystyle \int_{a}^{b} f(x) dx = F(b) - F(a) \)
           * Important notes:
             - Ensure proper KaTeX syntax in all formulas
             - Maintain consistent and professional mathematical typesetting

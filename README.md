@@ -27,8 +27,15 @@ Dive is an open-source AI Agent desktop application that seamlessly integrates a
 - ⚙️ **Advanced API Management**: Multiple API keys and model switching support
 - 💡 **Custom Instructions**: Personalized system prompts for tailored AI behavior
 - 💬 **Intuitive Chat Interface**: Real-time context management and user-friendly design
-
 - 🚀 **Upcoming Features**: Prompt Schedule and OpenAgentPlatform MarketPlace
+
+## Recent updates(2025/3/7)
+
+- 🔌 **SSE Transport Protocol**: Support for Server-Sent Events based MCP servers since v0.5.1
+- 🔄 **Auto-Update Mechanism**: Automatically checks for and installs the latest application updates
+- ⌨️ **Keyboard Shortcuts**: Enhanced productivity with customizable keyboard shortcuts
+- 🧮 **Math Formula Rendering**: Support for displaying mathematical formulas in markdown
+
 
 ## Download and Install ⬇️
 
@@ -81,6 +88,22 @@ Add this JSON configuration to your Dive MCP settings to enable both tools:
       "enabled": true
     }
   }
+```
+
+### Using SSE Server for MCP
+
+You can also connect to an external MCP server via SSE (Server-Sent Events). Add this configuration to your Dive MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "MCP_SERVER_NAME": {
+      "enabled": true,
+      "transport": "sse",
+      "url": "YOUR_SSE_SERVER_URL"
+    }
+  }
+}
 ```
 
 ### Additional Setup for yt-dlp-mcp

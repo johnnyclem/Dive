@@ -6,11 +6,11 @@ import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import { hasActiveConfigAtom, hasConfigAtom } from "../atoms/configState"
 import Setup from "./Setup"
-import { showToastAtom } from "../atoms/toastState"
 import { openOverlayAtom } from "../atoms/layerState"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
 import Textarea from "../components/WrappedTextarea"
 import Tooltip from "../components/Tooltip"
+import { loadToolsAtom, toolsAtom } from "../atoms/toolState"
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -27,43 +27,21 @@ const Welcome = () => {
   const navigate = useNavigate()
   const [message, setMessage] = useState("")
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
-  const [, showToast] = useAtom(showToastAtom)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
   const histories = useAtomValue(historiesAtom)
   const loadHistories = useSetAtom(loadHistoriesAtom)
   const hasConfig = useAtomValue(hasConfigAtom)
   const isComposing = useRef(false)
-  const [toolsCnt, setToolsCnt] = useState<number>(0)
-  const [, openOverlay] = useAtom(openOverlayAtom)
+  const openOverlay = useSetAtom(openOverlayAtom)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const loadTools = useSetAtom(loadToolsAtom)
+  const tools = useAtomValue(toolsAtom)
   const hasActiveConfig = useAtomValue(hasActiveConfigAtom)
 
   useEffect(() => {
-    fetchTools()
+    loadTools()
   }, [])
-
-  const fetchTools = async () => {
-    try {
-      const response = await fetch("/api/tools")
-      const data = await response.json()
-
-      if (data.success) {
-        setToolsCnt(data.tools?.length ?? 0)
-      } else {
-        setToolsCnt(0)
-        showToast({
-          message: data.message || t("tools.fetchFailed"),
-          type: "error"
-        })
-      }
-    } catch (error) {
-      showToast({
-        message: error instanceof Error ? error.message : t("tools.fetchFailed"),
-        type: "error"
-      })
-    }
-  }
 
   useEffect(() => {
     updateStreamingCode(null)
@@ -207,7 +185,7 @@ const Welcome = () => {
                   <svg width="20" height="20" viewBox="0 0 24 24">
                     <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
                   </svg>
-                  {`${toolsCnt} ${t("chat.tools")}`}
+                  {`${tools.length} ${t("chat.tools")}`}
                 </button>
                 <Tooltip
                   content={!hasActiveConfig ? t("chat.noModelAlert") : t("chat.send")}

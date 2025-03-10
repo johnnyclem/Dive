@@ -1,31 +1,17 @@
+// @ts-ignore
+import jsonlint from "jsonlint-mod"
 import React, { useEffect, useState, useRef, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { showToastAtom } from "../../atoms/toastState"
 import CodeMirror, { EditorView } from "@uiw/react-codemirror"
 import { json } from "@codemirror/lang-json"
 import { linter, lintGutter } from "@codemirror/lint"
 import { systemThemeAtom, themeAtom } from "../../atoms/themeState"
-
-// @ts-ignore
-import jsonlint from "jsonlint-mod"
 import { closeOverlayAtom } from "../../atoms/layerState"
 import Switch from "../../components/Switch"
 import { Behavior, useLayer } from "../../hooks/useLayer"
-
-interface SubTool {
-  name: string
-  description?: string
-  enabled: boolean
-}
-
-interface Tool {
-  name: string
-  description?: string
-  icon?: string
-  tools?: SubTool[]
-  enabled: boolean
-}
+import { loadToolsAtom, Tool, toolsAtom } from "../../atoms/toolState"
 
 interface ConfigModalProps {
   title: string
@@ -56,11 +42,11 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   const { t } = useTranslation()
   const [jsonString, setJsonString] = useState(config ? JSON.stringify(config, null, 2) : "")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [, showToast] = useAtom(showToastAtom)
+  const showToast = useSetAtom(showToastAtom)
   const [isFormatError, setIsFormatError] = useState(false)
-  const [theme] = useAtom(themeAtom)
-  const [systemTheme] = useAtom(systemThemeAtom)
-  
+  const theme = useAtomValue(themeAtom)
+  const systemTheme = useAtomValue(systemThemeAtom)
+
   useLayer({
     onClose: () => {
       onCancel()
@@ -165,16 +151,16 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
             }}
           />
           <div className="form-actions">
-            <button 
-              type="button" 
-              onClick={onCancel} 
+            <button
+              type="button"
+              onClick={onCancel}
               className="cancel-btn"
               disabled={isSubmitting}
             >
               {t("tools.cancel")}
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="submit-btn"
               disabled={isSubmitting}
             >
@@ -191,14 +177,15 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
 
 const Tools = () => {
   const { t } = useTranslation()
-  const [tools, setTools] = useState<Tool[]>([])
+  const tools = useAtomValue(toolsAtom)
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [mcpConfig, setMcpConfig] = useState<Record<string, any>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [, showToast] = useAtom(showToastAtom)
-  const [, closeOverlay] = useAtom(closeOverlayAtom)
+  const showToast = useSetAtom(showToastAtom)
+  const closeOverlay = useSetAtom(closeOverlayAtom)
   const toolsCacheRef = useRef<ToolsCache>({})
+  const loadTools = useSetAtom(loadToolsAtom)
 
   useEffect(() => {
     const cachedTools = localStorage.getItem("toolsCache")
@@ -212,12 +199,9 @@ const Tools = () => {
 
   const fetchTools = async () => {
     try {
-      const response = await fetch("/api/tools")
-      const data = await response.json()
+      const data = await loadTools()
 
       if (data.success) {
-        setTools(data.tools)
-        
         const newCache: ToolsCache = {}
         data.tools.forEach((tool: Tool) => {
           newCache[tool.name] = {
@@ -229,7 +213,7 @@ const Tools = () => {
             })) || []
           }
         })
-        
+
         toolsCacheRef.current = {...toolsCacheRef.current, ...newCache}
         localStorage.setItem("toolsCache", JSON.stringify(toolsCacheRef.current))
       } else {
@@ -276,9 +260,13 @@ const Tools = () => {
         })
       }
     } catch (error) {
+      showToast({
+        message: error instanceof Error ? error.message : t("tools.configFetchFailed"),
+        type: "error"
+      })
     }
   }
-  
+
   const handleUpdateConfigResponse = (data: { errors: { error: string; serverName: string }[] }) => {
     if (data.errors && data.errors.length && Array.isArray(data.errors)) {
       data.errors.forEach(({ error, serverName }: { error: string; serverName: string }) => {
@@ -354,14 +342,14 @@ const Tools = () => {
     if (configKeys.includes("mcpServers")) {
       mergedConfig.mcpServers = { ...mergedConfig.mcpServers, ...newConfig.mcpServers }
     }
-    
+
     mergedConfig.mcpServers = configKeys.reduce((acc, key) => {
       if ("command" in newConfig[key] && "args" in newConfig[key]) {
         acc[key] = { ...(mergedConfig.mcpServers[key] || {}), ...newConfig[key] }
       }
       return acc
     }, mergedConfig.mcpServers)
-    
+
     mergedConfig.mcpServers = Object.keys(mergedConfig.mcpServers).reduce((acc, key) => {
       if (!("enabled" in acc[key])) {
         acc[key].enabled = true
@@ -380,12 +368,12 @@ const Tools = () => {
   const sortedTools = useMemo(() => {
     const configOrder = mcpConfig.mcpServers ? Object.keys(mcpConfig.mcpServers) : []
     const toolMap = new Map(tools.map(tool => [tool.name, tool]))
-    
+
     return configOrder.map(name => {
       if (toolMap.has(name)) {
         return toolMap.get(name)!
       }
-      
+
       const cachedTool = toolsCacheRef.current[name]
       if (cachedTool) {
         return {
@@ -427,7 +415,7 @@ const Tools = () => {
             <p className="subtitle">{t("tools.subtitle")}</p>
           </div>
           <div className="header-actions">
-            <button 
+            <button
               className="add-btn"
               onClick={() => setShowAddModal(true)}
             >
@@ -436,13 +424,13 @@ const Tools = () => {
               </svg>
               {t("tools.addServer")}
             </button>
-            <button 
+            <button
               className="edit-btn"
               onClick={() => setShowConfigModal(true)}
             >
               {t("tools.editConfig")}
             </button>
-            <button 
+            <button
               className="folder-btn"
               onClick={handleOpenConfigFolder}
             >
@@ -529,4 +517,4 @@ const Tools = () => {
   )
 }
 
-export default React.memo(Tools) 
+export default React.memo(Tools)

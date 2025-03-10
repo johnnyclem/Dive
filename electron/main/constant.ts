@@ -16,13 +16,19 @@ export const binDirList = [
   path.join(process.resourcesPath, "python"),
 ]
 
+export const darwinPathList = [
+  "/opt/homebrew/bin",
+  "/usr/local/bin",
+  "/usr/bin",
+]
+
 export const DEF_MCP_SERVER_CONFIG = {
   "mcpServers": {
     "echo": {
       "enabled": true,
       "command": "node",
       "args": [
-        path.join(scriptsDir, "echo.js")
+        path.join(scriptsDir, "echo.cjs")
       ]
     },
   }

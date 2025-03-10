@@ -18,19 +18,28 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
     const [channel, ...omit] = args
     return ipcRenderer.invoke(channel, ...omit)
   },
-  port: () => ipcRenderer.invoke("api:port"),
-  getResources: (p: string) => ipcRenderer.invoke("api:getResources", p),
-  fillPathToConfig: (config: string) => ipcRenderer.invoke("api:fillPathToConfig", config),
-  openScriptsDir: () => ipcRenderer.invoke("fs:openScriptsDir"),
-  openaiModelList: (apiKey: string) => ipcRenderer.invoke("api:openaiModelList", apiKey),
-  openaiCompatibleModelList: (apiKey: string, baseURL: string) => ipcRenderer.invoke("api:openaiCompatibleModelList", apiKey, baseURL),
-  anthropicModelList: (apiKey: string, baseURL: string) => ipcRenderer.invoke("api:anthropicModelList", apiKey, baseURL),
-  ollamaModelList: (baseURL: string) => ipcRenderer.invoke("api:ollamaModelList", baseURL),
+
+  // util
+  fillPathToConfig: (config: string) => ipcRenderer.invoke("util:fillPathToConfig", config),
+
+  // system
+  openScriptsDir: () => ipcRenderer.invoke("system:openScriptsDir"),
+
+  // llm
+  openaiModelList: (apiKey: string) => ipcRenderer.invoke("llm:openaiModelList", apiKey),
+  openaiCompatibleModelList: (apiKey: string, baseURL: string) => ipcRenderer.invoke("llm:openaiCompatibleModelList", apiKey, baseURL),
+  anthropicModelList: (apiKey: string, baseURL: string) => ipcRenderer.invoke("llm:anthropicModelList", apiKey, baseURL),
+  ollamaModelList: (baseURL: string) => ipcRenderer.invoke("llm:ollamaModelList", baseURL),
+
+  // context menu
   showSelectionContextMenu: () => ipcRenderer.invoke("show-selection-context-menu"),
   showInputContextMenu: () => ipcRenderer.invoke("show-input-context-menu"),
-  checkNewVersion: () => ipcRenderer.invoke("api:checkNewVersion"),
-  getHotkeyMap: () => ipcRenderer.invoke("api:getHotkeyMap"),
-  getPlatform: () => ipcRenderer.invoke("api:getPlatform"),
+
+  // env
+  getHotkeyMap: () => ipcRenderer.invoke("env:getHotkeyMap"),
+  getPlatform: () => ipcRenderer.invoke("env:getPlatform"),
+  port: () => ipcRenderer.invoke("env:port"),
+  getResourcesPath: (p: string) => ipcRenderer.invoke("env:getResourcesPath", p),
 })
 
 // --------- Preload scripts loading ---------

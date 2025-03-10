@@ -4,7 +4,7 @@ interface Window {
   // expose in the `electron/preload/index.ts`
   ipcRenderer: import("electron").IpcRenderer & {
     port: () => Promise<number>
-    getResources: (p: string) => Promise<string>
+    getResourcesPath: (p: string) => Promise<string>
     openScriptsDir: () => Promise<void>
     fillPathToConfig: (config: string) => Promise<string>
     openaiModelList: (apiKey: string) => Promise<string[]>
@@ -13,7 +13,6 @@ interface Window {
     ollamaModelList: (baseURL: string) => Promise<string[]>
     showSelectionContextMenu: () => Promise<void>
     showInputContextMenu: () => Promise<void>
-    checkNewVersion: () => Promise<string>
     getHotkeyMap: () => Promise<Record<string, any>>
     getPlatform: () => Promise<string>
   }
