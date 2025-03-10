@@ -13,7 +13,6 @@ interface Window {
     ollamaModelList: (baseURL: string) => Promise<string[]>
     showSelectionContextMenu: () => Promise<void>
     showInputContextMenu: () => Promise<void>
-    checkNewVersion: () => Promise<string>
     getHotkeyMap: () => Promise<Record<string, any>>
     getPlatform: () => Promise<string>
     getAutoLaunch: () => Promise<boolean>

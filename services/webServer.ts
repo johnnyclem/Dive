@@ -1,23 +1,36 @@
 import { ToolDefinition } from "@langchain/core/language_models/base";
 import axios from "axios";
-import express from "express";
+import express, { Response } from "express";
 import fs from "fs/promises";
 import { initChatModel } from "langchain/chat_models/universal";
 import multer from "multer";
 import path from "path";
 import { MCPClient } from "./client.js";
-import { getChatWithMessages } from "./database/index.js";
+import {
+  DatabaseMode,
+  getChatWithMessages,
+  getDatabaseMode,
+  getNextAIMessage,
+  updateMessageContent,
+} from "./database/index.js";
 import { PromptManager } from "./prompt/index.js";
-import { createRouter } from "./routes/index.js";
+import { createRouter } from "./routes/_index.js";
 import { handleUploadFiles } from "./utils/fileHandler.js";
 import logger from "./utils/logger.js";
-import { iModelConfig, iQueryInput, iStreamMessage, ModelSettings } from "./utils/types.js";
+import { iQueryInput, iStreamMessage, ModelSettings } from "./utils/types.js";
 import envPaths from "env-paths";
 
-const envPath = envPaths("dive", {suffix: ""})
-const PROJECT_ROOT = envPath.data;
+interface FileProcessingResult {
+  images: string[];
+  documents: string[];
+}
 
-const OFFLINE_MODE = process.env.OFFLINE_MODE === "true";
+type SSEResponse = Response;
+
+const envPath = envPaths("dive", {suffix: ""})
+const PROJECT_ROOT = envPath.data
+
+const OFFLINE_MODE = true
 
 export class WebServer {
   private app;
@@ -82,11 +95,72 @@ export class WebServer {
     this.setupRoutes();
   }
 
+  private setupSSE(res: SSEResponse) {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    return (text: string) => {
+      res.write(`data: ${JSON.stringify({ message: text })}\n\n`);
+    };
+  }
+
+  private async processFiles(files: Express.Multer.File[], bodyFilepaths: any): Promise<FileProcessingResult> {
+    let filepaths: string[] = [];
+
+    if (bodyFilepaths) {
+      if (OFFLINE_MODE) {
+        filepaths = typeof bodyFilepaths === "string" ? JSON.parse(bodyFilepaths || "[]") : bodyFilepaths;
+      } else {
+        logger.error("filepaths arg is not allowed in online mode");
+      }
+    }
+
+    // Only allow files parameter in offline mode
+    if (!OFFLINE_MODE) files = [];
+
+    if (files?.length > 0 || filepaths?.length > 0) {
+      const processFiles = {
+        files: files,
+        filepaths: filepaths,
+      } as { files: Express.Multer.File[]; filepaths: string[] };
+      return await handleUploadFiles(processFiles);
+    }
+
+    return { images: [], documents: [] };
+  }
+
+  private handleStreamError(error: Error, res: SSEResponse) {
+    logger.error(`Stream error: ${error.message}`);
+    const response = {
+      type: "error",
+      content: error.message,
+    } as iStreamMessage;
+    res.write(`data: ${JSON.stringify({ message: response })}\n\n`);
+    res.end();
+  }
+
+  private async prepareQueryInput(
+    message: string | undefined,
+    files: Express.Multer.File[],
+    bodyFilepaths: any
+  ): Promise<iQueryInput> {
+    const queryInput: iQueryInput = {};
+
+    if (message) {
+      queryInput.text = message;
+    }
+
+    const { images, documents } = await this.processFiles(files, bodyFilepaths);
+    if (images.length > 0) queryInput.images = OFFLINE_MODE ? images : [];
+    if (documents.length > 0) queryInput.documents = OFFLINE_MODE ? documents : [];
+
+    return queryInput;
+  }
+
   private setupRoutes() {
     this.app.use("/", createRouter());
 
     // API endpoint for sending messages
-    //@ts-ignore
     this.app.post("/api/chat", (req, res) => {
       this.upload(req, res, async (err) => {
         if (err) {
@@ -98,74 +172,106 @@ export class WebServer {
         }
 
         try {
-          const { message, chatId } = req.body;
-          const files = req.files as Express.Multer.File[];
-          // Only allow filepaths parameter in offline mode
-          let filepaths = [] as string[];
-
-          const bodyFilepaths = req.body.filepaths;
-          if (bodyFilepaths) {
-            if (OFFLINE_MODE) {
-              filepaths = typeof bodyFilepaths === "string" ? JSON.parse(bodyFilepaths || "[]") : bodyFilepaths;
-            } else {
-              logger.error("filepaths arg is not allowed in online mode");
+          const { message, chatId, fingerprint, user_access_token } = req.body;
+          if (getDatabaseMode() === DatabaseMode.API) {
+            if (!fingerprint && !user_access_token) {
+              return res.status(400).json({
+                success: false,
+                message: "Fingerprint or user_access_token is required",
+              });
             }
           }
 
-          if (!message && (!files || files.length === 0) && (!filepaths || filepaths.length === 0)) {
+          let files = req.files as Express.Multer.File[];
+
+          if (!message && (!files || files.length === 0)) {
             return res.status(400).json({
               success: false,
-              message: "Message or Files/FilePaths are required",
+              message: "Message or Files are required",
             });
           }
 
-          // Set up SSE headers
-          res.setHeader("Content-Type", "text/event-stream");
-          res.setHeader("Cache-Control", "no-cache");
-          res.setHeader("Connection", "keep-alive");
+          const onStream = this.setupSSE(res);
+          const queryInput = await this.prepareQueryInput(message, files, req.body.filepaths);
 
-          const onStream = (text: string) => {
-            res.write(`data: ${JSON.stringify({ message: text })}\n\n`);
-          };
-
-          // Prepare query input
-          const queryInput: iQueryInput = {};
-
-          if (message) {
-            queryInput.text = message;
-          }
-
-          // Process uploaded files
-          if (files?.length > 0 || filepaths?.length > 0) {
-            // Handle both file paths and file instances
-            const processFiles = {
-              files: files,
-              filepaths: filepaths,
-            } as { files: Express.Multer.File[]; filepaths: string[] };
-            const { images, documents } = await handleUploadFiles(processFiles);
-            queryInput.images = images;
-            queryInput.documents = documents;
-          }
-
-          await this.mcpClient.processQuery(chatId, queryInput, onStream);
+          await this.mcpClient.processQuery(chatId, queryInput, onStream, undefined, fingerprint, user_access_token);
 
           res.write("data: [DONE]\n\n");
           res.end();
         } catch (error) {
-          logger.error(`Chat error: ${(error as Error).message}`);
-          const response = {
-            type: "error",
-            content: (error as Error).message,
-          } as iStreamMessage;
-          res.write(`data: ${JSON.stringify({ message: response })}\n\n`);
+          this.handleStreamError(error as Error, res);
+        }
+      });
+    });
+
+    // Add edit message endpoint
+    this.app.post("/api/chat/edit", (req, res) => {
+      this.upload(req, res, async (err) => {
+        if (err) {
+          logger.error(`File upload error: ${err.message}`);
+          return res.status(400).json({
+            success: false,
+            message: err.message,
+          });
+        }
+
+        try {
+          const { chatId, messageId, content, fingerprint, user_access_token } = req.body;
+          if (getDatabaseMode() === DatabaseMode.API) {
+            if (!fingerprint && !user_access_token) {
+              return res.status(400).json({
+                success: false,
+                message: "Fingerprint or user_access_token is required",
+              });
+            }
+          }
+
+          if (!chatId || !messageId) {
+            return res.status(400).json({
+              success: false,
+              message: "Chat ID and Message ID are required",
+            });
+          }
+
+          const onStream = this.setupSSE(res);
+          const files = req.files as Express.Multer.File[];
+          const queryInput = await this.prepareQueryInput(content, files, req.body.filepaths);
+
+          await updateMessageContent(messageId, queryInput);
+
+          const nextAIMessage = await getNextAIMessage(chatId, messageId);
+          if (!nextAIMessage) {
+            logger.warn(`No AI message found after user message ${messageId}`);
+          }
+
+          await this.mcpClient.processQuery(
+            chatId,
+            queryInput,
+            onStream,
+            nextAIMessage?.messageId,
+            fingerprint,
+            user_access_token
+          );
+
+          res.write("data: [DONE]\n\n");
           res.end();
+        } catch (error) {
+          this.handleStreamError(error as Error, res);
         }
       });
     });
 
     //@ts-ignore
     this.app.post("/api/chat/retry", async (req, res) => {
-      const { chatId, messageId } = req.body;
+      const { chatId, messageId, fingerprint, user_access_token } = req.body;
+      if (getDatabaseMode() === DatabaseMode.API) {
+        if (!fingerprint && !user_access_token) {
+          return res.status(400).json({
+            success: false,
+            message: "Fingerprint or user_access_token is required",
+          });
+        }
+      }
       if (!chatId || !messageId) {
         return res.status(400).json({
           success: false,
@@ -173,25 +279,12 @@ export class WebServer {
         });
       }
       try {
-        // Set up SSE headers
-        res.setHeader("Content-Type", "text/event-stream");
-        res.setHeader("Cache-Control", "no-cache");
-        res.setHeader("Connection", "keep-alive");
-        const onStream = (text: string) => {
-          res.write(`data: ${JSON.stringify({ message: text })}\n\n`);
-        };
-        // Prepare query input
-        await this.mcpClient.processQuery(chatId, "", onStream, messageId);
+        const onStream = this.setupSSE(res);
+        await this.mcpClient.processQuery(chatId, "", onStream, messageId, fingerprint, user_access_token);
         res.write("data: [DONE]\n\n");
         res.end();
       } catch (error) {
-        logger.error(`Chat error: ${(error as Error).message}`);
-        const response = {
-          type: "error",
-          content: (error as Error).message,
-        } as iStreamMessage;
-        res.write(`data: ${JSON.stringify({ message: response })}\n\n`);
-        res.end();
+        this.handleStreamError(error as Error, res);
       }
     });
 
@@ -256,18 +349,17 @@ export class WebServer {
           },
         ] as ToolDefinition[];
 
-
         let connectingSuccess = false;
         let connectingResult = null;
         let supportTools = false;
         let supportToolsResult = null;
 
         // check if model can connect
-        try{
-          const result = await model.invoke("Only return 'Hi' strictly")
+        try {
+          const result = await model.invoke("Only return 'Hi' strictly");
           connectingSuccess = true;
           connectingResult = result;
-        } catch(error){
+        } catch (error) {
           logger.error(`Model verification error: ${(error as Error).message}`);
           res.json({
             connectingSuccess: false,
@@ -277,13 +369,13 @@ export class WebServer {
         }
 
         // check if support tools
-        try{
+        try {
           const result = await model.invoke("Only return 'Hi' strictly", {
             tools: testTools,
           });
           supportTools = true;
           supportToolsResult = result;
-        } catch(error){
+        } catch (error) {
           logger.error(`Model verification error: ${(error as Error).message}`);
           supportTools = false;
           supportToolsResult = (error as Error).message;

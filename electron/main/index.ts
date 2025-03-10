@@ -29,6 +29,30 @@ protocol.registerSchemesAsPrivileged([
   }
 ])
 
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "img",
+    privileges: {
+      secure: true,
+      supportFetchAPI: true,
+      bypassCSP: true,
+      stream: true,
+    }
+  }
+])
+
+const selectionMenu = Menu.buildFromTemplate([
+  { role: "copy" },
+  { role: "selectAll" }
+])
+
+const inputMenu = Menu.buildFromTemplate([
+  { role: "copy" },
+  { role: "paste" },
+  { role: "cut" },
+  { role: "selectAll" }
+])
+
 // The built directory structure
 //
 // ├─┬ dist-electron
@@ -81,6 +105,13 @@ async function onReady() {
   protocol.handle("local-file", (req) => {
     const url = req.url.replace("local-file:///", process.platform === "win32" ? "file:///" : "file://")
     return net.fetch(url)
+  })
+
+  protocol.handle("img", (req) => {
+    // Remove 'img://'
+    const url = req.url.substring(6);
+    const assetPath = path.join(process.env.VITE_PUBLIC, "image", url)
+    return net.fetch(`file://${assetPath}`)
   })
 
   initMCPClient()
@@ -224,42 +255,4 @@ ipcMain.handle("open-win", (_, arg) => {
   } else {
     childWindow.loadFile(indexHtml, { hash: arg })
   }
-})
-
-ipcMain.handle("api:checkNewVersion", async () => {
-  try {
-    fse.mkdirSync(cacheDir, { recursive: true })
-    const pathToLastVersion = path.join(cacheDir, "lastVersion.json")
-    let lastQueryTime = 0
-    let lastVersion = ""
-
-    if (fse.existsSync(pathToLastVersion)) {
-      const body = await fse.readFile(pathToLastVersion, "utf-8")
-      const data = JSON.parse(body)
-      lastQueryTime = data.lastQueryTime
-      lastVersion = data.lastVersion
-    }
-
-    const currentVersion = app.getVersion()
-    if (lastQueryTime && +lastQueryTime > Date.now() + 1000 * 60 * 60) {
-      return ""
-    }
-
-    if (lastVersion && semver.gt(lastVersion, currentVersion)) {
-      return lastVersion
-    }
-
-    const lastVersionOnGithub = await getLatestVersion()
-    if (semver.gt(lastVersionOnGithub, currentVersion)) {
-      await fse.writeFile(pathToLastVersion, JSON.stringify({
-        lastQueryTime: Date.now(),
-        lastVersion: lastVersionOnGithub,
-      }))
-      return lastVersionOnGithub
-    }
-  } catch (e) {
-    console.error(e)
-  }
-
-  return ""
 })

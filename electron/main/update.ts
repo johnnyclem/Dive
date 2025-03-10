@@ -5,6 +5,7 @@ import type {
   UpdateDownloadedEvent,
   UpdateInfo,
 } from 'electron-updater'
+import path from 'node:path';
 
 const { autoUpdater } = createRequire(import.meta.url)('electron-updater');
 
@@ -14,6 +15,10 @@ export function update(win: Electron.BrowserWindow) {
   autoUpdater.autoDownload = false
   autoUpdater.disableWebInstaller = false
   autoUpdater.allowDowngrade = false
+
+  if (process.env.DEBUG) {
+    autoUpdater.updateConfigPath = path.join(__dirname, "dev-app-update.yml");
+  }
 
   // start check
   autoUpdater.on('checking-for-update', function () { })

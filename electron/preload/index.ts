@@ -37,9 +37,6 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
   showSelectionContextMenu: () => ipcRenderer.invoke("show-selection-context-menu"),
   showInputContextMenu: () => ipcRenderer.invoke("show-input-context-menu"),
 
-  // check new version
-  checkNewVersion: () => ipcRenderer.invoke("api:checkNewVersion"),
-
   // env
   getHotkeyMap: () => ipcRenderer.invoke("env:getHotkeyMap"),
   getPlatform: () => ipcRenderer.invoke("env:getPlatform"),
