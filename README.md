@@ -27,8 +27,15 @@ Dive is an open-source AI Agent desktop application that seamlessly integrates a
 - ⚙️ **Advanced API Management**: Multiple API keys and model switching support
 - 💡 **Custom Instructions**: Personalized system prompts for tailored AI behavior
 - 💬 **Intuitive Chat Interface**: Real-time context management and user-friendly design
-
 - 🚀 **Upcoming Features**: Prompt Schedule and OpenAgentPlatform MarketPlace
+
+## Recent updates(2025/3/7)
+
+- 🔌 **SSE Transport Protocol**: Support for Server-Sent Events based MCP servers since v0.5.1
+- 🔄 **Auto-Update Mechanism**: Automatically checks for and installs the latest application updates
+- ⌨️ **Keyboard Shortcuts**: Enhanced productivity with customizable keyboard shortcuts
+- 🧮 **Math Formula Rendering**: Support for displaying mathematical formulas in markdown
+
 
 ## Download and Install ⬇️
 
