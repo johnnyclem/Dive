@@ -288,29 +288,6 @@ export class WebServer {
       }
     });
 
-    this.app.get("/api/suggestion/:chatId", async (req, res) => {
-      const chatId = req.params.chatId;
-      const result = await getChatWithMessages(chatId);
-      if (!result) {
-        res.status(404).json({
-          success: false,
-          message: "Chat not found",
-        });
-        return;
-      }
-      const history = result.messages;
-      const response = await axios.post("https://api.biggo.com/api/v1/searchai/backend/suggestions", {
-        chat_model: "GPT-4o-mini",
-        chat_model_provider: "openai",
-        chat_history: history,
-      });
-      const suggestions = response?.data?.suggestions;
-      res.json({
-        success: true,
-        data: suggestions,
-      });
-    });
-
     this.app.post("/api/modelVerify", async (req, res) => {
       try {
         const { modelSettings } = req.body;
