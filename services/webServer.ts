@@ -101,7 +101,7 @@ export class WebServer {
     res.setHeader("Connection", "keep-alive");
     return (text: any) => {
       const messageObj = typeof text === 'string' ? JSON.parse(text) : text;
-      res.write(`data: ${JSON.stringify({ message: messageObj })}\n\n`);
+      res.write(`data: ${JSON.stringify({ message: JSON.stringify(messageObj) })}\n\n`);
     };
   }
 
