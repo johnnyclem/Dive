@@ -99,8 +99,9 @@ export class WebServer {
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
-    return (text: string) => {
-      res.write(`data: ${JSON.stringify({ message: text })}\n\n`);
+    return (text: any) => {
+      const messageObj = typeof text === 'string' ? JSON.parse(text) : text;
+      res.write(`data: ${JSON.stringify({ message: messageObj })}\n\n`);
     };
   }
 
