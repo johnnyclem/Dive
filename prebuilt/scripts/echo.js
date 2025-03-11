@@ -24,7 +24,6 @@ const server = new Server({
 }, {
     capabilities: {
         description: "A basic MCP echo server for system operation verification",
-        icon: "",
         tools: {},
     },
 });
