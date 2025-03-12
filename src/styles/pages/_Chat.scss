@@ -435,15 +435,16 @@
 
       textarea {
         width: 600px;
-        height: 80px;
         max-width: 100%;
+        min-height: 80px;
+        max-height: 200px;
+        field-sizing: content;
         padding: 8px;
         border: 1px solid var(--border-weak);
         border-radius: 8px;
         outline: none;
         resize: none;
         line-height: 20px;
-        max-height: 120px;
         overflow-y: auto;
         background: var(--bg);
         color: var(--text);
