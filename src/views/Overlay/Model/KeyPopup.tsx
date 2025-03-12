@@ -44,6 +44,7 @@ const KeyPopup = ({
     setProvider(newProvider)
     setFormData({active: true} as ModelConfig)
     setFields(defaultInterface[newProvider])
+    setErrors({})
   }
 
   const handleChange = (key: string, value: any) => {
