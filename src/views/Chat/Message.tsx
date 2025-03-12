@@ -13,7 +13,7 @@ import ToolPanel, { ToolCall, ToolResult } from './ToolPanel'
 import FilePreview from './FilePreview'
 import { useTranslation } from 'react-i18next'
 import { themeAtom } from "../../atoms/themeState";
-import WrappedTextarea from "../../components/WrappedTextarea"
+import Textarea from "../../components/WrappedTextarea"
 import { isChatStreamingAtom } from "../../atoms/chatState"
 
 interface MessageProps {
@@ -27,7 +27,7 @@ interface MessageProps {
   toolCalls?: ToolCall[]
   toolResults?: ToolResult[]
   onRetry: () => void
-  onEdit: (newText: string) => void
+  onEdit: (editedText: string) => void
 }
 
 const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls, toolResults, onRetry, onEdit }: MessageProps) => {
@@ -37,8 +37,8 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
   const cacheCode = useRef<string>("")
   const [isCopied, setIsCopied] = useState<Record<string, NodeJS.Timeout>>({})
   const [isEditing, setIsEditing] = useState(false)
-  const [originalText, setOriginalText] = useState(text)
-  const [newText, setNewText] = useState(text)
+  const [content, setContent] = useState(text)
+  const [editedText, setEditedText] = useState(text)
   const isChatStreaming = useAtomValue(isChatStreamingAtom)
   const copyToClipboard = async (text: string) => {
     try {
@@ -62,7 +62,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
   }
 
   const handleEdit = () => {
-    setNewText(originalText)
+    setEditedText(content)
     setIsEditing(true)
   }
 
@@ -72,16 +72,16 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
     }
 
     const onSave = async () => {
-      setOriginalText(newText)
+      setContent(editedText)
       setIsEditing(false)
-      onEdit(newText)
+      onEdit(editedText)
     }
 
     return (
       <div className="edit-text">
-        <WrappedTextarea
-          value={newText}
-          onChange={(e) => setNewText(e.target.value)}
+        <Textarea
+          value={editedText}
+          onChange={(e) => setEditedText(e.target.value)}
         />
         <div className="edit-text-footer">
           <div className="edit-text-footer-left">
@@ -99,7 +99,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
               type="button"
               className="save-btn"
               onClick={onSave}
-              disabled={newText === ""}
+              disabled={editedText === ""}
             >
               {t("chat.save")}
             </button>
@@ -107,11 +107,11 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
         </div>
       </div>
     )
-  }, [newText])
+  }, [editedText])
 
   const formattedText = useMemo(() => {
     if (isSent) {
-      const splitText = originalText.split("\n")
+      const splitText = content.split("\n")
       return splitText.map((line, i) => (
         <React.Fragment key={i}>
           {line}
@@ -161,7 +161,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
             const isLongCode = lines.length > 10
 
             if (isLongCode) {
-              const cleanText = originalText.replace(/\s+(?=```)/gm, "")
+              const cleanText = content.replace(/\s+(?=```)/gm, "")
               const isBlockComplete = cleanText.includes(code.trim() + "```")
               code = code.endsWith("``") ? code.slice(0, -2) : code
               code = code.endsWith("`") ? code.slice(0, -1) : code
@@ -215,10 +215,10 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
           }
         }}
       >
-        {originalText.replaceAll("file://", "https://localfile")}
+        {content.replaceAll("file://", "https://localfile")}
       </ReactMarkdown>
     )
-  }, [originalText, isSent, isLoading])
+  }, [content, isSent, isLoading])
 
   if (isEditing) {
     return (
@@ -276,7 +276,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
           <button
             type="button"
             className="tools-btn"
-            onClick={() => onCopy(messageId, originalText)}
+            onClick={() => onCopy(messageId, content)}
             title={t("chat.copy")}
           >
             {isCopied[messageId] ? (

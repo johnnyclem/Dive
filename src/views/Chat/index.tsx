@@ -157,7 +157,8 @@ const ChatWindow = () => {
   }, [isChatStreaming, currentChatId.current])
 
   const onEdit = useCallback(async (messageId: string, newText: string) => {
-    if (isChatStreaming || !currentChatId.current) return
+    if (isChatStreaming || !currentChatId.current)
+      return
 
     setMessages(prev => {
       let newMessages = [...prev]
