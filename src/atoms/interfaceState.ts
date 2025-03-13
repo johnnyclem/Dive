@@ -1,19 +1,22 @@
 import { atom } from "jotai"
 
-export type ModelProvider = "openai" | "openai_compatible" | "ollama" | "anthropic"
+export type ModelProvider = "openai" | "openai_compatible" | "ollama" | "anthropic" | "google_genai"
+export const PROVIDERS: ModelProvider[] = ["openai", "openai_compatible", "ollama", "anthropic", "google_genai"] as const
 
 export const PROVIDER_LABELS: Record<ModelProvider, string> = {
   openai: "OpenAI",
   openai_compatible: "OpenAI Compatible",
   ollama: "Ollama",
-  anthropic: "Anthropic"
+  anthropic: "Anthropic",
+  google_genai: "Google Gemini"
 }
 
 export const PROVIDER_ICONS: Record<ModelProvider, string> = {
   ollama: "img://model_ollama.svg",
   openai_compatible: "img://model_openai_compatible.svg",
   openai: "img://model_openai.svg",
-  anthropic: "img://model_anthropic.svg"
+  anthropic: "img://model_anthropic.svg",
+  google_genai: "img://model_gemini.svg"
 }
 
 export type InputType = "text" | "password"
@@ -161,6 +164,34 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
         }
       },
       listDependencies: ["apiKey", "baseURL"]
+    },
+  },
+  google_genai: {
+    apiKey: {
+      type: "string",
+      inputType: "password",
+      label: "API Key",
+      description: "Google Gemini API Key",
+      required: false,
+      default: "",
+      placeholder: "YOUR_API_KEY"
+    },
+    model: {
+      type: "list",
+      label: "Model ID",
+      description: "modelConfig.modelDescriptionHint",
+      required: false,
+      default: "",
+      placeholder: "Select a model",
+      listCallback: async (deps) => {
+        try {
+          return await window.ipcRenderer.googleGenaiModelList(deps.apiKey)
+        } catch (error) {
+          console.error(error)
+          return []
+        }
+      },
+      listDependencies: ["apiKey"]
     },
   }
 }

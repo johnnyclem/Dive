@@ -12,6 +12,8 @@ import { ModelManager } from "./models/index.js";
 import { imageToBase64 } from "./utils/image.js";
 import logger from "./utils/logger.js";
 import { iQueryInput, iStreamMessage } from "./utils/types.js";
+import { openAIConvertToGeminiTools } from "./utils/toolHandler.js";
+import { ToolDefinition } from "@langchain/core/language_models/base";
 
 // Map to store abort controllers
 export const abortControllerMap = new Map<string, AbortController>();
@@ -31,7 +33,7 @@ interface TokenUsage {
 
 export async function handleProcessQuery(
   toolToClientMap: Map<string, Client>,
-  availableTools: BindToolsInput[],
+  availableTools: ToolDefinition[],
   model: BaseChatModel | null,
   input: string | iQueryInput,
   history: BaseMessage[],
@@ -121,7 +123,9 @@ export async function handleProcessQuery(
 
     let hasToolCalls = true;
 
-    const runModel = modelManager.enableTools ? model.bindTools?.(availableTools) || model : model;
+    const tools = currentModelSettings?.modelProvider === "google-genai" ? openAIConvertToGeminiTools(availableTools) : availableTools;
+
+    const runModel = modelManager.enableTools ? model.bindTools?.(tools) || model : model;
 
     const isOllama = currentModelSettings?.modelProvider === "ollama";
     const isDeepseek =

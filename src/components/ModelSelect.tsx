@@ -9,6 +9,7 @@ import { openOverlayAtom } from "../atoms/layerState"
 import { showToastAtom } from "../atoms/toastState"
 import { getModelPrefix } from "../util"
 import Tooltip from "./Tooltip"
+import { systemThemeAtom, userThemeAtom } from "../atoms/themeState"
 
 interface ModelSelectProps {
   key: string
@@ -25,6 +26,8 @@ const ModelSelect = () => {
   const [model, setModel] = useState<string>(config?.activeProvider ?? "")
   const openOverlay = useSetAtom(openOverlayAtom)
   const [, showToast] = useAtom(showToastAtom)
+  const systemTheme = useAtomValue(systemThemeAtom)
+  const userTheme = useAtomValue(userThemeAtom)
 
   useEffect(() => {
     if (!configList) return
@@ -44,6 +47,15 @@ const ModelSelect = () => {
   useEffect(() => {
     setModel(config?.activeProvider ?? "")
   }, [config?.activeProvider])
+
+  const isProviderIconNoFilter = (model: string) => {
+    switch (model) {
+      case "ollama":
+      case "openai_compatible":
+      default:
+        return model.startsWith("google") && (userTheme === "system" ? systemTheme === "light" : userTheme === "light")
+    }
+  }
 
   const handleModelChange = async (value: string) => {
     const _model = model
@@ -70,9 +82,9 @@ const ModelSelect = () => {
           label: (
               <div className="model-select-label" key={model.key}>
               <img
-                src={PROVIDER_ICONS[model.model]}
+                src={PROVIDER_ICONS[model.model.replace("-", "_") as keyof typeof PROVIDER_ICONS]}
                 alt={model.model}
-                className={`model-select-label-icon ${model.model === "ollama" || model.model === "openai_compatible" ? "no-filter" : ""}`}
+                className={`model-select-label-icon ${isProviderIconNoFilter(model.model) ? "no-filter" : ""}`}
               />
               <span className="model-select-label-text">
                 {model.name}

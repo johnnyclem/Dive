@@ -43,4 +43,15 @@ export function ipcLlmHandler() {
       return []
     }
   })
+
+  ipcMain.handle("llm:googleGenaiModelList", async (_, apiKey: string) => {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+      const response = await fetch(url)
+      const data = await response.json() as { models: { name: string }[] }
+      return data.models.map((model) => model.name)
+    } catch (error) {
+      return []
+    }
+  })
 }
