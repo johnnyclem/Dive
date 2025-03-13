@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
   anthropicModelList: (apiKey: string, baseURL: string) => ipcRenderer.invoke("llm:anthropicModelList", apiKey, baseURL),
   ollamaModelList: (baseURL: string) => ipcRenderer.invoke("llm:ollamaModelList", baseURL),
   googleGenaiModelList: (apiKey: string) => ipcRenderer.invoke("llm:googleGenaiModelList", apiKey),
+  mistralaiModelList: (apiKey: string) => ipcRenderer.invoke("llm:mistralaiModelList", apiKey),
 
   // context menu
   showSelectionContextMenu: () => ipcRenderer.invoke("show-selection-context-menu"),

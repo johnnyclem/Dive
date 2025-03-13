@@ -2,6 +2,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { ipcMain } from "electron"
 import { Ollama } from "ollama"
 import OpenAI from "openai"
+import { Mistral } from "@mistralai/mistralai"
 
 export function ipcLlmHandler() {
   ipcMain.handle("llm:openaiModelList", async (_, apiKey: string) => {
@@ -50,6 +51,16 @@ export function ipcLlmHandler() {
       const response = await fetch(url)
       const data = await response.json() as { models: { name: string }[] }
       return data.models.map((model) => model.name)
+    } catch (error) {
+      return []
+    }
+  })
+
+  ipcMain.handle("llm:mistralaiModelList", async (_, apiKey: string) => {
+    try {
+      const client = new Mistral({ apiKey })
+      const models = await client.models.list()
+      return models.data?.map((model) => model.id) ?? []
     } catch (error) {
       return []
     }

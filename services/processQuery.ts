@@ -131,6 +131,7 @@ export async function handleProcessQuery(
     const isDeepseek =
       currentModelSettings?.configuration?.baseURL?.toLowerCase().includes("deepseek") ||
       currentModelSettings?.model?.toLowerCase().includes("deepseek");
+    const isMistralai = currentModelSettings?.modelProvider === "mistralai";
 
     logger.debug(`[${chatId}] Start to process LLM query`);
 
@@ -261,7 +262,7 @@ export async function handleProcessQuery(
               text: currentContent || ".",
             },
             // Deepseek will recursive when tool_use exist in content
-            ...(isDeepseek
+            ...(isDeepseek || isMistralai
               ? []
               : toolCalls.map((toolCall) => ({
                   type: "tool_use",

@@ -49,11 +49,15 @@ const ModelSelect = () => {
   }, [config?.activeProvider])
 
   const isProviderIconNoFilter = (model: string) => {
+    const isLightMode = userTheme === "system" ? systemTheme === "light" : userTheme === "light"
     switch (model) {
       case "ollama":
       case "openai_compatible":
+        return true
+      case "mistralai":
+        return isLightMode
       default:
-        return model.startsWith("google") && (userTheme === "system" ? systemTheme === "light" : userTheme === "light")
+        return model.startsWith("google") && isLightMode
     }
   }
 

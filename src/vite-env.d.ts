@@ -12,6 +12,7 @@ interface Window {
     anthropicModelList: (apiKey: string, baseURL: string) => Promise<string[]>
     ollamaModelList: (baseURL: string) => Promise<string[]>
     googleGenaiModelList: (apiKey: string) => Promise<string[]>
+    mistralaiModelList: (apiKey: string) => Promise<string[]>
     showSelectionContextMenu: () => Promise<void>
     showInputContextMenu: () => Promise<void>
     getHotkeyMap: () => Promise<Record<string, any>>
