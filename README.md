@@ -20,20 +20,16 @@ Dive is an open-source MCP Host Desktop Application that seamlessly integrates w
 
 - 🌐 **Universal LLM Support**: Compatible with ChatGPT, Anthropic, Ollama and OpenAI-compatible models
 - 💻 **Cross-Platform**: Available for Windows, MacOS, and Linux
-- 🔄 **Model Context Protocol**: Enabling seamless AI agent integration
-- 🔌 **MCP Server Integration**: External data access and processing capabilities
-- 🌍 **Multi-Language Support**: Traditional Chinese, English, with more coming soon
+- 🔄 **Model Context Protocol**: Enabling seamless MCP AI agent integration on both stdio and SSE mode
+- 🌍 **Multi-Language Support**: Traditional Chinese, Simplified Chinese, English, Spanish with more coming soon
 - ⚙️ **Advanced API Management**: Multiple API keys and model switching support
 - 💡 **Custom Instructions**: Personalized system prompts for tailored AI behavior
-- 💬 **Intuitive Chat Interface**: Real-time context management and user-friendly design
-- 🚀 **Upcoming Features**: Prompt Schedule and OpenAgentPlatform MarketPlace
-
-## Recent updates(2025/3/7)
-
-- 🔌 **SSE Transport Protocol**: Support for Server-Sent Events based MCP servers since v0.5.1
 - 🔄 **Auto-Update Mechanism**: Automatically checks for and installs the latest application updates
-- ⌨️ **Keyboard Shortcuts**: Enhanced productivity with customizable keyboard shortcuts
-- 🧮 **Math Formula Rendering**: Support for displaying mathematical formulas in markdown
+
+## Recent updates(2025/3/14)
+
+- 🌍 **Spanish Translation**: Added Spanish language support
+- 🤖 **Extended Model Support**: Added Google Gemini and Mistral AI models integration
 
 
 ## Download and Install ⬇️
