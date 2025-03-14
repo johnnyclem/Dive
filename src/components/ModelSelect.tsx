@@ -64,6 +64,7 @@ const ModelSelect = () => {
   return (
     <div className="model-select">
       <Select
+        maxHeight={550}
         options={modelList.map((model) => ({
           value: model.key,
           label: (

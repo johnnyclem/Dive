@@ -137,6 +137,12 @@ export const saveAllConfigAtom = atom(
     activeProvider?: ModelProvider
   }) => {
     const { providerConfigs, activeProvider } = params
+    const configs = Object.keys(providerConfigs).reduce((acc, key) => {
+      const config = providerConfigs[key]
+      config.modelProvider = config.modelProvider.startsWith("openai") ? "openai" : config.modelProvider
+      acc[key] = config
+      return acc
+    }, {} as Record<string, ModelConfig>)
 
     try {
       const response = await fetch("/api/config/model/replaceAll", {
@@ -145,9 +151,9 @@ export const saveAllConfigAtom = atom(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          configs,
+          enable_tools: true,
           activeProvider: activeProvider ?? get(activeProviderAtom),
-          configs: providerConfigs,
-          enable_tools: true
         }),
       })
 
