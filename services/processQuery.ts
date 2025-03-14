@@ -11,7 +11,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { ModelManager } from "./models/index.js";
 import { imageToBase64 } from "./utils/image.js";
 import logger from "./utils/logger.js";
-import { iQueryInput, iStreamMessage } from "./utils/types.js";
+import { iQueryInput, iStreamMessage, ModelSettings } from "./utils/types.js";
+import { openAIConvertToGeminiTools } from "./utils/toolHandler.js";
+import { ToolDefinition } from "@langchain/core/language_models/base";
 
 // Map to store abort controllers
 export const abortControllerMap = new Map<string, AbortController>();
@@ -31,7 +33,7 @@ interface TokenUsage {
 
 export async function handleProcessQuery(
   toolToClientMap: Map<string, Client>,
-  availableTools: BindToolsInput[],
+  availableTools: ToolDefinition[],
   model: BaseChatModel | null,
   input: string | iQueryInput,
   history: BaseMessage[],
@@ -121,12 +123,16 @@ export async function handleProcessQuery(
 
     let hasToolCalls = true;
 
-    const runModel = modelManager.enableTools ? model.bindTools?.(availableTools) || model : model;
+    const tools = currentModelSettings?.modelProvider === "google-genai" ? openAIConvertToGeminiTools(availableTools) : availableTools;
+
+    const runModel = modelManager.enableTools ? model.bindTools?.(tools) || model : model;
 
     const isOllama = currentModelSettings?.modelProvider === "ollama";
     const isDeepseek =
       currentModelSettings?.configuration?.baseURL?.toLowerCase().includes("deepseek") ||
       currentModelSettings?.model?.toLowerCase().includes("deepseek");
+    const isMistralai = currentModelSettings?.modelProvider === "mistralai";
+    const isBedrock = currentModelSettings?.modelProvider === "bedrock";
 
     logger.debug(`[${chatId}] Start to process LLM query`);
 
@@ -141,7 +147,7 @@ export async function handleProcessQuery(
       try {
         // Track token usage if available
         for await (const chunk of stream) {
-          caculateTokenUsage(tokenUsage, chunk, currentModelSettings!.modelProvider!);
+          caculateTokenUsage(tokenUsage, chunk, currentModelSettings!);
 
           if (chunk.content) {
             let chunkMessage = "";
@@ -235,6 +241,8 @@ export async function handleProcessQuery(
         throw error;
       }
 
+      logger.debug(`[${chatId}] Chunk collected`);
+
       // filter empty tool calls
       toolCalls = toolCalls.filter((call) => call);
 
@@ -247,6 +255,7 @@ export async function handleProcessQuery(
         break;
       }
 
+      logger.debug(`[${chatId}] Tool calls: ${JSON.stringify(toolCalls, null, 2)}`);
       // support anthropic multiple tool calls version but other not sure
       messages.push(
         new AIMessage({
@@ -257,14 +266,23 @@ export async function handleProcessQuery(
               text: currentContent || ".",
             },
             // Deepseek will recursive when tool_use exist in content
-            ...(isDeepseek
+            ...(isDeepseek || isMistralai || isBedrock
               ? []
-              : toolCalls.map((toolCall) => ({
+              : toolCalls.map((toolCall) => {
+                let parsedArgs = {}
+                try {
+                  parsedArgs = toolCall.function.arguments === "" ? {} : JSON.parse(toolCall.function.arguments);
+                } catch (error) {
+                  toolCall.function.arguments = "{}";
+                  logger.error(`[${chatId}] Error parsing tool call ${toolCall.function.name} args: ${error}`);
+                }
+                return {
                   type: "tool_use",
                   id: toolCall.id,
                   name: toolCall.function.name,
-                  input: toolCall.function.arguments === "" ? {} : JSON.parse(toolCall.function.arguments),
-                }))),
+                  input: parsedArgs,
+                }
+              })),
           ],
           additional_kwargs: {
             tool_calls: toolCalls.map((toolCall) => ({
@@ -296,6 +314,8 @@ export async function handleProcessQuery(
           } as iStreamMessage)
         );
       }
+
+      logger.debug(`[${chatId}] Tool calls collected`);
 
       // Execute all tool calls in parallel
       const toolResults = await Promise.all(
@@ -407,10 +427,14 @@ export async function handleProcessQuery(
         })
       );
 
+      logger.debug(`[${chatId}] Tool results collected`);
+
       // Add tool results to conversation
       if (toolResults.length > 0) {
         messages.push(...toolResults.map((result) => new ToolMessage(result)));
       }
+
+      logger.debug(`[${chatId}] Messages collected and ready to next round`);
     }
 
     // Log token usage at the end of processing
@@ -437,8 +461,20 @@ export async function handleProcessQuery(
   }
 }
 
-function caculateTokenUsage(tokenUsage: TokenUsage, chunk: AIMessageChunk, currentModelProvider: string) {
-  switch (currentModelProvider) {
+function caculateTokenUsage(tokenUsage: TokenUsage, chunk: AIMessageChunk, currentModelSettings: ModelSettings) {
+  if (!currentModelSettings) {
+    return;
+  }
+
+  if (currentModelSettings.configuration?.baseURL?.toLowerCase().includes("silicon")) {
+    const usage = chunk.response_metadata.usage;
+    tokenUsage.totalInputTokens = usage?.prompt_tokens || 0;
+    tokenUsage.totalOutputTokens = usage?.completion_tokens || 0;
+    tokenUsage.totalTokens = usage?.total_tokens || 0;
+    return;
+  }
+
+  switch (currentModelSettings.modelProvider) {
     case "openai":
       if (chunk.response_metadata?.usage) {
         const usage = chunk.response_metadata.usage;
@@ -455,6 +491,7 @@ function caculateTokenUsage(tokenUsage: TokenUsage, chunk: AIMessageChunk, curre
         tokenUsage.totalOutputTokens += usage?.output_tokens || 0;
         tokenUsage.totalTokens += usage?.total_tokens || 0;
       }
+      break;
     default:
       break;
   }
