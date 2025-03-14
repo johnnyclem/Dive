@@ -3,7 +3,7 @@ import { useSetAtom } from "jotai"
 import { newVersionAtom } from "./atoms/globalState"
 
 export const getAutoDownload = () => !!localStorage.getItem("autoDownload")
-export const setAutoDownload = (value: boolean) => localStorage.setItem("autoDownload", value.toString())
+export const setAutoDownload = (value: boolean) => localStorage.setItem("autoDownload", value?"1":"")
 
 export default function Updater() {
   const setNewVersion = useSetAtom(newVersionAtom)
