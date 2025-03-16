@@ -171,6 +171,8 @@
         }
 
         .provider-icon {
+          width: 22px;
+          height: 22px;
           filter: var(--filter-dark);
 
           &.no-filter {
