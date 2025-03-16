@@ -3,6 +3,7 @@ import path from "path"
 import https from "https"
 import { Extract as unzipper } from "unzipper"
 import tar from "tar"
+import { rimraf } from "rimraf"
 
 const NODE_VERSION = "20.18.1"
 const PLATFORM = process.argv[2] || "win-x64"
@@ -72,13 +73,13 @@ async function main() {
     }
 
     console.log("Cleaning up...")
-    fs.rmSync("temp", { recursive: true, force: true })
+    rimraf("temp").catch(() => {})
 
     console.log(`Done! Node.js v${NODE_VERSION} has been downloaded to ./${targetDir}`)
   } catch (error) {
     console.error("Error:", error)
     if (fs.existsSync("temp")) {
-      fs.rmSync("temp", { recursive: true, force: true })
+      rimraf("temp").catch(() => {})
     }
     process.exit(1)
   }
