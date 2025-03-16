@@ -75,6 +75,15 @@ Add this JSON configuration to your Dive MCP settings to enable both tools:
       ],
       "enabled": true
     },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/path/to/allowed/files"
+      ],
+      "enabled": true
+    },
     "youtubedl": {
       "command": "npx",
       "args": [
