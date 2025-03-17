@@ -74,6 +74,7 @@ class ModelVerificationService {
         result: fullResponse,
       };
     } catch (error) {
+      logger.error(`[ModelVerify] error: ${JSON.stringify(error, null, 2)}`);
       if ((error as { name?: string })?.name === "AbortError") {
         logger.warn(`Model tools test aborted for ${modelName}`);
       }
@@ -246,12 +247,10 @@ const testTools = [
           page: {
             type: "number",
             description: "Page number (default 1)",
-            default: 1,
           },
           language: {
             type: "string",
             description: "Search language code (e.g. 'en', 'zh', 'jp', 'all')",
-            default: "all",
           },
           categories: {
             type: "array",
@@ -259,17 +258,14 @@ const testTools = [
               type: "string",
               enum: ["general", "news", "science", "files", "images", "videos", "music", "social media", "it"],
             },
-            default: ["general"],
           },
           time_range: {
             type: "string",
-            enum: ["", "day", "week", "month", "year"],
-            default: "",
+            enum: ["none", "day", "week", "month", "year"],
           },
           safesearch: {
             type: "number",
             description: "0: None, 1: Moderate, 2: Strict",
-            default: 1,
           },
         },
         required: ["query"],

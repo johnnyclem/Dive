@@ -2,6 +2,7 @@ import fs from "fs"
 import path from "path"
 import https from "https"
 import { Extract as unzipper } from "unzipper"
+import { rimraf } from "rimraf"
 
 const UV_VERSION = "0.5.29"
 const UV_FILENAME = "uv-x86_64-pc-windows-msvc.zip"
@@ -106,16 +107,16 @@ async function main() {
     await extract(tempFile, targetDir)
 
     console.log("Cleaning up...")
-    fs.rmSync("temp", { recursive: true, force: true })
+    rimraf("temp").catch(() => {})
 
     console.log(`Done! UV v${UV_VERSION} has been downloaded to ./${targetDir}`)
   } catch (error) {
     console.error("Error:", error)
     if (fs.existsSync("temp")) {
-      fs.rmSync("temp", { recursive: true, force: true })
+      rimraf("temp").catch(() => {})
     }
     process.exit(1)
   }
 }
 
-main() 
+main()

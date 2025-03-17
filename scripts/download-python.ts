@@ -2,6 +2,7 @@ import fs from "fs"
 import path from "path"
 import https from "https"
 import { Extract as unzipper } from "unzipper"
+import { rimraf } from "rimraf"
 
 const PYTHON_VERSION = "3.12.8"
 const PLATFORM = process.argv[2] || "win-x64"
@@ -58,16 +59,16 @@ async function main() {
 
     // Cleanup temporary files
     console.log("Cleaning up...")
-    fs.rmSync("temp", { recursive: true, force: true })
+    rimraf("temp").catch(() => {})
 
     console.log(`Done! Python v${PYTHON_VERSION} has been downloaded to ./${targetDir}`)
   } catch (error) {
     console.error("Error:", error)
     if (fs.existsSync("temp")) {
-      fs.rmSync("temp", { recursive: true, force: true })
+      rimraf("temp").catch(() => {})
     }
     process.exit(1)
   }
 }
 
-main() 
+main()

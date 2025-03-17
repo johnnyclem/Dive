@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 import { formatData, ModelConfig } from "../../../atoms/configState"
-import { defaultInterface, FieldDefinition, ModelProvider, PROVIDER_LABELS } from "../../../atoms/interfaceState"
+import { defaultInterface, FieldDefinition, ModelProvider, PROVIDER_LABELS, PROVIDERS } from "../../../atoms/interfaceState"
 import PopupConfirm from "../../../components/PopupConfirm"
 import { useEffect, useRef, useState } from "react"
 import { showToastAtom } from "../../../atoms/toastState"
@@ -16,7 +16,6 @@ const KeyPopup = ({
   onSuccess: () => void
 }) => {
   const { t } = useTranslation()
-  const PROVIDERS: ModelProvider[] = ["openai", "openai_compatible", "ollama", "anthropic"]
   const [provider, setProvider] = useState(PROVIDERS[0])
   const [fields, setFields] = useState<Record<string, FieldDefinition>>(defaultInterface[provider])
 
