@@ -11,8 +11,7 @@ import ModelPopup from "./ModelPopup"
 import ParameterPopup from "./ParameterPopup"
 import { useModelsProvider } from "./ModelsProvider"
 import { showToastAtom } from "../../../atoms/toastState"
-import { ModelProvider } from "../../../atoms/interfaceState"
-import { getModelPrefix } from "../../../util"
+import { ModelProvider, PROVIDER_ICONS } from "../../../atoms/interfaceState"
 
 const PageLayout = () => {
   const { t } = useTranslation()
@@ -346,8 +345,8 @@ const PageLayout = () => {
                   onChange={handleGroupClick}
                 />
               </div>
-              <div>{t("Provider")}</div>
-              <div>{t("Authentication")}</div>
+              <div className="title-left">{t("Provider")}</div>
+              <div className="title-left">{t("Info")}</div>
               <div>{t("Status")}</div>
               <div>{t("Models")}</div>
             </div>
@@ -362,13 +361,19 @@ const PageLayout = () => {
                       }}
                     />
                   </div>
-                  <div>
-                    <div className="provider">
+                  <div className="provider">
+                    <img
+                      src={PROVIDER_ICONS[multiModelConfig.name as ModelProvider]}
+                      alt={multiModelConfig.name}
+                      className={`provider-icon ${multiModelConfig.name === "ollama" || multiModelConfig.name === "openai_compatible" ? "no-filter" : ""}`}
+                    />
+                    <div className="provider-name">
                       {multiModelConfig.name}
                     </div>
                   </div>
                   <div className="api-key">
-                    ...{multiModelConfig ? getModelPrefix(multiModelConfig as any, 5) : ""}
+                    {multiModelConfig.apiKey && <div>Key： ***{multiModelConfig.apiKey.slice(-5)}</div>}
+                    {multiModelConfig.baseURL && <div>{multiModelConfig.baseURL}</div>}
                   </div>
                   <div>
                     <Switch

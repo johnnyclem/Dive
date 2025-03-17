@@ -50,6 +50,8 @@
 
 .model-select-content {
   min-width: 280px;
+
+  @include scrollbar;
 }
 
 .model-select-label {

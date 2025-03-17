@@ -11,8 +11,7 @@
 [![Discord](https://img.shields.io/badge/Discord-Dive-blue?logo=discord&logoColor=white)](https://discord.gg/jact84GwGh)
 [![Twitter Follow](https://img.shields.io/twitter/follow/Dive_ai_agent?style=social)](https://twitter.com/Dive_ai_agent)
 
-
-Dive is an open-source AI Agent desktop application that seamlessly integrates any Tools Call-supported LLM with frontend MCP Server—part of the Open Agent Platform initiative. ✨
+Dive is an open-source MCP Host Desktop Application that seamlessly integrates with any LLMs supporting function calling capabilities. ✨
 
 ![Dive Demo](./docs/DiveAI.gif)
 
@@ -21,20 +20,16 @@ Dive is an open-source AI Agent desktop application that seamlessly integrates a
 
 - 🌐 **Universal LLM Support**: Compatible with ChatGPT, Anthropic, Ollama and OpenAI-compatible models
 - 💻 **Cross-Platform**: Available for Windows, MacOS, and Linux
-- 🔄 **Model Context Protocol**: Enabling seamless AI agent integration
-- 🔌 **MCP Server Integration**: External data access and processing capabilities
-- 🌍 **Multi-Language Support**: Traditional Chinese, English, with more coming soon
+- 🔄 **Model Context Protocol**: Enabling seamless MCP AI agent integration on both stdio and SSE mode
+- 🌍 **Multi-Language Support**: Traditional Chinese, Simplified Chinese, English, Spanish with more coming soon
 - ⚙️ **Advanced API Management**: Multiple API keys and model switching support
 - 💡 **Custom Instructions**: Personalized system prompts for tailored AI behavior
-- 💬 **Intuitive Chat Interface**: Real-time context management and user-friendly design
-- 🚀 **Upcoming Features**: Prompt Schedule and OpenAgentPlatform MarketPlace
-
-## Recent updates(2025/3/7)
-
-- 🔌 **SSE Transport Protocol**: Support for Server-Sent Events based MCP servers since v0.5.1
 - 🔄 **Auto-Update Mechanism**: Automatically checks for and installs the latest application updates
-- ⌨️ **Keyboard Shortcuts**: Enhanced productivity with customizable keyboard shortcuts
-- 🧮 **Math Formula Rendering**: Support for displaying mathematical formulas in markdown
+
+## Recent updates(2025/3/14)
+
+- 🌍 **Spanish Translation**: Added Spanish language support
+- 🤖 **Extended Model Support**: Added Google Gemini and Mistral AI models integration
 
 
 ## Download and Install ⬇️
@@ -77,6 +72,15 @@ Add this JSON configuration to your Dive MCP settings to enable both tools:
       "args": [
         "mcp-server-fetch",
         "--ignore-robots-txt"
+      ],
+      "enabled": true
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/path/to/allowed/files"
       ],
       "enabled": true
     },

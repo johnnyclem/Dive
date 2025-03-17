@@ -20,7 +20,13 @@
     "abort": "停止生成回應",
     "retry": "重試",
     "noModelAlert": "無可用模型",
-    "modelSettings": "模型設定"
+    "modelSettings": "模型設定",
+    "copy": "複製",
+    "copied": "已複製",
+    "edit": "編輯",
+    "editDescription": "編輯此訊息將會重新生成一個新的回應",
+    "cancel": "取消",
+    "save": "儲存"
   },
   "welcome": {
     "title": "歡迎使用 Dive AI",
@@ -116,7 +122,9 @@
     "language": "系統語言",
     "theme": "顯示模式",
     "defaultInstructions": "以繁體中文回應",
-    "autoDownload": "自動下載更新"
+    "autoDownload": "自動下載更新",
+    "autoLaunch": "開機自動啟動Dive AI",
+    "minimalToTray": "關閉按鈕會將Dive AI最小化到背景"
   },
   "toast": {
     "copiedToClipboard": "已複製到剪貼簿"

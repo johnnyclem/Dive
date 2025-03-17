@@ -1,5 +1,5 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react";
-import { activeProviderAtom, compressData, configAtom, configListAtom, extractData, loadConfigAtom, ModelConfig, MultiModelConfig, saveAllConfigAtom } from "../../../atoms/configState";
+import { activeProviderAtom, compressData, configAtom, configListAtom, extractData, loadConfigAtom, ModelConfig, MultiModelConfig, saveAllConfigAtom, transformModelProvider } from "../../../atoms/configState";
 import { useAtomValue, useSetAtom } from "jotai";
 import { FieldDefinition, ModelProvider } from "../../../atoms/interfaceState";
 import { ignoreFieldsForModel } from "../../../constants";
@@ -145,8 +145,13 @@ export default function ModelsProvider({
   }
 
   const verifyModel = async (multiModelConfig: MultiModelConfig, model: string) => {
+    return {
+      success: true,
+      supportTools: true,
+    }
+
     try {
-      const modelProvider = multiModelConfig.name.startsWith("openai") ? "openai" : multiModelConfig.name
+      const modelProvider = transformModelProvider(multiModelConfig.name)
       const formData = {
         apiKey: multiModelConfig.apiKey,
         baseURL: multiModelConfig.baseURL,

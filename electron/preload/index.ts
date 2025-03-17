@@ -24,12 +24,18 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
 
   // system
   openScriptsDir: () => ipcRenderer.invoke("system:openScriptsDir"),
+  getAutoLaunch: () => ipcRenderer.invoke("system:getAutoLaunch"),
+  setAutoLaunch: (enable: boolean) => ipcRenderer.invoke("system:setAutoLaunch", enable),
+  getMinimalToTray: () => ipcRenderer.invoke("system:getMinimalToTray"),
+  setMinimalToTray: (enable: boolean) => ipcRenderer.invoke("system:setMinimalToTray", enable),
 
   // llm
   openaiModelList: (apiKey: string) => ipcRenderer.invoke("llm:openaiModelList", apiKey),
   openaiCompatibleModelList: (apiKey: string, baseURL: string) => ipcRenderer.invoke("llm:openaiCompatibleModelList", apiKey, baseURL),
   anthropicModelList: (apiKey: string, baseURL: string) => ipcRenderer.invoke("llm:anthropicModelList", apiKey, baseURL),
   ollamaModelList: (baseURL: string) => ipcRenderer.invoke("llm:ollamaModelList", baseURL),
+  googleGenaiModelList: (apiKey: string) => ipcRenderer.invoke("llm:googleGenaiModelList", apiKey),
+  mistralaiModelList: (apiKey: string) => ipcRenderer.invoke("llm:mistralaiModelList", apiKey),
 
   // context menu
   showSelectionContextMenu: () => ipcRenderer.invoke("show-selection-context-menu"),

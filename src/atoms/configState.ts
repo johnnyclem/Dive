@@ -93,7 +93,7 @@ export const saveConfigAtom = atom(
     provider: ModelProvider
   }) => {
     const { formData, provider } = params
-    const modelProvider = provider.startsWith("openai") ? "openai" : provider
+    const modelProvider = transformModelProvider(provider)
     formData.active = true
     const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
     delete configuration.configuration
@@ -137,6 +137,12 @@ export const saveAllConfigAtom = atom(
     activeProvider?: ModelProvider
   }) => {
     const { providerConfigs, activeProvider } = params
+    const configs = Object.keys(providerConfigs).reduce((acc, key) => {
+      const config = providerConfigs[key]
+      config.modelProvider = transformModelProvider(config.modelProvider)
+      acc[key] = config
+      return acc
+    }, {} as Record<string, ModelConfig>)
 
     try {
       const response = await fetch("/api/config/model/replaceAll", {
@@ -145,9 +151,9 @@ export const saveAllConfigAtom = atom(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          configs,
+          enable_tools: true,
           activeProvider: activeProvider ?? get(activeProviderAtom),
-          configs: providerConfigs,
-          enable_tools: true
         }),
       })
 
@@ -229,4 +235,15 @@ export const compressData = (data: MultiModelConfig, index: number) => {
   })
 
   return compressedData
+}
+
+export function transformModelProvider(provider: ModelProvider) {
+  switch (provider) {
+    case "openai_compatible":
+      return "openai"
+    case "google_genai":
+      return "google-genai" as any
+    default:
+      return provider
+  }
 }

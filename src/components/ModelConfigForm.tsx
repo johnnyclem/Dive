@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { FieldDefinition, ModelProvider, PROVIDER_LABELS } from "../atoms/interfaceState"
-import { configAtom, ModelConfig, saveConfigAtom } from "../atoms/configState"
+import { FieldDefinition, ModelProvider, PROVIDER_LABELS, PROVIDERS } from "../atoms/interfaceState"
+import { configAtom, ModelConfig, saveConfigAtom, transformModelProvider } from "../atoms/configState"
 import { ignoreFieldsForModel } from "../constants"
 import { useAtom } from "jotai"
 import { loadConfigAtom } from "../atoms/configState"
@@ -10,8 +10,6 @@ import CustomInstructions from "./CustomInstructions"
 import InfoTooltip from "./InfoTooltip"
 import { showToastAtom } from "../atoms/toastState"
 import Input from "./WrappedInput"
-
-const PROVIDERS: ModelProvider[] = ["openai", "openai_compatible", "ollama", "anthropic"]
 
 interface ModelConfigFormProps {
   provider: ModelProvider
@@ -55,7 +53,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         ...prev,
         [key]: options
       }))
-      
+
       if (options.length > 0 && !options.includes(formData[key as keyof ModelConfig] as string)) {
         handleChange(key, options[0])
       }
@@ -66,7 +64,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       })
     }
   }, 100)
-  
+
   useEffect(() => {
     if (initProvider.current !== provider) {
       setListOptions({})
@@ -86,7 +84,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         }), {})
 
         const allDepsHaveValue = field.listDependencies.every(dep => !!formData[dep as keyof ModelConfig])
-        
+
         if (allDepsHaveValue) {
           fetchListOptions(key, field, deps)
         }
@@ -97,7 +95,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       cancelFetch()
     }
   }, [fields, formData])
-  
+
   const getFieldDefaultValue = () => {
     return Object.keys(fields).reduce((acc, key) => {
       return {
@@ -112,17 +110,17 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     onProviderChange?.(newProvider)
     setIsVerified(false)
   }
-  
+
   const prepareModelConfig = useCallback((config: ModelConfig, provider: ModelProvider) => {
     const _config = {...config}
     if (provider === "openai" && initialData?.baseURL) {
       delete (_config as any).baseURL
     }
-      
+
     if (_config.topP === 0) {
       delete (_config as any).topP
     }
-    
+
     if (_config.temperature === 0) {
       delete (_config as any).temperature
     }
@@ -142,13 +140,12 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const verifyModel = async () => {
     try {
       setIsVerifying(true)
-      const modelProvider = provider.startsWith("openai") ? "openai" : provider
-
+      const modelProvider = transformModelProvider(provider)
       const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
       delete configuration.configuration
-      
+
       const _formData = prepareModelConfig(formData, provider)
-      
+
       const response = await fetch("/api/modelVerify", {
         method: "POST",
         headers: {
@@ -204,12 +201,12 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm())
       return
 
     const _formData = prepareModelConfig(formData, provider)
-    
+
     try {
       setIsSubmitting(true)
       const data = await saveConfig({ formData: _formData, provider })
@@ -233,7 +230,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       setIsVerified(false)
     }
   }
-  
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
     Object.entries(fields).forEach(([key, field]) => {
@@ -257,8 +254,8 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     <form onSubmit={handleSubmit}>
       <div className="form-group">
         <label>{t("setup.provider")}</label>
-        <select 
-          value={provider} 
+        <select
+          value={provider}
           onChange={handleProviderChange}
           className="provider-select"
         >
@@ -308,8 +305,8 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
       <div className="form-actions">
         {showVerify && (
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="verify-btn"
             onClick={verifyModel}
             disabled={isVerifying || isSubmitting}
@@ -319,8 +316,8 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
             ) : t("setup.verify")}
           </button>
         )}
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="submit-btn"
           disabled={isVerifying || isSubmitting || (showVerify && !isVerified)}
         >
@@ -395,4 +392,4 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   )
 }
 
-export default React.memo(ModelConfigForm) 
+export default React.memo(ModelConfigForm)

@@ -135,10 +135,10 @@
 
     .providers-list-item {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: 1fr 2fr 2fr 1fr 1fr;
       padding: 20px;
       font-size: 20px;
-      column-gap: 20px;
+      column-gap: 10px;
 
       &.head {
         font-weight: 700;
@@ -152,6 +152,43 @@
         align-items: center;
         justify-content: center;
         min-width: 100%;
+      }
+
+      .title-left {
+        justify-content: flex-start;
+      }
+
+      .provider {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+
+        .provider-name {
+          @include line-clamp(1);
+
+          user-select: none;
+        }
+
+        .provider-icon {
+          width: 22px;
+          height: 22px;
+          filter: var(--filter-dark);
+
+          &.no-filter {
+            filter: none;
+          }
+        }
+      }
+
+      .api-key {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+
+        div {
+          @include line-clamp(1);
+        }
       }
 
       .checkbox {
@@ -184,12 +221,6 @@
         &:hover {
           background: var(--bg-btn-hover);
         }
-      }
-
-      .provider {
-        @include line-clamp(1);
-
-        user-select: none;
       }
     }
   }
