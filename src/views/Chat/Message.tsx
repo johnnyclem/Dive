@@ -110,8 +110,9 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
   }, [editedText])
 
   const formattedText = useMemo(() => {
+    const _text = isSent ? content : text
     if (isSent) {
-      const splitText = content.split("\n")
+      const splitText = _text.split("\n")
       return splitText.map((line, i) => (
         <React.Fragment key={i}>
           {line}
@@ -161,7 +162,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
             const isLongCode = lines.length > 10
 
             if (isLongCode) {
-              const cleanText = content.replace(/\s+(?=```)/gm, "")
+              const cleanText = _text.replace(/\s+(?=```)/gm, "")
               const isBlockComplete = cleanText.includes(code.trim() + "```")
               code = code.endsWith("``") ? code.slice(0, -2) : code
               code = code.endsWith("`") ? code.slice(0, -1) : code
@@ -215,10 +216,10 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
           }
         }}
       >
-        {content.replaceAll("file://", "https://localfile")}
+        {_text.replaceAll("file://", "https://localfile")}
       </ReactMarkdown>
     )
-  }, [content, isSent, isLoading])
+  }, [content, text, isSent, isLoading])
 
   if (isEditing) {
     return (
@@ -276,7 +277,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, toolCalls
           <button
             type="button"
             className="tools-btn"
-            onClick={() => onCopy(messageId, content)}
+            onClick={() => onCopy(messageId, isSent ? content : text)}
             title={t("chat.copy")}
           >
             {isCopied[messageId] ? (
