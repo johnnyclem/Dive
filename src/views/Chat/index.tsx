@@ -133,16 +133,26 @@ const ChatWindow = () => {
   const onRetry = useCallback(async (messageId: string) => {
     if (isChatStreaming || !currentChatId.current) return
 
+    let prevMessages = {} as Message
     setMessages(prev => {
       let newMessages = [...prev]
       const messageIndex = newMessages.findIndex(msg => msg.id === messageId)
       if (messageIndex !== -1) {
-        newMessages = newMessages.slice(0, messageIndex+1)
+        prevMessages = newMessages[messageIndex]
+        prevMessages.text = ""
+        prevMessages.toolCalls = undefined
+        prevMessages.toolResults = undefined
+        prevMessages.isError = false
+        newMessages = newMessages.slice(0, messageIndex)
       }
-      newMessages[newMessages.length - 1].text = ""
-      newMessages[newMessages.length - 1].toolCalls = undefined
-      newMessages[newMessages.length - 1].toolResults = undefined
-      newMessages[newMessages.length - 1].isError = false
+      return newMessages
+    })
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    setMessages(prev => {
+      const newMessages = [...prev]
+      newMessages.push(prevMessages)
       return newMessages
     })
     setIsChatStreaming(true)
@@ -159,17 +169,26 @@ const ChatWindow = () => {
   const onEdit = useCallback(async (messageId: string, newText: string) => {
     if (isChatStreaming || !currentChatId.current)
       return
-
+    let prevMessages = {} as Message
     setMessages(prev => {
       let newMessages = [...prev]
       const messageIndex = newMessages.findIndex(msg => msg.id === messageId)
       if (messageIndex !== -1) {
-        newMessages = newMessages.slice(0, messageIndex+2)
+        prevMessages = newMessages[messageIndex + 1]
+        prevMessages.text = ""
+        prevMessages.toolCalls = undefined
+        prevMessages.toolResults = undefined
+        prevMessages.isError = false
+        newMessages = newMessages.slice(0, messageIndex+1)
       }
-      newMessages[newMessages.length - 1].text = ""
-      newMessages[newMessages.length - 1].toolCalls = undefined
-      newMessages[newMessages.length - 1].toolResults = undefined
-      newMessages[newMessages.length - 1].isError = false
+      return newMessages
+    })
+
+    await new Promise(resolve => setTimeout(resolve, 0))
+
+    setMessages(prev => {
+      const newMessages = [...prev]
+      newMessages.push(prevMessages)
       return newMessages
     })
     setIsChatStreaming(true)
