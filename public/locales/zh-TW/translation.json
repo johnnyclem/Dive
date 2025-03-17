@@ -121,8 +121,9 @@
     "title": "系統設定",
     "language": "系統語言",
     "theme": "顯示模式",
-    "autoLaunch": "開機自動啟動Dive AI",
     "defaultInstructions": "以繁體中文回應",
+    "autoDownload": "自動下載更新",
+    "autoLaunch": "開機自動啟動Dive AI",
     "minimalToTray": "關閉按鈕會將Dive AI最小化到背景"
   },
   "toast": {
@@ -142,5 +143,10 @@
       "global_close-layer": "關閉視窗",
       "global_toggle-keymap-modal": "顯示/隱藏快捷鍵說明"
     }
+  },
+  "update": {
+    "downloading": "下載中",
+    "readyToInstall": "下載完成",
+    "clickToInstall": "點擊安裝更新"
   }
 }

@@ -22,4 +22,6 @@ interface Window {
     getMinimalToTray: () => Promise<boolean>
     setMinimalToTray: (enable: boolean) => Promise<void>
   }
+
+  PLATFORM: "darwin" | "win32" | "linux"
 }
