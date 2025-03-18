@@ -1,10 +1,10 @@
 import { Anthropic } from "@anthropic-ai/sdk"
-import { ipcMain } from "electron"
+import { ipcMain, BrowserWindow } from "electron"
 import { Ollama } from "ollama"
 import OpenAI from "openai"
 import { Mistral } from "@mistralai/mistralai"
 
-export function ipcLlmHandler() {
+export function ipcLlmHandler(win: BrowserWindow) {
   ipcMain.handle("llm:openaiModelList", async (_, apiKey: string) => {
     try {
       const client = new OpenAI({ apiKey })
