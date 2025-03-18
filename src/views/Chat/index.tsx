@@ -5,12 +5,22 @@ import ChatInput from "./ChatInput"
 import CodeModal from './CodeModal'
 import { useAtom, useSetAtom } from 'jotai'
 import { codeStreamingAtom } from '../../atoms/codeStreaming'
-import { ToolCall, ToolResult } from "./ToolPanel"
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import { showToastAtom } from "../../atoms/toastState"
 import { useTranslation } from "react-i18next"
 import { currentChatIdAtom, isChatStreamingAtom, lastMessageAtom } from "../../atoms/chatState"
 import { safeBase64Encode } from "../../util"
+
+interface ToolCall {
+  name: string
+  arguments: any
+}
+
+interface ToolResult {
+  name: string
+  result: any
+}
+
 
 const ChatWindow = () => {
   const { chatId } = useParams()
@@ -28,6 +38,8 @@ const ChatWindow = () => {
   const setCurrentChatId = useSetAtom(currentChatIdAtom)
   const [isChatStreaming, setIsChatStreaming] = useAtom(isChatStreamingAtom)
   const toolCallResults = useRef<string>("")
+  const toolResultCount = useRef(0)
+  const toolResultTotal = useRef(0)
 
   const loadChat = useCallback(async (id: string) => {
     try {
@@ -263,7 +275,13 @@ const ChatWindow = () => {
 
               case "tool_calls":
                 const toolCalls = data.content as ToolCall[]
-                const toolName = data.content?.length > 0 ? data.content[0].name || "%name%" : "%name%"
+
+                const tools = data.content?.map((call: {name: string}) => call.name) || []
+                toolResultTotal.current = tools.length
+
+                const uniqTools = new Set(tools)
+                const toolName = uniqTools.size === 0 ? "%name%" : Array.from(uniqTools).join(", ")
+
                 toolCallResults.current += `\n<tool-call name="${toolName}">##Tool Calls:${safeBase64Encode(JSON.stringify(toolCalls))}`
                 setMessages(prev => {
                   const newMessages = [...prev]
@@ -274,16 +292,24 @@ const ChatWindow = () => {
 
               case "tool_result":
                 const result = data.content as ToolResult
+
+                toolCallResults.current = toolCallResults.current.replace(`</tool-call>\n`, "")
                 toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(result.result))}</tool-call>\n`
-                currentText += toolCallResults.current.replace("%name%", result.name)
+
                 setMessages(prev => {
                   const newMessages = [...prev]
-                  newMessages[newMessages.length - 1].text = currentText
+                  newMessages[newMessages.length - 1].text = currentText + toolCallResults.current.replace("%name%", result.name)
                   return newMessages
                 })
 
-                toolCallResults.current = ""
-                scrollToBottom()
+                toolResultCount.current++
+                if (toolResultTotal.current === toolResultCount.current) {
+                  currentText += toolCallResults.current.replace("%name%", result.name)
+                  toolCallResults.current = ""
+                  toolResultTotal.current = 0
+                  toolResultCount.current = 0
+                }
+
                 break
 
               case "chat_info":

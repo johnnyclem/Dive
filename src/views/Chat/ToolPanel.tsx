@@ -6,16 +6,6 @@ import { themeAtom } from "../../atoms/themeState"
 import { safeBase64Decode } from "../../util"
 import { useTranslation } from "react-i18next"
 
-export interface ToolCall {
-  name: string
-  arguments: any
-}
-
-export interface ToolResult {
-  name: string
-  result: any
-}
-
 interface ToolPanelProps {
   content: string
   name: string
@@ -26,17 +16,25 @@ const resultStr = "##Tool Result:"
 
 function getToolResult(content: string) {
   let calls = ""
-  let result = ""
+  let results: string[] = []
 
   try {
     const resultIndex = content.indexOf(resultStr)
     calls = content.slice(callStr.length, resultIndex)
-    result = resultIndex !== -1 ? content.slice(resultIndex + resultStr.length) : ""
-  } catch (e) {}
+
+    if (resultIndex !== -1) {
+      results = content
+        .slice(resultIndex + resultStr.length)
+        .split(resultStr)
+        .filter(result => result.trim() !== "")
+    }
+  } catch (e) {
+    console.error("Error parsing tool results:", e)
+  }
 
   return {
     calls,
-    result
+    results
   }
 }
 
@@ -77,9 +75,9 @@ const Code = ({ content }: { content: string }) => {
 
 const ToolPanel: React.FC<ToolPanelProps> = ({ content, name }) => {
   const { t } = useTranslation()
-  const { calls, result } = useMemo(() => getToolResult(content), [content])
+  const { calls, results } = useMemo(() => getToolResult(content), [content])
   const formattedCalls = useMemo(() => formatJSON(safeBase64Decode(calls)), [calls])
-  const formattedResult = useMemo(() => formatJSON(safeBase64Decode(result)), [result])
+  const formattedResults = useMemo(() => results.map(result => formatJSON(safeBase64Decode(result))), [results])
 
   if (!content || !content.startsWith(callStr)) {
     return <></>
@@ -94,10 +92,14 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ content, name }) => {
         <span>Calls:</span>
         <Code content={formattedCalls} />
 
-        {result.length > 0 && (
+        {results.length > 0 && (
           <>
-            <span>Results:</span>
-            <Code content={formattedResult} />
+            {formattedResults.map((result, index) => (
+              <>
+                <span>Results{formattedResults.length > 1 ? ` ${index + 1}` : ""}:</span>
+                <Code key={index} content={result} />
+              </>
+            ))}
           </>
         )}
       </div>
