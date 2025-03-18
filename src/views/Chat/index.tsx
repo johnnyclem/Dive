@@ -53,7 +53,7 @@ const ChatWindow = () => {
       setIsChatStreaming(false)
     }
   }, [])
-  
+
   useHotkeyEvent("chat-message:copy-last", async () => {
     const lastMessage = messages[messages.length - 1]
     if (lastMessage) {
@@ -64,7 +64,7 @@ const ChatWindow = () => {
       })
     }
   })
-  
+
   useEffect(() => {
     if (messages.length > 0 && !isChatStreaming) {
       setLastMessage(messages[messages.length - 1].text)
@@ -140,8 +140,6 @@ const ChatWindow = () => {
       if (messageIndex !== -1) {
         prevMessages = newMessages[messageIndex]
         prevMessages.text = ""
-        prevMessages.toolCalls = undefined
-        prevMessages.toolResults = undefined
         prevMessages.isError = false
         newMessages = newMessages.slice(0, messageIndex)
       }
@@ -176,8 +174,6 @@ const ChatWindow = () => {
       if (messageIndex !== -1) {
         prevMessages = newMessages[messageIndex + 1]
         prevMessages.text = ""
-        prevMessages.toolCalls = undefined
-        prevMessages.toolResults = undefined
         prevMessages.isError = false
         newMessages = newMessages.slice(0, messageIndex+1)
       }
@@ -265,10 +261,10 @@ const ChatWindow = () => {
 
               case "tool_calls":
                 const toolCalls = data.content as ToolCall[]
+                currentText += `\n\n<tool-call>${JSON.stringify(toolCalls)}</tool-call>\n\n`
                 setMessages(prev => {
                   const newMessages = [...prev]
-                  const lastMessage = newMessages[newMessages.length - 1]
-                  lastMessage.toolCalls = toolCalls
+                  newMessages[newMessages.length - 1].text = currentText
                   return newMessages
                 })
                 scrollToBottom()
@@ -276,13 +272,10 @@ const ChatWindow = () => {
 
               case "tool_result":
                 const result = data.content as ToolResult
+                currentText += `\n\n<tool-result name="${result.name}">${JSON.stringify(result.result)}</tool-result>\n\n`
                 setMessages(prev => {
                   const newMessages = [...prev]
-                  const lastMessage = newMessages[newMessages.length - 1]
-                  if (!lastMessage.toolResults) {
-                    lastMessage.toolResults = []
-                  }
-                  lastMessage.toolResults.push(result)
+                  newMessages[newMessages.length - 1].text = currentText
                   return newMessages
                 })
                 scrollToBottom()
@@ -357,7 +350,7 @@ const ChatWindow = () => {
 
   useEffect(() => {
     const state = location.state as { initialMessage?: string, files?: File[] } | null
-    
+
     if ((state?.initialMessage || state?.files) && !isInitialMessageHandled.current) {
       isInitialMessageHandled.current = true
       handleInitialMessage(state?.initialMessage || '', state?.files)

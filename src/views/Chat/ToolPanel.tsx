@@ -12,7 +12,7 @@ export interface ToolResult {
 
 interface ToolPanelProps {
   type: 'calls' | 'result'
-  content: (ToolCall | ToolResult)[]
+  content: string
   name?: string
 }
 
@@ -28,11 +28,11 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ type, content, name }) => {
       </summary>
       <div className="tool-content">
         <pre>
-          <code>{JSON.stringify(content, null, 2)}</code>
+          <code>{content}</code>
         </pre>
       </div>
     </details>
   )
 }
 
-export default React.memo(ToolPanel) 
+export default React.memo(ToolPanel)
