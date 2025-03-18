@@ -50,17 +50,12 @@
   margin: 10px 0;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--bg-op-dark-extremeweak);
 
   summary {
-    padding: 10px 15px;
     cursor: pointer;
     user-select: none;
     font-weight: 500;
-
-    &:hover {
-      background: var(--bg-op-dark-extremeweak);
-    }
+    color: var(--text-inverted-weak);
   }
 
   .tool-content {
@@ -191,11 +186,11 @@
     .verify-btn {
       background: var(--bg-success);
       color: var(--text-light);
-      
+
       &:hover:not(:disabled) {
         background: var(--bg-hover-success);
       }
-      
+
       &:active:not(:disabled) {
         background: var(--bg-active-success);
       }
@@ -204,11 +199,11 @@
     .submit-btn {
       background: var(--bg-pri-blue);
       color: var(--text-light);
-      
+
       &:hover:not(:disabled) {
         background: var(--bg-hover-blue);
       }
-      
+
       &:active:not(:disabled) {
         background: var(--bg-active-blue);
       }

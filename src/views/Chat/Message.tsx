@@ -22,10 +22,7 @@ declare global {
     interface IntrinsicElements {
       "tool-call": {
         children: any
-      };
-      "tool-result": {
-        children: any,
-        name: string,
+        name: string
       };
     }
   }
@@ -142,18 +139,13 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
         }], remarkGfm]}
         rehypePlugins={[rehypeKatex, rehypeRaw]}
         components={{
-          "tool-call"({children}) {
+          "tool-call"({children, name}) {
+            if (typeof children !== "string") {
+              return <></>
+            }
+
             return (
               <ToolPanel
-                type="calls"
-                content={children}
-              />
-            )
-          },
-          "tool-result"({children, name}) {
-            return (
-              <ToolPanel
-                type="result"
                 content={children}
                 name={name}
               />

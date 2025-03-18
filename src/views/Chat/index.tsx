@@ -10,6 +10,7 @@ import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import { showToastAtom } from "../../atoms/toastState"
 import { useTranslation } from "react-i18next"
 import { currentChatIdAtom, isChatStreamingAtom, lastMessageAtom } from "../../atoms/chatState"
+import { safeBase64Encode } from "../../util"
 
 const ChatWindow = () => {
   const { chatId } = useParams()
@@ -26,6 +27,7 @@ const ChatWindow = () => {
   const setLastMessage = useSetAtom(lastMessageAtom)
   const setCurrentChatId = useSetAtom(currentChatIdAtom)
   const [isChatStreaming, setIsChatStreaming] = useAtom(isChatStreamingAtom)
+  const toolCallResults = useRef<string>("")
 
   const loadChat = useCallback(async (id: string) => {
     try {
@@ -261,23 +263,26 @@ const ChatWindow = () => {
 
               case "tool_calls":
                 const toolCalls = data.content as ToolCall[]
-                currentText += `\n\n<tool-call>${JSON.stringify(toolCalls)}</tool-call>\n\n`
+                const toolName = data.content?.length > 0 ? data.content[0].name || "%name%" : "%name%"
+                toolCallResults.current += `\n<tool-call name="${toolName}">##Tool Calls:${safeBase64Encode(JSON.stringify(toolCalls))}`
                 setMessages(prev => {
                   const newMessages = [...prev]
-                  newMessages[newMessages.length - 1].text = currentText
+                  newMessages[newMessages.length - 1].text = currentText + toolCallResults.current + "</tool-call>"
                   return newMessages
                 })
-                scrollToBottom()
                 break
 
               case "tool_result":
                 const result = data.content as ToolResult
-                currentText += `\n\n<tool-result name="${result.name}">${JSON.stringify(result.result)}</tool-result>\n\n`
+                toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(result.result))}</tool-call>\n`
+                currentText += toolCallResults.current.replace("%name%", result.name)
                 setMessages(prev => {
                   const newMessages = [...prev]
                   newMessages[newMessages.length - 1].text = currentText
                   return newMessages
                 })
+
+                toolCallResults.current = ""
                 scrollToBottom()
                 break
 
@@ -315,7 +320,7 @@ const ChatWindow = () => {
                 break
             }
           } catch (error) {
-            console.warn("Failed to parse SSE data:", dataStr)
+            console.warn(error)
           }
         }
       }
