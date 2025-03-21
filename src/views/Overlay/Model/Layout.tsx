@@ -11,7 +11,7 @@ import ModelPopup from "./ModelPopup"
 import ParameterPopup from "./ParameterPopup"
 import { useModelsProvider } from "./ModelsProvider"
 import { showToastAtom } from "../../../atoms/toastState"
-import { ModelProvider, PROVIDER_ICONS } from "../../../atoms/interfaceState"
+import { InterfaceProvider, PROVIDER_ICONS } from "../../../atoms/interfaceState"
 
 const PageLayout = () => {
   const { t } = useTranslation()
@@ -53,7 +53,7 @@ const PageLayout = () => {
 
     try {
       const _activeProvider = newMultiModelConfigList.filter(config => config.active && config.models.length > 0).length === 0 ? "none" : undefined
-      const data = await saveConfig(_activeProvider as ModelProvider)
+      const data = await saveConfig(_activeProvider as InterfaceProvider)
       if (data.success) {
         showToast({
           message: t("setup.saveSuccess"),
@@ -90,7 +90,7 @@ const PageLayout = () => {
     if (ifSave) {
       try {
         const _activeProvider = newMultiModelConfigList.filter(config => config.active && config.models.length > 0).length === 0 ? "none" : undefined
-        const data = await saveConfig(_activeProvider as ModelProvider)
+        const data = await saveConfig(_activeProvider as InterfaceProvider)
         if (data.success) {
           showToast({
             message: t("setup.saveSuccess"),
@@ -156,7 +156,7 @@ const PageLayout = () => {
       const newMultiModelConfigList = multiModelConfigList?.filter(config => !config.checked) ?? []
       setMultiModelConfigList(newMultiModelConfigList)
       const _activeProvider = newMultiModelConfigList.filter(config => config.active && config.models.length > 0).length === 0 ? "none" : undefined
-      const data = await saveConfig(_activeProvider as ModelProvider)
+      const data = await saveConfig(_activeProvider as InterfaceProvider)
       if (data.success) {
         showToast({
           message: t("models.deleteToast", { count: multiModelConfigList?.filter(config => config.checked).length ?? 0 }),
@@ -363,7 +363,7 @@ const PageLayout = () => {
                   </div>
                   <div className="provider">
                     <img
-                      src={PROVIDER_ICONS[multiModelConfig.name as ModelProvider]}
+                      src={PROVIDER_ICONS[multiModelConfig.name as InterfaceProvider]}
                       alt={multiModelConfig.name}
                       className={`provider-icon ${multiModelConfig.name === "ollama" || multiModelConfig.name === "openai_compatible" ? "no-filter" : ""}`}
                     />

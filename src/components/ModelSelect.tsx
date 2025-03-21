@@ -2,47 +2,25 @@ import "@/styles/components/_ModelSelect.scss"
 import { useTranslation } from "react-i18next"
 import Select from "./Select"
 import { useEffect, useState } from "react"
-import { ModelProvider, PROVIDER_ICONS } from "../atoms/interfaceState"
+import { InterfaceProvider, PROVIDER_ICONS } from "../atoms/interfaceState"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import { configAtom, configListAtom, ModelConfig, saveAllConfigAtom } from "../atoms/configState"
+import { configAtom, configDictAtom, enabledModelsIdsAtom, InterfaceModelConfigMap, writeRawConfigAtom } from "../atoms/configState"
 import { openOverlayAtom } from "../atoms/layerState"
 import { showToastAtom } from "../atoms/toastState"
-import { getModelPrefix } from "../util"
 import Tooltip from "./Tooltip"
 import { systemThemeAtom, userThemeAtom } from "../atoms/themeState"
-
-interface ModelSelectProps {
-  key: string
-  name: string
-  model: ModelProvider
-}
 
 const ModelSelect = () => {
   const { t } = useTranslation()
   const config = useAtomValue(configAtom)
-  const configList = useAtomValue(configListAtom)
-  const saveAllConfig = useSetAtom(saveAllConfigAtom)
-  const [modelList, setModelList] = useState<ModelSelectProps[]>([])
+  const configList = useAtomValue(configDictAtom)
+  const saveAllConfig = useSetAtom(writeRawConfigAtom)
   const [model, setModel] = useState<string>(config?.activeProvider ?? "")
   const openOverlay = useSetAtom(openOverlayAtom)
   const [, showToast] = useAtom(showToastAtom)
   const systemTheme = useAtomValue(systemThemeAtom)
   const userTheme = useAtomValue(userThemeAtom)
-
-  useEffect(() => {
-    if (!configList) return
-    const _modelsList: ModelSelectProps[] = []
-    Object.entries(configList as Record<string, ModelConfig>)
-    .forEach(([key, config]) => {
-      if(!config.model || !config.active) return
-      _modelsList.push({
-        key: key,
-        name: `${getModelPrefix(config, 4)}/${config.model}`,
-        model: config.modelProvider
-      })
-    })
-    setModelList([..._modelsList])
-  }, [configList])
+  const modelList = useAtomValue(enabledModelsIdsAtom)
 
   useEffect(() => {
     setModel(config?.activeProvider ?? "")
@@ -65,7 +43,7 @@ const ModelSelect = () => {
     const _model = model
     setModel(value)
     try {
-      const data = await saveAllConfig({ providerConfigs: configList as Record<string, ModelConfig>, activeProvider: value as ModelProvider })
+      const data = await saveAllConfig({ providerConfigs: configList as InterfaceModelConfigMap, activeProvider: value as InterfaceProvider })
       if (data.success) {
         showToast({
           message: t("setup.saveSuccess"),
@@ -86,9 +64,9 @@ const ModelSelect = () => {
           label: (
               <div className="model-select-label" key={model.key}>
               <img
-                src={PROVIDER_ICONS[model.model.replace("-", "_") as keyof typeof PROVIDER_ICONS]}
-                alt={model.model}
-                className={`model-select-label-icon ${isProviderIconNoFilter(model.model) ? "no-filter" : ""}`}
+                src={PROVIDER_ICONS[model.provider.replace("-", "_") as keyof typeof PROVIDER_ICONS]}
+                alt={model.provider}
+                className={`model-select-label-icon ${isProviderIconNoFilter(model.provider) ? "no-filter" : ""}`}
               />
               <span className="model-select-label-text">
                 {model.name}

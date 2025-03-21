@@ -1,71 +1,121 @@
-import { atom } from 'jotai'
-import { ModelProvider } from './interfaceState'
+import { atom } from "jotai"
+import { EMPTY_PROVIDER, InterfaceProvider, ModelProvider } from "./interfaceState"
+import { getModelPrefix } from "../util"
 
-export type ModelConfigList = ModelConfig[]
-
-export type ModelConfig = {
+export type ProviderRequired = {
   apiKey: string
   baseURL: string
   model: string | null
-  modelProvider: ModelProvider
-  configuration: ModelConfig
-  active: boolean
+}
+
+export type ModelParameter = {
   topP: number
   temperature: number
 }
 
-export type ActiveProviderConfig = {
-  activeProvider: ModelProvider|""
-  configs: Record<ModelProvider, ModelConfig>
+export type ModelConfig = ProviderRequired & ModelParameter & {
+  modelProvider: ModelProvider
+  configuration: ProviderRequired & ModelParameter
+  active: boolean
 }
 
-export type MultiModelConfig = {
-  name: ModelProvider
-  apiKey: string
-  baseURL: string
+export type InterfaceModelConfig = Omit<ModelConfig, "modelProvider"> & {
+  modelProvider: InterfaceProvider
+}
+
+export type ModelConfigMap = Record<string, ModelConfig>
+export type InterfaceModelConfigMap = Record<string, InterfaceModelConfig>
+
+export type RawModelConfig = {
+  activeProvider: string
+  configs: ModelConfigMap
+}
+
+export type MultiModelConfig = ProviderRequired & ModelParameter & {
+  name: InterfaceProvider
   active: boolean
   checked: boolean
   models: string[]
-  topP: number
-  temperature: number
 }
 
-export const configAtom = atom<ActiveProviderConfig | null>(null)
+export const configAtom = atom<RawModelConfig>({
+  activeProvider: "",
+  configs: {}
+})
 
-export const configListAtom = atom<Record<string, ModelConfig> | null>(null)
-
-export const hasConfigAtom = atom(
-  (get) => {
+export const updateConfigWithProviderAtom = atom(
+  null,
+  (get, set, params: {
+    provider: string
+    data: ModelConfig
+  }) => {
+    const { provider, data } = params
     const config = get(configAtom)
-    return config !== null && config.activeProvider !== ""
+    config.configs[provider] = data
+    set(configAtom, {...config})
   }
 )
 
-export const hasActiveConfigAtom = atom(
+export const activeConfigAtom = atom<ModelConfig | null>(
   (get) => {
-    return get(hasConfigAtom) && get(activeProviderAtom) !== "none" as any
+    const config = get(configAtom)
+    return !config ? null : config.configs[config.activeProvider] || null
   }
 )
 
-export const activeProviderAtom = atom<ModelProvider>(
+export const activeConfigIdAtom = atom<string>(
   (get) => {
     const config = get(configAtom)
-    return config?.activeProvider || "none" as any
+    return !config ? "" : config.activeProvider
   }
 )
 
-export const activeConfigAtom = atom(
+export const enabledConfigsAtom = atom<ModelConfigMap>(
   (get) => {
-    const config = get(configAtom)
-    if (!config?.activeProvider) return null
-    return config.configs[config.activeProvider]
+    const configDict = get(configDictAtom)
+    return Object.keys(configDict)
+      .reduce((acc, key) => {
+        const config = configDict[key]
+        if(config.active && config.model) {
+          acc[key] = config
+        }
+
+        return acc
+      }, {} as ModelConfigMap)
   }
 )
 
-export const providerConfigAtom = atom(
-  (get) => (provider: ModelProvider) => {
+export const enabledModelsIdsAtom = atom<{key: string, name: string, provider: string}[]>(
+  (get) => {
+    const enabledConfigs = get(enabledConfigsAtom)
+    return Object.keys(enabledConfigs).map((key) => ({
+      key,
+      name: `${getModelPrefix(enabledConfigs[key], 4)}/${enabledConfigs[key].model}`,
+      provider: enabledConfigs[key].modelProvider
+    }))
+  }
+)
+
+export const configDictAtom = atom<ModelConfigMap>((get) => get(configAtom).configs)
+
+export const isConfigNotInitializedAtom = atom(
+  (get) => {
     const config = get(configAtom)
-    return config?.configs[provider] || null
+    return !config.activeProvider
+  }
+)
+
+export const isConfigActiveAtom = atom(
+  (get) => {
+    const config = get(configAtom)
+    return config !== null && config.activeProvider !== EMPTY_PROVIDER
+  }
+)
+
+export const activeProviderAtom = atom<string>(
+  (get) => {
+    const config = get(configAtom)
+    return config?.activeProvider || EMPTY_PROVIDER
   }
 )
 
@@ -75,10 +125,8 @@ export const loadConfigAtom = atom(
     try {
       const response = await fetch("/api/config/model")
       const data = await response.json()
-      const config = data.config
-      set(configAtom, config)
-      set(configListAtom, config.configs)
-      return config
+      set(configAtom, data.config)
+      return data.config
     } catch (error) {
       console.warn("Failed to load config:", error)
       return null
@@ -86,63 +134,47 @@ export const loadConfigAtom = atom(
   }
 )
 
-export const saveConfigAtom = atom(
+export const saveFirstConfigAtom = atom(
   null,
   async (get, set, params: {
-    formData: ModelConfig
-    provider: ModelProvider
+    data: InterfaceModelConfig
+    provider: InterfaceProvider
   }) => {
-    const { formData, provider } = params
+    const { data: config, provider } = params
     const modelProvider = transformModelProvider(provider)
-    formData.active = true
-    const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
+    config.active = true
+    const configuration: any = {...config} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
+    delete configuration.active
+    delete configuration.checked
     delete configuration.configuration
 
-    try {
-      const response = await fetch("/api/config/model", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          provider: `${provider}`,
-          modelSettings: {
-            ...formData,
-            modelProvider,
-            configuration,
-          },
-        }),
-      })
-
-      const data = await response.json()
-      if (data.success) {
-        const config = get(configAtom)
-        if (config) {
-          config.configs[provider] = formData
-        }
-        set(configAtom, config)
-      }
-      return data
-    } catch (error) {
-      console.error("Failed to save config:", error)
-      throw error
-    }
+    return set(writeRawConfigAtom, {
+      providerConfigs: {
+        [`${modelProvider}-0-0`]: {
+          ...config,
+          modelProvider,
+          configuration,
+        } as any
+      },
+      activeProvider: `${modelProvider}-0-0` as any
+    })
   }
 )
 
-export const saveAllConfigAtom = atom(
+export const writeRawConfigAtom = atom(
   null,
   async (get, set, params: {
-    providerConfigs: Record<string, ModelConfig>,
-    activeProvider?: ModelProvider
+    providerConfigs: InterfaceModelConfigMap
+    activeProvider?: InterfaceProvider
   }) => {
     const { providerConfigs, activeProvider } = params
+
     const configs = Object.keys(providerConfigs).reduce((acc, key) => {
-      const config = providerConfigs[key]
+      const config = providerConfigs[key] as any
       config.modelProvider = transformModelProvider(config.modelProvider)
-      acc[key] = config
+      acc[key] = config as ModelConfig
       return acc
-    }, {} as Record<string, ModelConfig>)
+    }, {} as ModelConfigMap)
 
     try {
       const response = await fetch("/api/config/model/replaceAll", {
@@ -159,16 +191,11 @@ export const saveAllConfigAtom = atom(
 
       const data = await response.json()
       if (data.success) {
-        let config = get(configAtom)
-        if (config) {
-          config = {
-            ...config,
-            configs: providerConfigs,
-            activeProvider: activeProvider ?? get(activeProviderAtom)
-          }
-        }
-        set(configAtom, config)
-        set(configListAtom, providerConfigs)
+        set(configAtom, {
+          ...get(configAtom),
+          configs,
+          activeProvider: activeProvider ?? get(activeProviderAtom)
+        })
       }
       return data
     } catch (error) {
@@ -178,32 +205,34 @@ export const saveAllConfigAtom = atom(
   }
 )
 
-export const formatData = (data: ModelConfig) => {
+export const formatData = (data: InterfaceModelConfig|ModelConfig): MultiModelConfig => {
+  const config = convertConfigToInterfaceModel(data)
   return {
-    name: data.modelProvider as ModelProvider,
-    apiKey: data.apiKey,
-    baseURL: data.baseURL,
-    active: data.active ?? false,
+    name: config.modelProvider,
+    apiKey: config.apiKey,
+    baseURL: config.baseURL,
+    active: config.active ?? false,
     checked: false,
-    models: data.model ? [data.model] : [],
-    topP: data.topP ?? 0,
-    temperature: data.temperature ?? 0,
+    models: config.model ? [config.model] : [],
+    topP: config.topP ?? 0,
+    temperature: config.temperature ?? 0,
+    model: config.model,
   }
 }
 
-export const extractData = (data: Record<string, ModelConfig>) => {
+export const extractData = (data: InterfaceModelConfigMap|ModelConfigMap) => {
   const providerConfigList: MultiModelConfig[] = []
 
   Object.entries(data).forEach(([key, value]) => {
     if(!key.includes("-")){
       key = `${key}-${providerConfigList.length}-0`
     }
-    const [name, index, modelIndex] = key.split("-")
+    const [name , index, modelIndex] = key.split("-")
     const _index = parseInt(index)
 
     if (!providerConfigList[_index]) {
-      const _value = {...value}
-      _value.modelProvider = name as ModelProvider
+      const _value: InterfaceModelConfig|ModelConfig = {...value}
+      _value.modelProvider = name as InterfaceProvider
       providerConfigList[_index] = {
         ...formatData(_value),
       }
@@ -216,7 +245,7 @@ export const extractData = (data: Record<string, ModelConfig>) => {
 }
 
 export const compressData = (data: MultiModelConfig, index: number) => {
-  const compressedData: Record<string, ModelConfig> = {}
+  const compressedData: Record<string, InterfaceModelConfig> = {}
 
   const { models, ...restData } = data
   const modelsToProcess = models.length === 0 ? [null] : models
@@ -226,24 +255,46 @@ export const compressData = (data: MultiModelConfig, index: number) => {
       model: model,
       modelProvider: data.name
     }
-    const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
+    const configuration = {...formData} as Partial<Pick<InterfaceModelConfig, "configuration">> & Omit<InterfaceModelConfig, "configuration">
     delete configuration.configuration
     compressedData[`${restData.name}-${index}-${modelIndex}`] = {
       ...formData,
-      configuration: configuration as ModelConfig,
+      configuration: configuration as InterfaceModelConfig,
     }
   })
 
   return compressedData
 }
 
-export function transformModelProvider(provider: ModelProvider) {
+export function transformModelProvider(provider: InterfaceProvider): ModelProvider {
   switch (provider) {
     case "openai_compatible":
       return "openai"
     case "google_genai":
-      return "google-genai" as any
+      return "google-genai"
     default:
       return provider
   }
 }
+
+export function convertConfigToInterfaceModel(model: InterfaceModelConfig|ModelConfig): InterfaceModelConfig {
+  switch (model.modelProvider) {
+    case "openai":
+      if (model.baseURL) {
+        return {
+          ...model,
+          modelProvider: "openai_compatible"
+        }
+      }
+
+      break
+    case "google-genai":
+      return {
+        ...model,
+        modelProvider: "google_genai"
+      }
+  }
+
+  return model as InterfaceModelConfig
+}
+
