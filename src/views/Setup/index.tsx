@@ -1,10 +1,10 @@
 import React, { useState } from "react"
 import { useSetAtom } from "jotai"
-import { InterfaceProvider, defaultInterface } from "../atoms/interfaceState"
+import { InterfaceProvider, defaultInterface } from "../../atoms/interfaceState"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
-import ModelConfigForm from "../components/ModelConfigForm"
-import { showToastAtom } from "../atoms/toastState"
+import ModelConfigForm from "./ModelConfigForm"
+import { showToastAtom } from "../../atoms/toastState"
 
 const Setup = () => {
   const { t } = useTranslation()
