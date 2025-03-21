@@ -17,6 +17,14 @@ interface ModelSelectProps {
   model: ModelProvider
 }
 
+function optionMask(model: string) {
+  if (model.length <= 43) {
+    return model
+  }
+
+  return `${model.slice(0, 25)}...${model.slice(-18)}`
+}
+
 const ModelSelect = () => {
   const { t } = useTranslation()
   const config = useAtomValue(configAtom)
@@ -91,7 +99,7 @@ const ModelSelect = () => {
                 className={`model-select-label-icon ${isProviderIconNoFilter(model.model) ? "no-filter" : ""}`}
               />
               <span className="model-select-label-text">
-                {model.name}
+                ***{optionMask(model.name)}
               </span>
                 </div>
             )
