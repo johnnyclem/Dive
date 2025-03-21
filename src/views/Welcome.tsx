@@ -1,10 +1,10 @@
 import React, { useState, useRef, KeyboardEvent, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { useSetAtom, useAtom, useAtomValue } from "jotai"
+import { useSetAtom, useAtomValue } from "jotai"
 import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
-import { activeConfigAtom, hasActiveConfigAtom, hasConfigAtom } from "../atoms/configState"
+import { isConfigActiveAtom, isConfigNotInitializedAtom, activeConfigAtom, currentModelSupportToolsAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { openOverlayAtom } from "../atoms/layerState"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
@@ -31,17 +31,15 @@ const Welcome = () => {
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
   const histories = useAtomValue(historiesAtom)
   const loadHistories = useSetAtom(loadHistoriesAtom)
-  const hasConfig = useAtomValue(hasConfigAtom)
+  const isConfigNotInitialized = useAtomValue(isConfigNotInitializedAtom)
   const isComposing = useRef(false)
   const openOverlay = useSetAtom(openOverlayAtom)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const loadTools = useSetAtom(loadToolsAtom)
   const tools = useAtomValue(toolsAtom)
+  const hasActiveConfig = useAtomValue(isConfigActiveAtom)
   const activeConfig = useAtomValue(activeConfigAtom)
-  const hasActiveConfig = useAtomValue(hasActiveConfigAtom)
-  const localListOptions = localStorage.getItem("modelVerify")
-  const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
-  const supportTools = allVerifiedList[activeConfig?.apiKey || activeConfig?.baseURL as string]?.[activeConfig?.model as string]?.supportTools
+  const supportTools = useAtomValue(currentModelSupportToolsAtom)
 
   useEffect(() => {
     loadTools()
@@ -138,7 +136,7 @@ const Welcome = () => {
     setUploadedFiles(prev => [...prev, ...validFiles])
   }
 
-  if (!hasConfig) {
+  if (isConfigNotInitialized) {
     return <Setup />
   }
 

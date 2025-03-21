@@ -1,50 +1,42 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { FieldDefinition, ModelProvider, PROVIDER_LABELS, PROVIDERS } from "../atoms/interfaceState"
-import { configAtom, ModelConfig, saveConfigAtom, transformModelProvider } from "../atoms/configState"
-import { ignoreFieldsForModel } from "../constants"
-import { useAtom } from "jotai"
-import { loadConfigAtom } from "../atoms/configState"
-import useDebounce from "../hooks/useDebounce"
-import CustomInstructions from "./CustomInstructions"
-import InfoTooltip from "./InfoTooltip"
-import { showToastAtom } from "../atoms/toastState"
-import Input from "./WrappedInput"
+import { FieldDefinition, InterfaceProvider, PROVIDER_LABELS, PROVIDERS } from "../../atoms/interfaceState"
+import { InterfaceModelConfig, ModelConfig, saveFirstConfigAtom } from "../../atoms/configState"
+import { ignoreFieldsForModel } from "../../constants"
+import { useSetAtom } from "jotai"
+import { loadConfigAtom } from "../../atoms/configState"
+import useDebounce from "../../hooks/useDebounce"
+import { showToastAtom } from "../../atoms/toastState"
+import Input from "../../components/WrappedInput"
+import { transformModelProvider } from "../../helper/config"
 
 interface ModelConfigFormProps {
-  provider: ModelProvider
+  provider: InterfaceProvider
   fields: Record<string, FieldDefinition>
-  initialData?: ModelConfig|null
-  onProviderChange?: (provider: ModelProvider) => void
+  onProviderChange?: (provider: InterfaceProvider) => void
   onSubmit: (data: any) => void
   submitLabel?: string
-  showVerify?: boolean
-  showParameters?: boolean
 }
 
 const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   provider,
   fields,
-  initialData,
   onProviderChange,
   onSubmit,
   submitLabel = "setup.submit",
-  showVerify = true,
-  showParameters = false,
 }) => {
   const { t } = useTranslation()
-  const [formData, setFormData] = useState<ModelConfig>(initialData || {} as ModelConfig)
+  const [formData, setFormData] = useState<InterfaceModelConfig>({} as InterfaceModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isVerifying, setIsVerifying] = useState(false)
   const [isVerifyingNoTool, setIsVerifyingNoTool] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
-  const [listOptions, setListOptions] = useState<Record<string, string[]>>(initialData?.model ? { model: [initialData.model] } : {})
+  const [listOptions, setListOptions] = useState<Record<string, string[]>>({} as Record<string, string[]>)
   const initProvider = useRef(provider)
-  const [, loadConfig] = useAtom(loadConfigAtom)
-  const [config] = useAtom(configAtom)
-  const [, saveConfig] = useAtom(saveConfigAtom)
-  const [, showToast] = useAtom(showToastAtom)
+  const loadConfig = useSetAtom(loadConfigAtom)
+  const saveConfig = useSetAtom(saveFirstConfigAtom)
+  const showToast = useSetAtom(showToastAtom)
 
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
     try {
@@ -68,10 +60,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   useEffect(() => {
     if (initProvider.current !== provider) {
       setListOptions({})
-      setFormData(Object.assign(getFieldDefaultValue(), config?.configs[provider] || {} as ModelConfig))
-    } else {
-      setListOptions(initialData?.model ? { model: [initialData.model] } : {})
-      setFormData(initialData || {} as ModelConfig)
+      setFormData(getFieldDefaultValue())
     }
   }, [provider])
 
@@ -80,7 +69,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       if (field.type === "list" && field.listCallback && field.listDependencies) {
         const deps = field.listDependencies.reduce((acc, dep) => ({
           ...acc,
-          [dep]: formData[dep as keyof ModelConfig] || ""
+          [dep]: formData[dep as keyof InterfaceModelConfig] || ""
         }), {})
 
         const allDepsHaveValue = field.listDependencies.every(dep => !!formData[dep as keyof ModelConfig])
@@ -102,21 +91,17 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         ...acc,
         [key]: fields[key].default
       }
-    }, {} as ModelConfig)
+    }, {} as InterfaceModelConfig)
   }
 
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newProvider = e.target.value as ModelProvider
+    const newProvider = e.target.value as InterfaceProvider
     onProviderChange?.(newProvider)
     setIsVerified(false)
   }
 
-  const prepareModelConfig = useCallback((config: ModelConfig, provider: ModelProvider) => {
+  const prepareModelConfig = useCallback((config: InterfaceModelConfig, provider: InterfaceProvider) => {
     const _config = {...config}
-    if (provider === "openai" && initialData?.baseURL) {
-      delete (_config as any).baseURL
-    }
-
     if (_config.topP === 0) {
       delete (_config as any).topP
     }
@@ -134,7 +119,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         ...acc,
         [key]: _config[key as keyof ModelConfig]
       }
-    }, {} as ModelConfig)
+    }, {} as InterfaceModelConfig)
   }, [])
 
   const verifyModel = async () => {
@@ -209,7 +194,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
     try {
       setIsSubmitting(true)
-      const data = await saveConfig({ formData: _formData, provider })
+      const data = await saveConfig({ data: _formData, provider })
       await onSubmit(data)
       loadConfig()
     } finally {
@@ -244,10 +229,6 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       return false
     }
     return true
-  }
-
-  const validateNumber = (value: number, min: number, max: number) => {
-    return value > max ? max : value < min ? min : value
   }
 
   return (
@@ -304,90 +285,26 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       ))}
 
       <div className="form-actions">
-        {showVerify && (
-          <button
-            type="button"
-            className="verify-btn"
-            onClick={verifyModel}
-            disabled={isVerifying || isSubmitting}
-          >
-            {isVerifying ? (
-              <div className="loading-spinner"></div>
-            ) : t("setup.verify")}
-          </button>
-        )}
+        <button
+          type="button"
+          className="verify-btn"
+          onClick={verifyModel}
+          disabled={isVerifying || isSubmitting}
+        >
+          {isVerifying ? (
+            <div className="loading-spinner"></div>
+          ) : t("setup.verify")}
+        </button>
         <button
           type="submit"
           className="submit-btn"
-          disabled={isVerifying || isSubmitting || (showVerify && !isVerified)}
+          disabled={isVerifying || isSubmitting || !isVerified}
         >
           {isSubmitting ? (
             <div className="loading-spinner"></div>
           ) : t(submitLabel)}
         </button>
       </div>
-
-      <div className="divider" />
-
-      {showParameters && (
-        <div className="form-group parameters">
-          <label>{t("setup.parameters")}</label>
-          <div className="parameters-container">
-            <div className="parameters-grid">
-                <InfoTooltip
-                  maxWidth={270}
-                  side="left"
-                  content={t("setup.topPDescription")}
-                >
-                <div className="parameter-label">
-                  <div>TOP-P</div>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 23 22" width="15" height="15">
-                    <g clipPath="url(#ic_information_svg__a)">
-                      <circle cx="11.5" cy="11" r="10.25" stroke="currentColor" strokeWidth="1.5"></circle>
-                      <path fill="currentColor" d="M9.928 13.596h3.181c-.126-2.062 2.516-2.63 2.516-5.173 0-2.01-1.6-3.677-4.223-3.608-2.229.051-4.08 1.288-4.026 3.9h2.714c0-.824.593-1.168 1.222-1.185.593 0 1.258.326 1.222.962-.144 1.942-2.911 2.389-2.606 5.104Zm1.582 3.591c.988 0 1.779-.618 1.779-1.563 0-.963-.791-1.581-1.78-1.581-.97 0-1.76.618-1.76 1.58 0 .946.79 1.565 1.76 1.565Z"></path>
-                    </g>
-                    <defs>
-                      <clipPath id="ic_information_svg__a">
-                        <path fill="currentColor" d="M.5 0h22v22H.5z"></path>
-                      </clipPath>
-                    </defs>
-                  </svg>
-                </div>
-              </InfoTooltip>
-              <Input type="number" value={formData.topP ?? 0} min={0} max={1} step={0.1} onChange={e => handleChange("topP", validateNumber(parseFloat(e.target.value), 0, 1))} />
-            </div>
-            <div className="parameters-grid">
-              <InfoTooltip
-                maxWidth={270}
-                side="left"
-                content={t("setup.temperatureDescription")}
-              >
-                <div className="parameter-label">
-                  <div>Temperature</div>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 23 22" width="15" height="15">
-                    <g clipPath="url(#ic_information_svg__a)">
-                      <circle cx="11.5" cy="11" r="10.25" stroke="currentColor" strokeWidth="1.5"></circle>
-                      <path fill="currentColor" d="M9.928 13.596h3.181c-.126-2.062 2.516-2.63 2.516-5.173 0-2.01-1.6-3.677-4.223-3.608-2.229.051-4.08 1.288-4.026 3.9h2.714c0-.824.593-1.168 1.222-1.185.593 0 1.258.326 1.222.962-.144 1.942-2.911 2.389-2.606 5.104Zm1.582 3.591c.988 0 1.779-.618 1.779-1.563 0-.963-.791-1.581-1.78-1.581-.97 0-1.76.618-1.76 1.58 0 .946.79 1.565 1.76 1.565Z"></path>
-                    </g>
-                    <defs>
-                      <clipPath id="ic_information_svg__a">
-                        <path fill="currentColor" d="M.5 0h22v22H.5z"></path>
-                      </clipPath>
-                    </defs>
-                  </svg>
-                </div>
-              </InfoTooltip>
-              <Input type="number" value={formData.temperature ?? 0} min={0} max={1} step={0.1} onChange={e => handleChange("temperature", validateNumber(parseFloat(e.target.value), 0, 1))} />
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="divider" />
-
-      {showParameters && (
-        <CustomInstructions />
-      )}
     </form>
   )
 }

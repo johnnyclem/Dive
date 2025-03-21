@@ -9,7 +9,7 @@ import { defaultInterface } from "../../../atoms/interfaceState"
 import React from "react"
 import WrappedInput from "../../../components/WrappedInput"
 import { ModelVerifyStatus, useModelVerify } from "../../../migration/modelVerify"
-import { compressData } from "../../../atoms/configState"
+import { compressData } from "../../../helper/config"
 
 const ModelPopup = ({
   onClose,

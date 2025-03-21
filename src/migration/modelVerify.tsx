@@ -1,7 +1,8 @@
-import { ModelConfig, transformModelProvider } from "../atoms/configState"
+import { InterfaceModelConfig, InterfaceModelConfigMap, ModelConfig } from "../atoms/configState"
 import { useRef } from "react"
-import { ModelProvider } from "../atoms/interfaceState"
+import { InterfaceProvider } from "../atoms/interfaceState"
 import { ignoreFieldsForModel } from "../constants"
+import { transformModelProvider } from "../helper/config"
 
 export interface ModelVerifyStatus {
   name: string
@@ -17,7 +18,7 @@ export const useModelVerify = () => {
   const isAbort = useRef(false)
   const abortTimeout = useRef<NodeJS.Timeout | null>(null)
 
-  const verify = async (needVerifyList: Record<string, ModelConfig>, onComplete: () => void, onUpdate?: (detail: ModelVerifyStatus[]) => void, onAbort?: () => void, timeout?: number) => {
+  const verify = async (needVerifyList: InterfaceModelConfigMap, onComplete: () => void, onUpdate?: (detail: ModelVerifyStatus[]) => void, onAbort?: () => void, timeout?: number) => {
     detail.current = []
     Object.entries(needVerifyList).forEach(([key, value]) => {
       detail.current.push({name: value.model ?? "", status: "verifying"})
@@ -43,7 +44,7 @@ export const useModelVerify = () => {
       if (isAbort.current || nextIndex >= entries.length) return null
 
       const [key, value] = entries[nextIndex++]
-      const _value = value as ModelConfig
+      const _value = value as InterfaceModelConfig
       const _key = _value.apiKey ?? _value.baseURL
 
       const controller = new AbortController()
@@ -110,7 +111,7 @@ export const useModelVerify = () => {
   return { verify, abort }
 }
 
-const prepareModelConfig = (config: ModelConfig, provider: ModelProvider) => {
+const prepareModelConfig = (config: InterfaceModelConfig, provider: InterfaceProvider) => {
   const _config = {...config}
   if (provider === "openai" && config.baseURL) {
     delete (_config as any).baseURL
@@ -136,7 +137,7 @@ const prepareModelConfig = (config: ModelConfig, provider: ModelProvider) => {
   }, {} as ModelConfig)
 }
 
-const verifyModel = async (modelConfig: ModelConfig, signal?: AbortSignal) => {
+const verifyModel = async (modelConfig: InterfaceModelConfig, signal?: AbortSignal) => {
   try {
     const modelProvider = transformModelProvider(modelConfig.modelProvider)
     const configuration = {...modelConfig} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">

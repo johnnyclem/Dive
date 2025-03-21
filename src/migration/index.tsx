@@ -5,8 +5,8 @@ import { migratingAtom } from '../atoms/globalState'
 import { useAtom, useSetAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { systemThemeAtom, themeAtom } from '../atoms/themeState'
-import { loadConfigAtom, ModelConfig, saveAllConfigAtom } from '../atoms/configState'
-import { ModelProvider } from '../atoms/interfaceState'
+import { InterfaceModelConfig, loadConfigAtom, writeRawConfigAtom } from '../atoms/configState'
+import { InterfaceProvider, ModelProvider } from '../atoms/interfaceState'
 
 function Migration() {
   const { t } = useTranslation()
@@ -14,7 +14,7 @@ function Migration() {
   const [systemTheme] = useAtom(systemThemeAtom)
   const setMigrating = useSetAtom(migratingAtom)
   const loadConfig = useSetAtom(loadConfigAtom)
-  const saveAllConfig = useSetAtom(saveAllConfigAtom)
+  const saveAllConfig = useSetAtom(writeRawConfigAtom)
   const localListOptions = localStorage.getItem("modelVerify")
   const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
   const [detail, setDetail] = useState<{name: string, status: any}[]>([])
@@ -28,14 +28,14 @@ function Migration() {
   const runVerify = async () => {
     const data = await loadConfig()
     const needVerifyList = Object.entries(data.configs).filter(([key, value]) => {
-      const _value = value as ModelConfig
+      const _value = value as InterfaceModelConfig
       const _key = (_value.apiKey ?? _value.baseURL) as string
       const _model = _value.model as string
       return _value.active && !allVerifiedList[_key]?.[_model]
     }).reduce((acc, [key, value]) => {
-      acc[key as string] = value as ModelConfig
+      acc[key as string] = value as InterfaceModelConfig
       return acc
-    }, {} as Record<string, ModelConfig>)
+    }, {} as Record<string, InterfaceModelConfig>)
 
     await verify(needVerifyList, onComplete, onUpdate, () => {}, 60000)
   }
@@ -61,7 +61,7 @@ function Migration() {
     if(activeModel && _key && !allVerifiedList[_key as string]?.[activeModel.model as string]?.success) {
       await saveAllConfig({
         providerConfigs: data.configs,
-        activeProvider: "none" as ModelProvider,
+        activeProvider: "none" as InterfaceProvider,
         enableTools: data.enableTools,
       })
     }
