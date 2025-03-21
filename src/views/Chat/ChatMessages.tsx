@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react"
 import Message from "./Message"
-import { ToolCall, ToolResult } from "./ToolPanel"
 import { isChatStreamingAtom } from "../../atoms/chatState"
 import { useAtomValue } from "jotai"
 
@@ -11,8 +10,6 @@ export interface Message {
   timestamp: number
   files?: File[]
   isError?: boolean
-  toolCalls?: ToolCall[]
-  toolResults?: ToolResult[]
 }
 
 interface Props {
@@ -69,8 +66,6 @@ const ChatMessages = ({ messages, isLoading, onRetry, onEdit }: Props) => {
           files={message.files}
           isError={message.isError}
           isLoading={!message.isSent && index === messages.length - 1 && isLoading}
-          toolCalls={message.toolCalls}
-          toolResults={message.toolResults}
           messageId={message.id}
           onRetry={() => onRetry(message.id)}
           onEdit={(newText: string) => onEdit(message.id, newText)}

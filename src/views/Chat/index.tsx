@@ -5,11 +5,22 @@ import ChatInput from "./ChatInput"
 import CodeModal from './CodeModal'
 import { useAtom, useSetAtom } from 'jotai'
 import { codeStreamingAtom } from '../../atoms/codeStreaming'
-import { ToolCall, ToolResult } from "./ToolPanel"
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import { showToastAtom } from "../../atoms/toastState"
 import { useTranslation } from "react-i18next"
 import { currentChatIdAtom, isChatStreamingAtom, lastMessageAtom } from "../../atoms/chatState"
+import { safeBase64Encode } from "../../util"
+
+interface ToolCall {
+  name: string
+  arguments: any
+}
+
+interface ToolResult {
+  name: string
+  result: any
+}
+
 
 const ChatWindow = () => {
   const { chatId } = useParams()
@@ -26,6 +37,9 @@ const ChatWindow = () => {
   const setLastMessage = useSetAtom(lastMessageAtom)
   const setCurrentChatId = useSetAtom(currentChatIdAtom)
   const [isChatStreaming, setIsChatStreaming] = useAtom(isChatStreamingAtom)
+  const toolCallResults = useRef<string>("")
+  const toolResultCount = useRef(0)
+  const toolResultTotal = useRef(0)
 
   const loadChat = useCallback(async (id: string) => {
     try {
@@ -53,7 +67,7 @@ const ChatWindow = () => {
       setIsChatStreaming(false)
     }
   }, [])
-  
+
   useHotkeyEvent("chat-message:copy-last", async () => {
     const lastMessage = messages[messages.length - 1]
     if (lastMessage) {
@@ -64,7 +78,7 @@ const ChatWindow = () => {
       })
     }
   })
-  
+
   useEffect(() => {
     if (messages.length > 0 && !isChatStreaming) {
       setLastMessage(messages[messages.length - 1].text)
@@ -140,8 +154,6 @@ const ChatWindow = () => {
       if (messageIndex !== -1) {
         prevMessages = newMessages[messageIndex]
         prevMessages.text = ""
-        prevMessages.toolCalls = undefined
-        prevMessages.toolResults = undefined
         prevMessages.isError = false
         newMessages = newMessages.slice(0, messageIndex)
       }
@@ -176,8 +188,6 @@ const ChatWindow = () => {
       if (messageIndex !== -1) {
         prevMessages = newMessages[messageIndex + 1]
         prevMessages.text = ""
-        prevMessages.toolCalls = undefined
-        prevMessages.toolResults = undefined
         prevMessages.isError = false
         newMessages = newMessages.slice(0, messageIndex+1)
       }
@@ -265,27 +275,41 @@ const ChatWindow = () => {
 
               case "tool_calls":
                 const toolCalls = data.content as ToolCall[]
+
+                const tools = data.content?.map((call: {name: string}) => call.name) || []
+                toolResultTotal.current = tools.length
+
+                const uniqTools = new Set(tools)
+                const toolName = uniqTools.size === 0 ? "%name%" : Array.from(uniqTools).join(", ")
+
+                toolCallResults.current += `\n<tool-call name="${toolName}">##Tool Calls:${safeBase64Encode(JSON.stringify(toolCalls))}`
                 setMessages(prev => {
                   const newMessages = [...prev]
-                  const lastMessage = newMessages[newMessages.length - 1]
-                  lastMessage.toolCalls = toolCalls
+                  newMessages[newMessages.length - 1].text = currentText + toolCallResults.current + "</tool-call>"
                   return newMessages
                 })
-                scrollToBottom()
                 break
 
               case "tool_result":
                 const result = data.content as ToolResult
+
+                toolCallResults.current = toolCallResults.current.replace(`</tool-call>\n`, "")
+                toolCallResults.current += `##Tool Result:${safeBase64Encode(JSON.stringify(result.result))}</tool-call>\n`
+
                 setMessages(prev => {
                   const newMessages = [...prev]
-                  const lastMessage = newMessages[newMessages.length - 1]
-                  if (!lastMessage.toolResults) {
-                    lastMessage.toolResults = []
-                  }
-                  lastMessage.toolResults.push(result)
+                  newMessages[newMessages.length - 1].text = currentText + toolCallResults.current.replace("%name%", result.name)
                   return newMessages
                 })
-                scrollToBottom()
+
+                toolResultCount.current++
+                if (toolResultTotal.current === toolResultCount.current) {
+                  currentText += toolCallResults.current.replace("%name%", result.name)
+                  toolCallResults.current = ""
+                  toolResultTotal.current = 0
+                  toolResultCount.current = 0
+                }
+
                 break
 
               case "chat_info":
@@ -322,7 +346,7 @@ const ChatWindow = () => {
                 break
             }
           } catch (error) {
-            console.warn("Failed to parse SSE data:", dataStr)
+            console.warn(error)
           }
         }
       }
@@ -357,7 +381,7 @@ const ChatWindow = () => {
 
   useEffect(() => {
     const state = location.state as { initialMessage?: string, files?: File[] } | null
-    
+
     if ((state?.initialMessage || state?.files) && !isInitialMessageHandled.current) {
       isInitialMessageHandled.current = true
       handleInitialMessage(state?.initialMessage || '', state?.files)
