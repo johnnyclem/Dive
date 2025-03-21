@@ -27,7 +27,8 @@
     "editDescription": "编辑此消息将重新生成一个新回复",
     "cancel": "取消",
     "save": "保存",
-    "toolCalls": "🛠 请求 {{name}} 工具结果"
+    "toolCalls": "🛠 请求 {{name}} 工具结果",
+    "unsupportTools": "{{model}} 不支持MCP Tool Calls"
   },
   "welcome": {
     "title": "欢迎使用 Dive AI",
@@ -102,7 +103,7 @@
     "deleteDescription": "Authentication一经删除即无法恢复。",
     "deleteToast": "已删除 {{count}} 笔 Provider Authentication",
     "deleteFailed": "删除 Provider Authentication 失败",
-    "verifying": "验证 API Key 与模型中...",
+    "verifying": "{{model}} 验证中...",
     "verifyingAbort": "验证中断，请稍后再试",
     "apiKeyError": "API Key 无效，请检查您的 API Key 并重新输入。",
     "closeAllTitle": "确定关闭？",
@@ -116,7 +117,17 @@
     "modelSaveFailed": "模型保存失败",
     "parameterSaved": "已保存参数",
     "parameterSaveFailed": "参数保存失败",
-    "unToolCallsSupport": "不支持MCP tool Calls"
+    "popupTitle": "选择模型",
+    "unToolCallsSupport": "不支持MCP tool Calls",
+    "verify": "验证模型",
+    "verifyAbort": "取消验证",
+    "notVerified": "尚未验证",
+    "notSupportModel": "不支持此模型",
+    "verifyTitle-success": "可运行",
+    "verifyTitle-supportTools": "辅助工具",
+    "searchPlaceholder": "搜寻模型...",
+    "noResult": "无搜寻结果",
+    "progressVerifying": "模型验证更新中，请稍候..."
   },
   "system": {
     "title": "系统设置",

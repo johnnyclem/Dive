@@ -20,7 +20,14 @@
     "abort": "Detener generación de respuesta",
     "retry": "Reintentar",
     "noModelAlert": "No hay modelos disponibles",
-    "modelSettings": "Configuración del Modelo"
+    "modelSettings": "Configuración del Modelo",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "edit": "Editar",
+    "editDescription": "Editar este mensaje regenerará una nueva respuesta",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "unsupportTools": "{{model}} no admite llamadas de herramientas MCP"
   },
   "welcome": {
     "title": "Bienvenido a Dive AI",
@@ -95,7 +102,7 @@
     "deleteDescription": "La autenticación no se puede recuperar una vez eliminada.",
     "deleteToast": "Eliminado {{count}} autenticación del proveedor",
     "deleteFailed": "Error al eliminar autenticación del proveedor",
-    "verifying": "Verificando clave & modelo ...",
+    "verifying": "{{model}} verificando ...",
     "verifyingAbort": "Verificación interrumpida, por favor inténtalo de nuevo más tarde",
     "apiKeyError": "La clave API es inválida, por favor revisa tu clave API e inténtalo de nuevo.",
     "closeAllTitle": "¿Confirmar cierre?",
@@ -109,7 +116,17 @@
     "modelSaveFailed": "Error al guardar modelos",
     "parameterSaved": "Parámetros guardados",
     "parameterSaveFailed": "Error al guardar parámetros",
-    "unToolCallsSupport": "No admite llamadas de herramientas MCP"
+    "popupTitle": "Seleccionar Modelo",
+    "unToolCallsSupport": "No admite llamadas de herramientas MCP",
+    "verify": "Verificar Modelo",
+    "verifyAbort": "Cancelar Verificación",
+    "notVerified": "No verificado",
+    "notSupportModel": "No admite este modelo",
+    "verifyTitle-success": "Ejecutable",
+    "verifyTitle-supportTools": "Herramientas soportadas",
+    "searchPlaceholder": "Buscar modelo...",
+    "noResult": "No hay resultados de búsqueda",
+    "progressVerifying": "Verificación del modelo actualizando, por favor espera..."
   },
   "system": {
     "title": "Configuración del Sistema",

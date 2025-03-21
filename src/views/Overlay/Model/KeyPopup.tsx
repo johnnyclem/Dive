@@ -29,14 +29,8 @@ const KeyPopup = ({
   const { multiModelConfigList, setMultiModelConfigList,
     saveConfig, prepareModelConfig,
     fetchListOptions, setListOptions,
-    setCurrentIndex, verifyModel
+    setCurrentIndex
   } = useModelsProvider()
-
-  useEffect(() => {
-    return () => {
-      isVerifying.current = false
-    }
-  }, [])
 
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newProvider = e.target.value as ModelProvider
@@ -94,8 +88,6 @@ const KeyPopup = ({
     try {
       setErrors({})
       setIsSubmitting(true)
-      setVerifiedCnt(0)
-      isVerifying.current = true
 
       const listOptions = await fetchListOptions(multiModelConfig, fields)
 
@@ -105,20 +97,6 @@ const KeyPopup = ({
         setErrors(newErrors)
         return
       }
-      const verifiedList = []
-      for(const index in listOptions){
-        const verifyResult = await verifyModel(multiModelConfig, listOptions[index].name)
-        if(!isVerifying.current)
-          return
-        if(verifyResult && verifyResult.success){
-          const options = JSON.parse(JSON.stringify(listOptions))
-          options[index].supportTools = verifyResult.supportTools
-          verifiedList.push(options[index])
-        }
-        setVerifiedCnt((Number(index)+1) / listOptions.length)
-      }
-      sessionStorage.setItem(`model-list-${multiModelConfig.apiKey || multiModelConfig.baseURL}`, JSON.stringify(verifiedList))
-      setListOptions(verifiedList)
       setMultiModelConfigList([...(multiModelConfigList ?? []), multiModelConfig])
       setCurrentIndex((multiModelConfigList?.length ?? 0))
       const data = await saveConfig()
@@ -130,19 +108,7 @@ const KeyPopup = ({
       setMultiModelConfigList(_multiModelConfigList)
     } finally {
       setIsSubmitting(false)
-      setVerifiedCnt(0)
-      isVerifying.current = false
     }
-  }
-
-  const handleClose = () => {
-    if(isVerifying.current){
-      showToast({
-        message: t("models.verifyingAbort"),
-        type: "error"
-      })
-    }
-    onClose()
   }
 
   return (
@@ -151,12 +117,12 @@ const KeyPopup = ({
       zIndex={900}
       footerType="center"
       onConfirm={onConfirm}
-      confirmText={(isVerifying.current || isSubmitting) ? (
+      confirmText={isSubmitting ? (
         <div className="loading-spinner"></div>
       ) : t("tools.save")}
-      disabled={isVerifying.current || isSubmitting}
-      onCancel={handleClose}
-      onClickOutside={handleClose}
+      disabled={isSubmitting}
+      onCancel={onClose}
+      onClickOutside={onClose}
     >
       <div className="models-key-popup">
         <div className="models-key-form-group">
@@ -194,19 +160,6 @@ const KeyPopup = ({
             </div>
           )
         ))}
-        {isVerifying.current && (
-          <div className="models-key-progress-wrapper">
-            {t("models.verifying")}
-            <div className="models-key-progress-container">
-              <div
-                className="models-key-progress"
-                style={{
-                  width: `${verifiedCnt * 100}%`
-                }}
-              />
-            </div>
-          </div>
-        )}
       </div>
     </PopupConfirm>
   )

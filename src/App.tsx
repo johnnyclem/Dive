@@ -1,17 +1,20 @@
 import { RouterProvider } from "react-router-dom"
 import { router } from "./router"
-import { useSetAtom } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import { loadConfigAtom } from './atoms/configState'
 import { useEffect, useState } from "react"
 import { handleGlobalHotkey, loadHotkeyMapAtom } from "./atoms/hotkeyState"
 import { systemThemeAtom } from "./atoms/themeState"
 import Updater from "./updater"
+import Migration from "./migration"
+import { migratingAtom } from "./atoms/globalState"
 
 function App() {
   const [loading, setLoading] = useState(true)
   const loadConfig = useSetAtom(loadConfigAtom)
   const loadHotkeyMap = useSetAtom(loadHotkeyMapAtom)
   const setSystemTheme = useSetAtom(systemThemeAtom)
+  const migrating = useAtomValue(migratingAtom)
 
   // init app
   useEffect(() => {
@@ -42,6 +45,10 @@ function App() {
 
   if (loading) {
     return <></>
+  }
+
+  if (migrating) {
+    return <Migration />
   }
 
   return (

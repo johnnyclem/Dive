@@ -27,7 +27,8 @@
     "editDescription": "Editing this message will regenerate a new response",
     "cancel": "Cancel",
     "save": "Save",
-    "toolCalls": "🛠 Tool Calls Result from {{name}}"
+    "toolCalls": "🛠 Tool Calls Result from {{name}}",
+    "unsupportTools": "{{model}} does not support MCP Tool calls"
   },
   "welcome": {
     "title": "Welcome to Dive AI",
@@ -102,7 +103,7 @@
     "deleteDescription": "Authentication cannot be recovered once deleted.",
     "deleteToast": "Deleted {{count}} Provider Authentication",
     "deleteFailed": "Failed to delete Provider Authentication",
-    "verifying": "Verifying key & model ...",
+    "verifying": "{{model}} verifying ...",
     "verifyingAbort": "Verification interrupted, please try again later",
     "apiKeyError": "API Key is invalid, please check your API Key and re-enter.",
     "closeAllTitle": "Confirm Close?",
@@ -116,7 +117,17 @@
     "modelSaveFailed": "Failed to save Models",
     "parameterSaved": "Parameters saved",
     "parameterSaveFailed": "Failed to save Parameters",
-    "unToolCallsSupport": "Does not support MCP tool Calls"
+    "popupTitle": "Select Model",
+    "unToolCallsSupport": "Does not support MCP tool Calls",
+    "verify": "Verify Model",
+    "verifyAbort": "Cancel Verification",
+    "notVerified": "Not verified",
+    "notSupportModel": "Does not support this model",
+    "verifyTitle-success": "Runable",
+    "verifyTitle-supportTools": "Support Tools",
+    "searchPlaceholder": "Search model...",
+    "noResult": "No search results",
+    "progressVerifying": "Model verification updating, please wait..."
   },
   "system": {
     "title": "System Settings",

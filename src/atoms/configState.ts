@@ -134,9 +134,10 @@ export const saveAllConfigAtom = atom(
   null,
   async (get, set, params: {
     providerConfigs: Record<string, ModelConfig>,
-    activeProvider?: ModelProvider
+    activeProvider?: ModelProvider,
+    enableTools?: boolean
   }) => {
-    const { providerConfigs, activeProvider } = params
+    const { providerConfigs, activeProvider, enableTools } = params
     const configs = Object.keys(providerConfigs).reduce((acc, key) => {
       const config = providerConfigs[key]
       config.modelProvider = transformModelProvider(config.modelProvider)
@@ -152,7 +153,7 @@ export const saveAllConfigAtom = atom(
         },
         body: JSON.stringify({
           configs,
-          enable_tools: true,
+          enable_tools: enableTools,
           activeProvider: activeProvider ?? get(activeProviderAtom),
         }),
       })

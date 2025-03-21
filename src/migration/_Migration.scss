@@ -1,0 +1,91 @@
+@use "../styles/_variables" as *;
+
+.reseting-wrapper {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  z-index: 99999;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 20px;
+
+  .reseting-detail {
+    width: 500px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 20px;
+    overflow-y: auto;
+    border: 1px solid var(--border-weak);
+    border-radius: 4px;
+
+    @include scrollbar;
+
+    .reseting-item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+
+      .reseting-status {
+        font-size: 12px;
+        fill: var(--stroke-op-dark-extremestrong);
+        color: var(--stroke-op-dark-extremestrong);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .correct-icon {
+        color: var(--bg-pri-green);
+      }
+    }
+  }
+
+  .progress-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    gap: 10px;
+
+    @include progress-bar;
+    .progress-container {
+      width: 450px;
+    }
+
+    .progress-text {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: 15px;
+
+      .progress-text-right {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+
+        .abort-button {
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--stroke-op-dark-extremestrong);
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+
+          &:hover {
+            color: var(--stroke-op-dark-strong);
+            background: var(--bg-hover-cancel);
+          }
+        }
+      }
+    }
+  }
+}

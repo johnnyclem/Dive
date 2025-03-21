@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
 import { activeProviderAtom, compressData, configAtom, configListAtom, extractData, loadConfigAtom, ModelConfig, MultiModelConfig, saveAllConfigAtom, transformModelProvider } from "../../../atoms/configState";
 import { useAtomValue, useSetAtom } from "jotai";
 import { FieldDefinition, ModelProvider } from "../../../atoms/interfaceState";
@@ -7,21 +7,21 @@ import { ignoreFieldsForModel } from "../../../constants";
 export type ListOption = {
   name: string
   checked: boolean
+  verified: Record<string, boolean> | "verifying" | null
   supportTools?: boolean
 }
 
 type ContextType = {
   multiModelConfigList?: MultiModelConfig[]
-  setMultiModelConfigList: (multiModelConfigList: MultiModelConfig[]) => void
+  setMultiModelConfigList: Dispatch<SetStateAction<MultiModelConfig[]>>
   parameter: Record<string, number>
   setParameter: (parameter: Record<string, number>) => void
   currentIndex: number
   setCurrentIndex: (currentIndex: number) => void
   listOptions: ListOption[]
-  setListOptions: (listOptions: ListOption[]) => void
+  setListOptions: Dispatch<SetStateAction<ListOption[]>>
   fetchListOptions: (multiModelConfig: MultiModelConfig, fields: Record<string, FieldDefinition>) => Promise<ListOption[]>
   prepareModelConfig: (config: ModelConfig, provider: ModelProvider) => ModelConfig
-  verifyModel: (multiModelConfig: MultiModelConfig, model: string) => Promise<{ success: boolean, supportTools?: boolean }>
   saveConfig: (activeProvider?: ModelProvider) => Promise<{ success: boolean, error?: string }>
 }
 
@@ -36,7 +36,6 @@ export default function ModelsProvider({
   const config = useAtomValue(configAtom)
   const loadConfig = useSetAtom(loadConfigAtom)
   const saveAllConfig = useSetAtom(saveAllConfigAtom)
-  const activeProvider = useAtomValue(activeProviderAtom)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [listOptions, setListOptions] = useState<ListOption[]>([])
   const [multiModelConfigList, setMultiModelConfigList] = useState<MultiModelConfig[]>([])
@@ -138,57 +137,21 @@ export default function ModelsProvider({
     options.forEach((option: string) => {
       newListOptions.push({
         name: option,
-        checked: multiModelConfig.models.includes(option)
+        checked: multiModelConfig.models.includes(option),
+        verified: null,
       })
     })
+    const localListOptions = localStorage.getItem("modelVerify")
+    if(localListOptions){
+      const listOptions = JSON.parse(localListOptions)
+      const _listOptions = listOptions[`${multiModelConfig.apiKey || multiModelConfig.baseURL}`]
+      if(_listOptions){
+        newListOptions.forEach((option: ListOption) => {
+          option.verified = _listOptions[option.name]
+        })
+      }
+    }
     return newListOptions
-  }
-
-  const verifyModel = async (multiModelConfig: MultiModelConfig, model: string) => {
-    return {
-      success: true,
-      supportTools: true,
-    }
-
-    try {
-      const modelProvider = transformModelProvider(multiModelConfig.name)
-      const formData = {
-        apiKey: multiModelConfig.apiKey,
-        baseURL: multiModelConfig.baseURL,
-        model: model,
-        modelProvider: multiModelConfig.name,
-        configuration: {},
-        active: multiModelConfig.active,
-        topP: multiModelConfig.topP,
-        temperature: multiModelConfig.temperature
-      } as ModelConfig
-
-      const configuration = {...formData} as ModelConfig
-      delete (configuration as any).configuration
-
-      const _formData = prepareModelConfig(formData, multiModelConfig.name)
-
-      const response = await fetch("/api/modelVerify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          provider: multiModelConfig.name,
-          modelSettings: {
-            ..._formData,
-            modelProvider,
-            configuration,
-          },
-        }),
-      })
-
-      const data = await response.json()
-      return data
-    } catch (error) {
-      console.error("Failed to verify model:", error)
-      return false
-    }
   }
 
   const saveConfig = async (newActiveProvider?: ModelProvider) => {
@@ -233,7 +196,6 @@ export default function ModelsProvider({
       setListOptions,
       fetchListOptions,
       prepareModelConfig,
-      verifyModel,
       saveConfig
     }}>
       {children}

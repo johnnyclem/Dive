@@ -15,6 +15,7 @@ interface ModelSelectProps {
   key: string
   name: string
   model: ModelProvider
+  supportTools: boolean
 }
 
 const ModelSelect = () => {
@@ -31,14 +32,20 @@ const ModelSelect = () => {
 
   useEffect(() => {
     if (!configList) return
+    const localListOptions = localStorage.getItem("modelVerify")
+    const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
     const _modelsList: ModelSelectProps[] = []
     Object.entries(configList as Record<string, ModelConfig>)
     .forEach(([key, config]) => {
-      if(!config.model || !config.active) return
+      const _key = `${config.apiKey || config.baseURL}`
+      const verifiedList = allVerifiedList[_key] ?? {}
+      const anabled = config.model && (verifiedList[config.model] && verifiedList[config.model].success)
+      if(!config.model || !config.active || !anabled) return
       _modelsList.push({
         key: key,
         name: `${getModelPrefix(config, 4)}/${config.model}`,
-        model: config.modelProvider
+        model: config.modelProvider,
+        supportTools: verifiedList[config.model]?.supportTools ?? false
       })
     })
     setModelList([..._modelsList])
@@ -64,8 +71,13 @@ const ModelSelect = () => {
   const handleModelChange = async (value: string) => {
     const _model = model
     setModel(value)
+    const localListOptions = localStorage.getItem("modelVerify")
+    const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+    const activeConfig = configList?.[value]
+    const supportTools = allVerifiedList[activeConfig?.apiKey || activeConfig?.baseURL as string]?.[activeConfig?.model as string]?.supportTools
+
     try {
-      const data = await saveAllConfig({ providerConfigs: configList as Record<string, ModelConfig>, activeProvider: value as ModelProvider })
+      const data = await saveAllConfig({ providerConfigs: configList as Record<string, ModelConfig>, activeProvider: value as ModelProvider, enableTools: supportTools })
       if (data.success) {
         showToast({
           message: t("setup.saveSuccess"),
@@ -85,15 +97,15 @@ const ModelSelect = () => {
           value: model.key,
           label: (
               <div className="model-select-label" key={model.key}>
-              <img
-                src={PROVIDER_ICONS[model.model.replace("-", "_") as keyof typeof PROVIDER_ICONS]}
-                alt={model.model}
-                className={`model-select-label-icon ${isProviderIconNoFilter(model.model) ? "no-filter" : ""}`}
-              />
-              <span className="model-select-label-text">
-                {model.name}
-              </span>
-                </div>
+                <img
+                  src={PROVIDER_ICONS[model.model.replace("-", "_") as keyof typeof PROVIDER_ICONS]}
+                  alt={model.model}
+                  className={`model-select-label-icon ${isProviderIconNoFilter(model.model) ? "no-filter" : ""}`}
+                />
+                <span className="model-select-label-text">
+                  {model.name}
+                </span>
+              </div>
             )
           })
         )}

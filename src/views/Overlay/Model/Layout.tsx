@@ -82,6 +82,15 @@ const PageLayout = () => {
     setMultiModelConfigList(newMultiModelConfigList)
   }
 
+  const getVerifyModelCount = (multiModelConfig: MultiModelConfig) => {
+    const localListOptions = localStorage.getItem("modelVerify")
+    const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+    const key = `${multiModelConfig.apiKey || multiModelConfig.baseURL}`
+    const verifiedList = allVerifiedList[key] ?? {}
+    const result = multiModelConfig.models.filter(model => verifiedList[model] && verifiedList[model].success)
+    return result.length
+  }
+
   const changeConfirm = async (newMultiModelConfigList: MultiModelConfig[], ifSave: boolean = true) => {
     const _multiModelConfigList = JSON.parse(JSON.stringify(multiModelConfigList))
 
@@ -156,6 +165,11 @@ const PageLayout = () => {
       const newMultiModelConfigList = multiModelConfigList?.filter(config => !config.checked) ?? []
       setMultiModelConfigList(newMultiModelConfigList)
       const _activeProvider = newMultiModelConfigList.filter(config => config.active && config.models.length > 0).length === 0 ? "none" : undefined
+
+      const allVerifiedListText = localStorage.getItem("modelVerify")
+      const allVerifiedList = allVerifiedListText ? JSON.parse(allVerifiedListText) : {}
+      localStorage.setItem("modelVerify", JSON.stringify(Object.fromEntries(Object.entries(allVerifiedList).filter(([key]) => newMultiModelConfigList.some(config => config.apiKey === key || config.baseURL === key)))))
+
       const data = await saveConfig(_activeProvider as ModelProvider)
       if (data.success) {
         showToast({
@@ -388,7 +402,7 @@ const PageLayout = () => {
                       className="models-popup-btn"
                       onClick={() => openModelPopup(index)}
                     >
-                      {multiModelConfig.models?.length ?? 0}
+                      {getVerifyModelCount(multiModelConfig)}
                     </div>
                   </div>
                 </div>
