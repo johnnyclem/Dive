@@ -50,6 +50,14 @@ const ParameterPopup = ({
   }
 
   const validateNumber = (value: number, min: number, max: number) => {
+    const _value = String(value)
+    if(!_value.includes(".")){
+      if(_value[_value.length - 1] === "0"){
+        return 0
+      }else if(_value[_value.length - 1] === "1"){
+        return 1
+      }
+    }
     return value > max ? max : value < min ? min : value
   }
 
@@ -158,7 +166,14 @@ const ParameterPopup = ({
                   </svg>
                 </div>
               </InfoTooltip>
-              <input type="number" value={initialParams.temperature ?? 0} min={0} max={1} step={0.1} onChange={e => handleParameterChange("temperature", validateNumber(parseFloat(e.target.value), 0, 1))} />
+              <WrappedInput
+                type="number"
+                value={initialParams.temperature ?? 0}
+                min={0}
+                max={1}
+                step={0.1}
+                onChange={e => handleParameterChange("temperature", validateNumber(parseFloat(e.target.value), 0, 1))}
+              />
             </div>
           </div>
         </div>

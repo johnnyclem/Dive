@@ -77,7 +77,7 @@ const Select = forwardRef<HTMLButtonElement|null, Props>(({
                   onSelect(item.value)
                 }}
               >
-                <div>
+                <div className="left-slot">
                   <div className="label">{item.label}</div>
                   {item.info &&
                     <div className="info">{item.info}</div>
