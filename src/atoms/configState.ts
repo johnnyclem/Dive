@@ -1,6 +1,7 @@
 import { atom } from "jotai"
 import { EMPTY_PROVIDER, InterfaceProvider, ModelProvider } from "./interfaceState"
 import { getModelPrefix } from "../util"
+import { transformModelProvider } from "../helper/config"
 
 export type ProviderRequired = {
   apiKey: string
@@ -204,97 +205,3 @@ export const writeRawConfigAtom = atom(
     }
   }
 )
-
-export const formatData = (data: InterfaceModelConfig|ModelConfig): MultiModelConfig => {
-  const config = convertConfigToInterfaceModel(data)
-  return {
-    name: config.modelProvider,
-    apiKey: config.apiKey,
-    baseURL: config.baseURL,
-    active: config.active ?? false,
-    checked: false,
-    models: config.model ? [config.model] : [],
-    topP: config.topP ?? 0,
-    temperature: config.temperature ?? 0,
-    model: config.model,
-  }
-}
-
-export const extractData = (data: InterfaceModelConfigMap|ModelConfigMap) => {
-  const providerConfigList: MultiModelConfig[] = []
-
-  Object.entries(data).forEach(([key, value]) => {
-    if(!key.includes("-")){
-      key = `${key}-${providerConfigList.length}-0`
-    }
-    const [name , index, modelIndex] = key.split("-")
-    const _index = parseInt(index)
-
-    if (!providerConfigList[_index]) {
-      const _value: InterfaceModelConfig|ModelConfig = {...value}
-      _value.modelProvider = name as InterfaceProvider
-      providerConfigList[_index] = {
-        ...formatData(_value),
-      }
-    } else if(value.model) {
-      providerConfigList[_index].models.push(value.model)
-    }
-  })
-
-  return providerConfigList
-}
-
-export const compressData = (data: MultiModelConfig, index: number) => {
-  const compressedData: Record<string, InterfaceModelConfig> = {}
-
-  const { models, ...restData } = data
-  const modelsToProcess = models.length === 0 ? [null] : models
-  modelsToProcess.forEach((model, modelIndex) => {
-    const formData = {
-      ...restData,
-      model: model,
-      modelProvider: data.name
-    }
-    const configuration = {...formData} as Partial<Pick<InterfaceModelConfig, "configuration">> & Omit<InterfaceModelConfig, "configuration">
-    delete configuration.configuration
-    compressedData[`${restData.name}-${index}-${modelIndex}`] = {
-      ...formData,
-      configuration: configuration as InterfaceModelConfig,
-    }
-  })
-
-  return compressedData
-}
-
-export function transformModelProvider(provider: InterfaceProvider): ModelProvider {
-  switch (provider) {
-    case "openai_compatible":
-      return "openai"
-    case "google_genai":
-      return "google-genai"
-    default:
-      return provider
-  }
-}
-
-export function convertConfigToInterfaceModel(model: InterfaceModelConfig|ModelConfig): InterfaceModelConfig {
-  switch (model.modelProvider) {
-    case "openai":
-      if (model.baseURL) {
-        return {
-          ...model,
-          modelProvider: "openai_compatible"
-        }
-      }
-
-      break
-    case "google-genai":
-      return {
-        ...model,
-        modelProvider: "google_genai"
-      }
-  }
-
-  return model as InterfaceModelConfig
-}
-

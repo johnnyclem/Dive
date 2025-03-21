@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { FieldDefinition, InterfaceProvider, PROVIDER_LABELS, PROVIDERS } from "../../atoms/interfaceState"
-import { InterfaceModelConfig, ModelConfig, saveFirstConfigAtom, transformModelProvider } from "../../atoms/configState"
+import { InterfaceModelConfig, ModelConfig, saveFirstConfigAtom } from "../../atoms/configState"
 import { ignoreFieldsForModel } from "../../constants"
 import { useSetAtom } from "jotai"
 import { loadConfigAtom } from "../../atoms/configState"
 import useDebounce from "../../hooks/useDebounce"
 import { showToastAtom } from "../../atoms/toastState"
 import Input from "../../components/WrappedInput"
+import { transformModelProvider } from "../../helper/config"
 
 interface ModelConfigFormProps {
   provider: InterfaceProvider

@@ -1,12 +1,13 @@
 import { useTranslation } from "react-i18next"
-import { formatData, InterfaceModelConfig, ModelConfig } from "../../../atoms/configState"
-import { defaultInterface, FieldDefinition, InterfaceProvider, ModelProvider, PROVIDER_LABELS, PROVIDERS } from "../../../atoms/interfaceState"
+import { InterfaceModelConfig, ModelConfig } from "../../../atoms/configState"
+import { defaultInterface, FieldDefinition, InterfaceProvider, PROVIDER_LABELS, PROVIDERS } from "../../../atoms/interfaceState"
 import PopupConfirm from "../../../components/PopupConfirm"
 import { useEffect, useRef, useState } from "react"
 import { showToastAtom } from "../../../atoms/toastState"
 import { useAtom } from "jotai"
 import React from "react"
 import { useModelsProvider } from "./ModelsProvider"
+import { formatData } from "../../../helper/config"
 
 const KeyPopup = ({
   onClose,

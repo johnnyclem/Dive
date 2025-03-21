@@ -1,8 +1,9 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react";
-import { compressData, configAtom, configDictAtom, extractData, loadConfigAtom, MultiModelConfig, writeRawConfigAtom, transformModelProvider, InterfaceModelConfig } from "../../../atoms/configState";
+import { configAtom, configDictAtom, loadConfigAtom, MultiModelConfig, writeRawConfigAtom, InterfaceModelConfig } from "../../../atoms/configState";
 import { useAtomValue, useSetAtom } from "jotai";
 import { FieldDefinition, InterfaceProvider } from "../../../atoms/interfaceState";
 import { ignoreFieldsForModel } from "../../../constants";
+import { compressData, extractData, transformModelProvider } from "../../../helper/config";
 
 export type ListOption = {
   name: string
