@@ -52,16 +52,35 @@
   min-width: 280px;
 
   @include scrollbar;
+
+  .left-slot,
+  .label {
+    width: 100%;
+  }
 }
 
 .model-select-label {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
+  width: 100%;
+
+  .model-select-label-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+  }
 
   img {
     width: 22px;
     height: 22px;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: var(--stroke-op-dark-extremestrong);
   }
 
   .model-select-label-text {
