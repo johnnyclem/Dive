@@ -40,7 +40,7 @@ const ModelSelect = () => {
   useEffect(() => {
     if (!configList) return
     const _modelsList: ModelSelectProps[] = []
-    Object.entries(configList as Record<string, ModelConfig>)
+    Object.entries(configList)
     .forEach(([key, config]) => {
       if(!config.model || !config.active) return
       _modelsList.push({
