@@ -40,6 +40,7 @@ const Welcome = () => {
   const hasActiveConfig = useAtomValue(hasActiveConfigAtom)
 
   useEffect(() => {
+    document.title = t("header.title")
     loadTools()
   }, [])
 

@@ -105,7 +105,7 @@ const ModelSelect = () => {
             )
           })
         )}
-        placeholder={modelList.length === 0 ? t("models.noModelAlertOption") : ""}
+        placeholder={modelList.length === 0 ? t("models.noModelAlertOption") : t("models.selectModelPlaceHolder")}
         value={model}
         onSelect={handleModelChange}
         className={`${modelList.length === 0 ? "disabled" : ""}`}
