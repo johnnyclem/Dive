@@ -25,6 +25,7 @@ $select-button-width: 475px;
 
     &.disabled {
       pointer-events: none;
+      background: var(--bg-op-dark-ultraweak);
     }
   }
 

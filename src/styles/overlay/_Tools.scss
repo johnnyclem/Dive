@@ -348,8 +348,16 @@
       }
 
       .tool-toggle {
-        font-size: 12px;
+        width: 18px;
+        font-size: 18px;
         transition: transform 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &.disabled {
+          color: var(--stroke-neg-medium);
+        }
       }
     }
 
@@ -370,6 +378,16 @@
 
       .tool-content {
         display: block;
+      }
+    }
+
+    &.disabled {
+      .tool-header {
+        cursor: default;
+
+        &:hover {
+          background: transparent;
+        }
       }
     }
 

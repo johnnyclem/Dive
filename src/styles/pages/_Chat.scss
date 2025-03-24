@@ -13,7 +13,6 @@
 .chat-container {
   display: flex;
   flex: 1;
-  max-width: $chat-width;
   justify-content: center;
   padding: 0;
   margin: 0;
@@ -24,7 +23,6 @@
 }
 
 .chat-window {
-  max-width: $chat-width;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -59,72 +57,17 @@
 }
 
 .message-container {
-  padding: 10px 15px;
+  padding: 10px 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   position: relative;
-
-  .message-tools {
-    z-index: 1;
-    display: none;
-    align-items: center;
-    position: absolute;
-    left: 100%;
-    bottom: -4px;
-    transform: translate(-100%, 25%);
-    background: var(--bg-medium);
-    padding: 7px 10px;
-    border-radius: 8px;
-    gap: 10px;
-
-    .message-page {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      gap: 10px;
-      button {
-        padding: 8px 12px;
-        svg {
-          color: var(--stroke-dark-weak);
-        }
-
-        &.active {
-          svg {
-            color: var(--stroke-dark);
-          }
-        }
-      }
-    }
-
-    .tools-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: fit-content;
-      height: 25px;
-      padding: 4px 7px;
-      border-radius: 4px;
-      font-size: 14px;
-      cursor: pointer;
-      word-break: keep-all;
-      background: transparent;
-      border: none;
-
-      &:hover {
-        background: var(--bg-op-dark-extremeweak);
-      }
-
-      svg {
-        fill: currentColor;
-      }
-
-    }
-  }
+  max-width: $chat-width;
+  margin: 0 auto;
 
   &:hover {
     .message-tools {
-      display: flex;
+      opacity: 1;
     }
   }
 }
@@ -140,6 +83,9 @@
   z-index: 1;
   background: var(--bg);
   color: var(--text);
+  max-width: $chat-width;
+  margin: 0 auto;
+  width: 100%;
 
   .abort-btn {
     cursor: pointer;
@@ -315,7 +261,8 @@
   padding: 10px 15px;
   border-radius: 18px;
   word-wrap: break-word;
-  
+  position: relative;
+
   .message-images {
     display: flex;
     flex-wrap: wrap;
@@ -330,6 +277,67 @@
     }
   }
 
+  .message-tools {
+    z-index: 1;
+    display: flex;
+    opacity: 0;
+    align-items: center;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    transform: translate(0, 100%);
+    background: transparent;
+    padding: 7px 0px;
+    gap: 10px;
+    transition: opacity $transition-normal ease;
+
+    .message-page {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 10px;
+      button {
+        padding: 8px 12px;
+        svg {
+          color: var(--stroke-dark-weak);
+        }
+
+        &.active {
+          svg {
+            color: var(--stroke-dark);
+          }
+        }
+      }
+    }
+
+    .tools-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      height: 25px;
+      padding: 4px 7px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      word-break: keep-all;
+      background: transparent;
+      border: none;
+      color: var(--text-weak);
+
+      &:hover {
+        background: var(--bg-ultraweak);
+        color: var(--text-medium);
+      }
+
+      svg {
+        color: currentColor;
+        fill: currentColor;
+      }
+
+    }
+  }
+
   &.sent {
     background: var(--bg-pri-blue);
     color: var(--text-light);
@@ -339,12 +347,16 @@
     .message-images img {
       background: var(--bg-inverted-op-dark-ultraweak);
     }
+
+    .message-tools {
+      left: 100%;
+      transform: translate(-100%, 100%);
+    }
   }
 
   &.received {
     width: 100%;
     animation: slideFromLeft 0.3s ease;
-    background: var(--bg-ultraweak);
 
     .message-images img {
       background: var(--bg-op-dark-extremeweak);

@@ -12,6 +12,7 @@ import { closeOverlayAtom } from "../../atoms/layerState"
 import Switch from "../../components/Switch"
 import { Behavior, useLayer } from "../../hooks/useLayer"
 import { loadToolsAtom, Tool, toolsAtom } from "../../atoms/toolState"
+import Tooltip from "../../components/Tooltip"
 
 interface ConfigModalProps {
   title: string
@@ -29,6 +30,7 @@ interface ToolsCache {
       name: string
       description: string
     }[]
+    disabled: boolean
   }
 }
 
@@ -210,7 +212,8 @@ const Tools = () => {
             subTools: tool.tools?.map(subTool => ({
               name: subTool.name,
               description: subTool.description || ''
-            })) || []
+            })) || [],
+            disabled: false
           }
         })
 
@@ -337,7 +340,7 @@ const Tools = () => {
   }
 
   const handleAddSubmit = async (newConfig: Record<string, any>) => {
-    let mergedConfig = mcpConfig
+    const mergedConfig = mcpConfig
     const configKeys = Object.keys(newConfig)
     if (configKeys.includes("mcpServers")) {
       mergedConfig.mcpServers = { ...mergedConfig.mcpServers, ...newConfig.mcpServers }
@@ -385,14 +388,16 @@ const Tools = () => {
             name: subTool.name,
             description: subTool.description,
             enabled: false
-          }))
+          })),
+          disabled: true,
         }
       }
 
       return {
         name,
         description: "",
-        enabled: false
+        enabled: false,
+        disabled: true,
       }
     })
   }, [tools, mcpConfig.mcpServers])
@@ -444,7 +449,7 @@ const Tools = () => {
 
         <div className="tools-list">
           {sortedTools.map((tool, index) => (
-            <div key={index} id={`tool-${index}`} onClick={() => toggleToolSection(index)} className="tool-section">
+            <div key={index} id={`tool-${index}`} onClick={() => !tool.disabled && toggleToolSection(index)} className={`tool-section ${tool.disabled ? "disabled" : ""}`}>
               <div className="tool-header">
                 <div className="tool-header-content">
                   <svg width="20" height="20" viewBox="0 0 24 24">
@@ -458,7 +463,21 @@ const Tools = () => {
                     onChange={() => toggleTool(tool)}
                   />
                 </div>
-                <span className="tool-toggle">▼</span>
+                {tool.disabled ?
+                  <Tooltip
+                    content={t("tools.installFailed")}
+                  >
+                    <span className="tool-toggle disabled">
+                      <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
+                      <line x1="12" y1="6" x2="12" y2="14" stroke="currentColor" strokeWidth="2"/>
+                        <circle cx="12" cy="17" r="1.5" fill="currentColor"/>
+                      </svg>
+                    </span>
+                  </Tooltip>
+                :
+                  <span className="tool-toggle">▼</span>
+                }
               </div>
               <div className="tool-content">
                 {tool.description && (
