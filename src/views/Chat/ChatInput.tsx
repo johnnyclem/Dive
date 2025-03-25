@@ -321,11 +321,9 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
                 onAbort()
               }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <circle cx="12" cy="12" r="12" fill="black"></circle>
-                <circle cx="12" cy="12" r="7" fill="white"></circle>
-                <circle cx="12" cy="12" r="6.5" fill="black"></circle>
-                <circle cx="12" cy="12" r="3" fill="white"></circle>
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none">
+                <path fill="currentColor" d="M7 8.89A1.89 1.89 0 0 1 8.89 7h4.22A1.89 1.89 0 0 1 15 8.89v4.22A1.89 1.89 0 0 1 13.11 15H8.89A1.89 1.89 0 0 1 7 13.11V8.89Z"></path>
+                <circle cx="11" cy="11" r="10" stroke="currentColor" strokeWidth="2"></circle>
               </svg>
             </button>
           </Tooltip>
