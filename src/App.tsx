@@ -1,6 +1,6 @@
 import { RouterProvider } from "react-router-dom"
 import { router } from "./router"
-import { useAtomValue, useSetAtom } from 'jotai'
+import { useAtom, useSetAtom } from 'jotai'
 import { loadConfigAtom } from './atoms/configState'
 import { useEffect, useState } from "react"
 import { handleGlobalHotkey, loadHotkeyMapAtom } from "./atoms/hotkeyState"
@@ -14,15 +14,21 @@ function App() {
   const loadConfig = useSetAtom(loadConfigAtom)
   const loadHotkeyMap = useSetAtom(loadHotkeyMapAtom)
   const setSystemTheme = useSetAtom(systemThemeAtom)
-  const migrating = useAtomValue(migratingAtom)
+  const [migrating, setMigrating] = useAtom(migratingAtom)
 
   // init app
   useEffect(() => {
     loadHotkeyMap()
-    loadConfig().finally(() => {
-      setLoading(false)
-      window.postMessage({ payload: "removeLoading" }, "*")
-    })
+    loadConfig()
+      .then((data) => {
+        if (!data) {
+          setMigrating(false)
+        }
+      })
+      .finally(() => {
+        setLoading(false)
+        window.postMessage({ payload: "removeLoading" }, "*")
+      })
 
     window.addEventListener("keydown", handleGlobalHotkey)
     return () => {

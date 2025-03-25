@@ -27,6 +27,10 @@ function Migration() {
 
   const runVerify = async () => {
     const data = await loadConfig()
+    if (!data) {
+      await onComplete()
+      return
+    }
     const needVerifyList = Object.entries(data.configs).filter(([key, value]) => {
       const _value = value as InterfaceModelConfig
       const _key = (_value.apiKey ?? _value.baseURL) as string
@@ -52,7 +56,11 @@ function Migration() {
   }
 
   const onComplete = async () => {
-    const data = await loadConfig()
+    const data = await loadConfig() as any
+    if (!data) {
+      setMigrating(false)
+      return
+    }
 
     const activeModel = data.configs[data.activeProvider]
     const _key = activeModel?.apiKey ?? activeModel?.baseURL

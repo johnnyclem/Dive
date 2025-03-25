@@ -39,10 +39,12 @@ export type MultiModelConfig = ProviderRequired & ModelParameter & {
   models: string[]
 }
 
-export const configAtom = atom<RawModelConfig>({
+const defaultConfig: RawModelConfig = {
   activeProvider: "",
   configs: {}
-})
+} as const
+
+export const configAtom = atom<RawModelConfig>(defaultConfig)
 
 export const updateConfigWithProviderAtom = atom(
   null,
@@ -135,11 +137,11 @@ export const loadConfigAtom = atom(
     try {
       const response = await fetch("/api/config/model")
       const data = await response.json()
-      set(configAtom, data.config)
-      return data.config
+      set(configAtom, data.config || defaultConfig)
+      return data.config as RawModelConfig || defaultConfig
     } catch (error) {
       console.warn("Failed to load config:", error)
-      return null
+      return defaultConfig
     }
   }
 )

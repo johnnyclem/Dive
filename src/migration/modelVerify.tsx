@@ -41,7 +41,8 @@ export const useModelVerify = () => {
     }
 
     const addNewTask = () => {
-      if (isAbort.current || nextIndex >= entries.length) return null
+      if (isAbort.current || nextIndex >= entries.length)
+        return null
 
       const [key, value] = entries[nextIndex++]
       const _value = value as InterfaceModelConfig
