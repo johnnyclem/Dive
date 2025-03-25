@@ -42,6 +42,7 @@ const Welcome = () => {
   const supportTools = useAtomValue(currentModelSupportToolsAtom)
 
   useEffect(() => {
+    document.title = t("header.title")
     loadTools()
   }, [])
 

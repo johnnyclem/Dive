@@ -75,7 +75,8 @@
     "fetchFailed": "Error al cargar las herramientas",
     "configFetchFailed": "Error al cargar la configuración",
     "invalidJson": "Formato JSON inválido",
-    "updateFailed": "{{serverName}} no pudo cargarse: {{error}}"
+    "updateFailed": "{{serverName}} no pudo cargarse: {{error}}",
+    "installFailed": "Instalación fallida"
   },
   "modelConfig": {
     "title": "Configuración del Modelo",
@@ -111,6 +112,7 @@
     "deleteAllDescription": "Eliminar inhabilitará todos los modelos, y no podrás chatear.",
     "noModelAlertTitle": "¡No hay modelos habilitados!",
     "noModelAlertDescription": "No hay modelos disponibles, no podrás chatear.",
+    "selectModelPlaceHolder": "Seleccionar Modelo...",
     "noModelAlertOption": "No hay modelos disponibles",
     "modelSaved": "Modelos guardados",
     "modelSaveFailed": "Error al guardar modelos",

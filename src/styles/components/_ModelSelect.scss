@@ -1,6 +1,6 @@
 @use "../_variables" as *;
 
-
+$select-button-width: 475px;
 
 .sidebar-visible {
   .model-select {
@@ -19,12 +19,13 @@
   transition: left $transition-normal ease;
 
   .select-button {
-    width: 280px;
+    width: $select-button-width;
     height: 100%;
     border-radius: 6px;
 
     &.disabled {
       pointer-events: none;
+      background: var(--bg-op-dark-ultraweak);
     }
   }
 
@@ -49,7 +50,7 @@
 }
 
 .model-select-content {
-  min-width: 280px;
+  min-width: $select-button-width;
 
   @include scrollbar;
 
@@ -85,10 +86,11 @@
 
   .model-select-label-text {
     flex: 1;
-    max-width: 185px;
+    max-width: calc($select-button-width - 55px);
     white-space: normal;
 
     @include line-clamp(1);
+    word-break: break-all !important;
   }
 
   .model-select-label-icon {

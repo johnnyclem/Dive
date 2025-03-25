@@ -76,7 +76,8 @@
     "fetchFailed": "Failed to load tools",
     "configFetchFailed": "Failed to load configuration",
     "invalidJson": "Invalid JSON format",
-    "updateFailed": "{{serverName}} failed to load: {{error}}"
+    "updateFailed": "{{serverName}} failed to load: {{error}}",
+    "installFailed": "Installation failed"
   },
   "modelConfig": {
     "title": "Model Settings",
@@ -112,6 +113,7 @@
     "deleteAllDescription": "Deleting will disable all models, and you will not be able to chat.",
     "noModelAlertTitle": "No Models Enabled!",
     "noModelAlertDescription": "No available models, you will not be able to chat.",
+    "selectModelPlaceHolder": "Select Model...",
     "noModelAlertOption": "No available models",
     "modelSaved": "Models saved",
     "modelSaveFailed": "Failed to save Models",
