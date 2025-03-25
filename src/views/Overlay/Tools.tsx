@@ -278,6 +278,11 @@ const Tools = () => {
           type: "error",
           closable: true
         })
+        setMcpConfig(prevConfig => {
+          const newConfig = {...prevConfig}
+          newConfig.mcpServers[serverName].disabled = true
+          return newConfig
+        })
       })
     } else {
       showToast({
@@ -389,7 +394,7 @@ const Tools = () => {
             description: subTool.description,
             enabled: false
           })),
-          disabled: true,
+          disabled: mcpConfig.mcpServers[name]?.disabled ?? false,
         }
       }
 
@@ -397,7 +402,7 @@ const Tools = () => {
         name,
         description: "",
         enabled: false,
-        disabled: true,
+        disabled: mcpConfig.mcpServers[name]?.disabled ?? false,
       }
     })
   }, [tools, mcpConfig.mcpServers])
