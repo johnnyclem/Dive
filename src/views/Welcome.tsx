@@ -153,6 +153,11 @@ const Welcome = () => {
               {t("chat.unsupportTools", { model: activeConfig?.model })}
             </div>
           )}
+          {(!activeConfig?.model || activeConfig?.model == "none") && (
+            <div className="chat-input-banner">
+              {t("chat.noModelBanner")}
+            </div>
+          )}
           <form className="welcome-input" onSubmit={handleSubmit}>
             <div className="input-container">
               <Textarea

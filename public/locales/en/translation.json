@@ -20,6 +20,7 @@
     "abort": "Stop generating response",
     "retry": "Retry",
     "noModelAlert": "No available model",
+    "noModelBanner": "No model available, please select a model first",
     "modelSettings": "Model Settings",
     "copy": "Copy",
     "copied": "Copied",

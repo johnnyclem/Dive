@@ -167,11 +167,6 @@
           justify-content: center;
           gap: 4px;
           width: fit-content;
-
-          &:hover {
-            background: var(--bg-op-dark-extremeweak);
-            color: var(--text-error);
-          }
         }
       }
     }
@@ -181,53 +176,45 @@
       justify-content: space-between;
       gap: 10px;
 
-      button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        height: 38px;
-        width: 38px;
-        padding: 5px;
-        border-radius: 50%;
-
-        &:hover {
-          background: var(--bg-btn-hover);
-        }
-
-        .tools-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-          border-radius: 8px;
-        }
-
-        &.send-btn svg {
-          fill: var(--stroke-extremestrong);
-        }
-      }
-
       .tools-container {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 4px;
         width: fit-content;
-      }
 
-      .tools-btn {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: fit-content;
-        height: 38px;
-        line-height: 1;
-        padding: 4px 7px;
-        border-radius: 8px;
-        font-size: 1em;
-        cursor: pointer;
-        background: transparent;
-        border: none;
+        button {
+          background: none;
+          border: none;
+          cursor: pointer;
+          height: 38px;
+          width: 38px;
+          padding: 5px;
+          border-radius: 50%;
+
+          &:hover {
+            background: var(--bg-btn-hover);
+          }
+
+          &.send-btn svg {
+            fill: var(--stroke-extremestrong);
+          }
+        }
+
+        .tools-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: fit-content;
+          height: 38px;
+          line-height: 1;
+          padding: 4px 7px;
+          border-radius: 8px;
+          font-size: 1em;
+          cursor: pointer;
+          background: transparent;
+          border: none;
+        }
       }
     }
   }

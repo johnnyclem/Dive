@@ -31,6 +31,11 @@
       justify-content: flex-start;
       gap: 10px;
 
+      > span {
+        max-width: 300px;
+        @include line-clamp(1);
+      }
+
       .reseting-status {
         font-size: 12px;
         fill: var(--stroke-op-dark-extremestrong);

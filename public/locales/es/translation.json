@@ -20,6 +20,7 @@
     "abort": "Detener generación de respuesta",
     "retry": "Reintentar",
     "noModelAlert": "No hay modelos disponibles",
+    "noModelBanner": "No hay modelos disponibles, por favor selecciona un modelo primero",
     "modelSettings": "Configuración del Modelo",
     "copy": "Copiar",
     "copied": "Copiado",

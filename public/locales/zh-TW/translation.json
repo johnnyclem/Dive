@@ -20,6 +20,7 @@
     "abort": "停止生成回應",
     "retry": "重試",
     "noModelAlert": "無可用模型",
+    "noModelBanner": "無模型可用，請先選擇模型",
     "modelSettings": "模型設定",
     "copy": "複製",
     "copied": "已複製",
