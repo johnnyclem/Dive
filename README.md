@@ -8,7 +8,7 @@
 ![GitHub top language](https://img.shields.io/github/languages/top/OpenAgentPlatform/Dive)
 ![GitHub last commit](https://img.shields.io/github/last-commit/OpenAgentPlatform/Dive?color=red)
 ![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FOpenAgentPlatform%2FDive&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)
-[![Discord](https://img.shields.io/badge/Discord-Dive-blue?logo=discord&logoColor=white)](https://discord.gg/jact84GwGh)
+[![Discord](https://img.shields.io/badge/Discord-Dive-blue?logo=discord&logoColor=white)](https://discord.com/invite/qceMERf4y2)
 [![Twitter Follow](https://img.shields.io/twitter/follow/Dive_ai_agent?style=social)](https://twitter.com/Dive_ai_agent)
 
 Dive is an open-source MCP Host Desktop Application that seamlessly integrates with any LLMs supporting function calling capabilities. ✨
@@ -134,7 +134,7 @@ pip install yt-dlp
 See [BUILD.md](BUILD.md) for more details.
 
 ## Connect With Us 🌐
-- 💬 Join our [Discord](https://discord.gg/qceMERf4y2)
+- 💬 Join our [Discord](https://discord.com/invite/qceMERf4y2)
 - 🐦 Follow us on [Twitter/X](https://x.com/Dive_ai_agent)
 - ⭐ Star us on GitHub
 - 🐛 Report issues on our [Issue Tracker](https://github.com/OpenAgentPlatform/Dive/issues)
