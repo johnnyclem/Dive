@@ -72,6 +72,31 @@
   }
 }
 
+.chat-input-wrapper {
+  position: relative;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  max-width: $chat-width;
+  width: 100%;
+  margin: 0 auto;
+
+  .chat-input-banner {
+    display: flex;
+    padding: 8px 12px 13px;
+    background: var(--bg-op-dark-weak);
+    border-radius: 8px 8px 0 0;
+    font-size: 10px;
+    color: var(--text-weak);
+    position: absolute;
+    width: calc(100% - 20px);
+    left: 10px;
+    top: 5px;
+    transform: translate(0, -100%);
+    z-index: 1;
+  }
+}
+
 .chat-input {
   padding: 8px;
   display: flex;
