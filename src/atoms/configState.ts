@@ -149,6 +149,14 @@ export const saveFirstConfigAtom = atom(
     delete configuration.checked
     delete configuration.configuration
 
+    if (!config.apiKey && !(config as any).aws_access_key_id) {
+      config.apiKey = (config as any).aws_access_key_id
+    }
+
+    delete configuration.aws_access_key_id
+    delete configuration.aws_secret_access_key
+    delete configuration.aws_session_token
+
     return set(writeRawConfigAtom, {
       providerConfigs: {
         [`${modelProvider}-0-0`]: {
@@ -173,6 +181,15 @@ export const writeRawConfigAtom = atom(
     const configs = Object.keys(providerConfigs).reduce((acc, key) => {
       const config = providerConfigs[key] as any
       config.modelProvider = transformModelProvider(config.modelProvider)
+
+      // fill apiKey if use aws
+      if (!config.apiKey && !(config as any).aws_access_key_id) {
+        config.apiKey = (config as any).aws_access_key_id
+        delete config.aws_access_key_id
+        delete config.aws_secret_access_key
+        delete config.aws_session_token
+      }
+
       acc[key] = config as ModelConfig
       return acc
     }, {} as ModelConfigMap)

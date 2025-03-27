@@ -2,7 +2,13 @@ import { ModelConfig } from "./atoms/configState"
 
 
 export const getModelPrefix = (config: ModelConfig, length: number = 5) => {
-  if(config.apiKey) return config.apiKey.slice(-length)
+  if (config.apiKey)
+    return config.apiKey.slice(-length)
+
+  if ((config as any).aws_access_key_id) {
+    return (config as any).aws_access_key_id.slice(-length)
+  }
+
   try {
     if(config.baseURL) {
       const url = new URL(config.baseURL)
