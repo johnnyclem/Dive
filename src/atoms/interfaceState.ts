@@ -229,7 +229,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
     },
   },
   bedrock: {
-    aws_access_key_id: {
+    accessKeyId: {
       type: "string",
       inputType: "password",
       label: "AWS Access Key ID",
@@ -238,7 +238,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "YOUR_AWS_ACCESS_KEY_ID"
     },
-    aws_secret_access_key: {
+    secretAccessKey: {
       type: "string",
       inputType: "password",
       label: "AWS Secret Access Key",
@@ -247,7 +247,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "YOUR_AWS_SECRET_ACCESS_KEY"
     },
-    aws_session_token: {
+    sessionToken: {
       type: "string",
       inputType: "password",
       label: "AWS Session Token",
@@ -274,13 +274,13 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       placeholder: "Select a model",
       listCallback: async (deps) => {
         try {
-          return await window.ipcRenderer.bedrockModelList(deps.aws_access_key_id, deps.aws_secret_access_key, deps.aws_session_token, deps.region)
+          return await window.ipcRenderer.bedrockModelList(deps.accessKeyId, deps.secretAccessKey, deps.sessionToken, deps.region)
         } catch (error) {
           console.error(error)
           return []
         }
       },
-      listDependencies: ["aws_access_key_id", "aws_secret_access_key", "aws_session_token", "region"]
+      listDependencies: ["accessKeyId", "secretAccessKey", "sessionToken", "region"]
     },
   }
 }

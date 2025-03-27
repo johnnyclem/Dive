@@ -374,7 +374,7 @@ const PageLayout = () => {
                   <div className="api-key">
                     {multiModelConfig.apiKey && <div>Key： ***{multiModelConfig.apiKey.slice(-5)}</div>}
                     {multiModelConfig.baseURL && <div>{multiModelConfig.baseURL}</div>}
-                    {(multiModelConfig as any).aws_access_key_id && <div>Id： ***{(multiModelConfig as any).aws_access_key_id.slice(-5)}</div>}
+                    {(multiModelConfig as any).accessKeyId && <div>Id： ***{(multiModelConfig as any).accessKeyId.slice(-5)}</div>}
                   </div>
                   <div>
                     <Switch

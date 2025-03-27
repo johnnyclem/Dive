@@ -149,13 +149,24 @@ export const saveFirstConfigAtom = atom(
     delete configuration.checked
     delete configuration.configuration
 
-    if (!config.apiKey && !(config as any).aws_access_key_id) {
-      config.apiKey = (config as any).aws_access_key_id
-    }
+    if (config.modelProvider === "bedrock") {
+      config.apiKey = (config as any).accessKeyId || (config as any).credentials.accessKeyId
+      if (!((config as any).credentials)) {
+        ;(config as any).credentials = {
+          accessKeyId: (config as any).accessKeyId,
+          secretAccessKey: (config as any).secretAccessKey,
+          sessionToken: (config as any).sessionToken,
+        }
+      }
 
-    delete configuration.aws_access_key_id
-    delete configuration.aws_secret_access_key
-    delete configuration.aws_session_token
+      delete (config as any).accessKeyId
+      delete (config as any).secretAccessKey
+      delete (config as any).sessionToken
+      delete configuration.accessKeyId
+      delete configuration.secretAccessKey
+      delete configuration.sessionToken
+      console.log("bedrock set", config)
+    }
 
     return set(writeRawConfigAtom, {
       providerConfigs: {
@@ -182,18 +193,32 @@ export const writeRawConfigAtom = atom(
       const config = providerConfigs[key] as any
       config.modelProvider = transformModelProvider(config.modelProvider)
 
-      // fill apiKey if use aws
-      if (!config.apiKey && !(config as any).aws_access_key_id) {
-        config.apiKey = (config as any).aws_access_key_id
-        delete config.aws_access_key_id
-        delete config.aws_secret_access_key
-        delete config.aws_session_token
+      // process bedrock config
+      if (config.modelProvider === "bedrock") {
+        if (!config.credentials && (config as any).accessKeyId) {
+          config.credentials = {
+            accessKeyId: (config as any).accessKeyId,
+            secretAccessKey: (config as any).secretAccessKey,
+            sessionToken: (config as any).sessionToken,
+          }
+        }
+
+        config.apiKey = (config as any).accessKeyId || (config as any).credentials?.accessKeyId
+
+        delete config.accessKeyId
+        delete config.secretAccessKey
+        delete config.sessionToken
+        delete config.configuration.accessKeyId
+        delete config.configuration.secretAccessKey
+        delete config.configuration.sessionToken
+        console.log("bedrock set", config)
       }
 
       acc[key] = config as ModelConfig
       return acc
     }, {} as ModelConfigMap)
 
+    console.log("configs", configs)
     try {
       const response = await fetch("/api/config/model/replaceAll", {
         method: "POST",
