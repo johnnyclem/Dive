@@ -449,7 +449,7 @@ const Tools = () => {
 
         <div className="tools-list">
           {sortedTools.map((tool, index) => (
-            <div key={index} id={`tool-${index}`} onClick={() => !tool.disabled && toggleToolSection(index)} className={`tool-section ${tool.disabled ? "disabled" : ""}`}>
+            <div key={index} id={`tool-${index}`} onClick={() => toggleToolSection(index)} className={`tool-section`}>
               <div className="tool-header">
                 <div className="tool-header-content">
                   <svg width="20" height="20" viewBox="0 0 24 24">
@@ -463,21 +463,7 @@ const Tools = () => {
                     onChange={() => toggleTool(tool)}
                   />
                 </div>
-                {tool.disabled ?
-                  <Tooltip
-                    content={t("tools.installFailed")}
-                  >
-                    <span className="tool-toggle disabled">
-                      <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
-                      <line x1="12" y1="6" x2="12" y2="14" stroke="currentColor" strokeWidth="2"/>
-                        <circle cx="12" cy="17" r="1.5" fill="currentColor"/>
-                      </svg>
-                    </span>
-                  </Tooltip>
-                :
-                  <span className="tool-toggle">▼</span>
-                }
+                <span className="tool-toggle">▼</span>
               </div>
               <div className="tool-content">
                 {tool.description && (
