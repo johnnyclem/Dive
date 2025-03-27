@@ -165,7 +165,6 @@ export const saveFirstConfigAtom = atom(
       delete configuration.accessKeyId
       delete configuration.secretAccessKey
       delete configuration.sessionToken
-      console.log("bedrock set", config)
     }
 
     return set(writeRawConfigAtom, {
@@ -211,14 +210,12 @@ export const writeRawConfigAtom = atom(
         delete config.configuration.accessKeyId
         delete config.configuration.secretAccessKey
         delete config.configuration.sessionToken
-        console.log("bedrock set", config)
       }
 
       acc[key] = config as ModelConfig
       return acc
     }, {} as ModelConfigMap)
 
-    console.log("configs", configs)
     try {
       const response = await fetch("/api/config/model/replaceAll", {
         method: "POST",
