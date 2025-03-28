@@ -262,8 +262,8 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       label: "Region",
       description: "",
       required: false,
-      placeholder: "us-east-1",
-      default: "",
+      placeholder: "e.g. us-east-1",
+      default: "us-east-1",
     },
     model: {
       type: "list",
