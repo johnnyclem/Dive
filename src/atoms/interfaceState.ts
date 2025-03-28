@@ -1,9 +1,10 @@
-import { atom } from "jotai"
+export const EMPTY_PROVIDER = "none"
 
-export type ModelProvider = "openai" | "openai_compatible" | "ollama" | "anthropic" | "google_genai" | "mistralai"
-export const PROVIDERS: ModelProvider[] = ["openai", "openai_compatible", "ollama", "anthropic", "google_genai", "mistralai"] as const
+export type ModelProvider = "openai" | "ollama" | "anthropic" | "google-genai" | "mistralai"
+export type InterfaceProvider = "openai" | "openai_compatible" | "ollama" | "anthropic" | "google_genai" | "mistralai"
+export const PROVIDERS: InterfaceProvider[] = ["openai", "openai_compatible", "ollama", "anthropic", "google_genai", "mistralai"] as const
 
-export const PROVIDER_LABELS: Record<ModelProvider, string> = {
+export const PROVIDER_LABELS: Record<InterfaceProvider, string> = {
   openai: "OpenAI",
   openai_compatible: "OpenAI Compatible",
   ollama: "Ollama",
@@ -12,7 +13,7 @@ export const PROVIDER_LABELS: Record<ModelProvider, string> = {
   mistralai: "Mistral AI"
 }
 
-export const PROVIDER_ICONS: Record<ModelProvider, string> = {
+export const PROVIDER_ICONS: Record<InterfaceProvider, string> = {
   ollama: "img://model_ollama.svg",
   openai_compatible: "img://model_openai_compatible.svg",
   openai: "img://model_openai.svg",
@@ -37,7 +38,7 @@ export interface FieldDefinition {
 
 export type InterfaceDefinition = Record<string, FieldDefinition>
 
-export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
+export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = {
   openai: {
     apiKey: {
       type: "string",
@@ -225,11 +226,3 @@ export const defaultInterface: Record<ModelProvider, InterfaceDefinition> = {
     },
   }
 }
-
-export const interfaceAtom = atom<{
-  provider: ModelProvider
-  fields: InterfaceDefinition
-}>({
-  provider: "openai",
-  fields: defaultInterface["openai"]
-})

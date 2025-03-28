@@ -5,7 +5,7 @@ import useHotkeyEvent from "../../hooks/useHotkeyEvent"
 import Textarea from "../../components/WrappedTextarea"
 import { lastMessageAtom } from "../../atoms/chatState"
 import { useAtomValue } from "jotai"
-import { hasActiveConfigAtom } from "../../atoms/configState"
+import { isConfigActiveAtom } from "../../atoms/configState"
 
 interface Props {
   onSendMessage?: (message: string, files?: FileList) => void
@@ -35,7 +35,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const isComposing = useRef(false)
   const [isAborting, setIsAborting] = useState(false)
   const lastMessage = useAtomValue(lastMessageAtom)
-  const hasActiveConfig = useAtomValue(hasActiveConfigAtom)
+  const hasActiveConfig = useAtomValue(isConfigActiveAtom)
 
   const formatFileSize = useCallback((bytes: number): string => {
     if (bytes < 1024) return bytes + ' B'

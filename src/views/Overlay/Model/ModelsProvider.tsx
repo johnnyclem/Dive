@@ -1,8 +1,9 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react";
-import { activeProviderAtom, compressData, configAtom, configListAtom, extractData, loadConfigAtom, ModelConfig, MultiModelConfig, saveAllConfigAtom, transformModelProvider } from "../../../atoms/configState";
+import { configAtom, configDictAtom, loadConfigAtom, MultiModelConfig, writeRawConfigAtom, InterfaceModelConfig } from "../../../atoms/configState";
 import { useAtomValue, useSetAtom } from "jotai";
-import { FieldDefinition, ModelProvider } from "../../../atoms/interfaceState";
+import { FieldDefinition, InterfaceProvider } from "../../../atoms/interfaceState";
 import { ignoreFieldsForModel } from "../../../constants";
+import { compressData, extractData, transformModelProvider } from "../../../helper/config";
 
 export type ListOption = {
   name: string
@@ -20,9 +21,9 @@ type ContextType = {
   listOptions: ListOption[]
   setListOptions: (listOptions: ListOption[]) => void
   fetchListOptions: (multiModelConfig: MultiModelConfig, fields: Record<string, FieldDefinition>) => Promise<ListOption[]>
-  prepareModelConfig: (config: ModelConfig, provider: ModelProvider) => ModelConfig
+  prepareModelConfig: (config: InterfaceModelConfig, provider: InterfaceProvider) => InterfaceModelConfig
   verifyModel: (multiModelConfig: MultiModelConfig, model: string) => Promise<{ success: boolean, supportTools?: boolean }>
-  saveConfig: (activeProvider?: ModelProvider) => Promise<{ success: boolean, error?: string }>
+  saveConfig: (activeProvider?: InterfaceProvider) => Promise<{ success: boolean, error?: string }>
 }
 
 const context = createContext<ContextType>({} as ContextType)
@@ -32,11 +33,10 @@ export default function ModelsProvider({
 }:{
   children: ReactNode
 }) {
-  const configList = useAtomValue(configListAtom)
+  const configList = useAtomValue(configDictAtom)
   const config = useAtomValue(configAtom)
   const loadConfig = useSetAtom(loadConfigAtom)
-  const saveAllConfig = useSetAtom(saveAllConfigAtom)
-  const activeProvider = useAtomValue(activeProviderAtom)
+  const saveAllConfig = useSetAtom(writeRawConfigAtom)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [listOptions, setListOptions] = useState<ListOption[]>([])
   const [multiModelConfigList, setMultiModelConfigList] = useState<MultiModelConfig[]>([])
@@ -95,7 +95,7 @@ export default function ModelsProvider({
     }
   }, [multiModelConfigList])
 
-  const prepareModelConfig = useCallback((config: ModelConfig, provider: ModelProvider) => {
+  const prepareModelConfig = useCallback((config: InterfaceModelConfig, provider: InterfaceProvider) => {
     const _config = {...config}
     if (provider === "openai" && config.baseURL) {
       delete (_config as any).baseURL
@@ -116,9 +116,9 @@ export default function ModelsProvider({
 
       return {
         ...acc,
-        [key]: _config[key as keyof ModelConfig]
+        [key]: _config[key as keyof InterfaceModelConfig]
       }
-    }, {} as ModelConfig)
+    }, {} as InterfaceModelConfig)
   }, [])
 
   const fetchListOptions = async (multiModelConfig: MultiModelConfig, fields: Record<string, FieldDefinition>) => {
@@ -161,9 +161,9 @@ export default function ModelsProvider({
         active: multiModelConfig.active,
         topP: multiModelConfig.topP,
         temperature: multiModelConfig.temperature
-      } as ModelConfig
+      } as InterfaceModelConfig
 
-      const configuration = {...formData} as ModelConfig
+      const configuration = {...formData} as InterfaceModelConfig
       delete (configuration as any).configuration
 
       const _formData = prepareModelConfig(formData, multiModelConfig.name)
@@ -191,8 +191,8 @@ export default function ModelsProvider({
     }
   }
 
-  const saveConfig = async (newActiveProvider?: ModelProvider) => {
-    let compressedData: Record<string, ModelConfig> = {}
+  const saveConfig = async (newActiveProvider?: InterfaceProvider) => {
+    let compressedData: Record<string, InterfaceModelConfig> = {}
     const _multiModelConfigList = await getMultiModelConfigList()
     const _parameter = await getParameter()
     _multiModelConfigList.forEach((multiModelConfig, index) => {
@@ -205,20 +205,19 @@ export default function ModelsProvider({
       }
     })
 
-    let _activeProvider: ModelProvider | "" = newActiveProvider ?? config?.activeProvider ?? ""
+    let _activeProvider: InterfaceProvider = newActiveProvider ?? config?.activeProvider as any ?? ""
     const model = configList?.[_activeProvider]?.model
-    const existModel = Object.keys(compressedData).find(key => compressedData[key].active && compressedData[key].model === model) as ModelProvider
+    const existModel = Object.keys(compressedData).find(key => compressedData[key].active && compressedData[key].model === model) as InterfaceProvider
     const activeModel = Object.keys(compressedData).filter(key => compressedData[key].active)
     _activeProvider = existModel ?? "none"
-    _activeProvider = activeModel?.length == 1 ? activeModel[0] as ModelProvider : _activeProvider
+    _activeProvider = activeModel?.length == 1 ? activeModel[0] as InterfaceProvider : _activeProvider
 
     if(!_multiModelConfigList?.length){
       const _parameter = await getParameter()
       localStorage.setItem("ConfigParameter", JSON.stringify(_parameter))
     }
 
-    const data = await saveAllConfig({ providerConfigs: compressedData, activeProvider: _activeProvider as ModelProvider })
-    return data
+    return await saveAllConfig({ providerConfigs: compressedData, activeProvider: _activeProvider as InterfaceProvider })
   }
 
   return (

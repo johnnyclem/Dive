@@ -1,12 +1,13 @@
 import { useTranslation } from "react-i18next"
-import { formatData, ModelConfig } from "../../../atoms/configState"
-import { defaultInterface, FieldDefinition, ModelProvider, PROVIDER_LABELS, PROVIDERS } from "../../../atoms/interfaceState"
+import { InterfaceModelConfig, ModelConfig } from "../../../atoms/configState"
+import { defaultInterface, FieldDefinition, InterfaceProvider, PROVIDER_LABELS, PROVIDERS } from "../../../atoms/interfaceState"
 import PopupConfirm from "../../../components/PopupConfirm"
 import { useEffect, useRef, useState } from "react"
 import { showToastAtom } from "../../../atoms/toastState"
 import { useAtom } from "jotai"
 import React from "react"
 import { useModelsProvider } from "./ModelsProvider"
+import { formatData } from "../../../helper/config"
 
 const KeyPopup = ({
   onClose,
@@ -16,10 +17,10 @@ const KeyPopup = ({
   onSuccess: () => void
 }) => {
   const { t } = useTranslation()
-  const [provider, setProvider] = useState(PROVIDERS[0])
+  const [provider, setProvider] = useState<InterfaceProvider>(PROVIDERS[0])
   const [fields, setFields] = useState<Record<string, FieldDefinition>>(defaultInterface[provider])
 
-  const [formData, setFormData] = useState<ModelConfig>({active: true} as ModelConfig)
+  const [formData, setFormData] = useState<InterfaceModelConfig>({active: true} as InterfaceModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [verifiedCnt, setVerifiedCnt] = useState(0)
   const isVerifying = useRef(false)
@@ -39,9 +40,9 @@ const KeyPopup = ({
   }, [])
 
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newProvider = e.target.value as ModelProvider
+    const newProvider = e.target.value as InterfaceProvider
     setProvider(newProvider)
-    setFormData({active: true} as ModelConfig)
+    setFormData({active: true} as InterfaceModelConfig)
     setFields(defaultInterface[newProvider])
     setErrors({})
   }
@@ -53,7 +54,7 @@ const KeyPopup = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
     Object.entries(fields).forEach(([key, field]) => {
-      if (field.required && !formData[key as keyof ModelConfig]) {
+      if (field.required && !formData[key as keyof InterfaceModelConfig]) {
         newErrors[key] = t("setup.required")
       }
     })

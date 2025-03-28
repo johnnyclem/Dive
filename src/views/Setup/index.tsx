@@ -1,20 +1,18 @@
 import React, { useState } from "react"
-import { useAtom } from "jotai"
-import { ModelProvider, defaultInterface } from "../atoms/interfaceState"
+import { useSetAtom } from "jotai"
+import { InterfaceProvider, defaultInterface } from "../../atoms/interfaceState"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useLocation } from "react-router-dom"
-import { configAtom } from "../atoms/configState"
-import ModelConfigForm from "../components/ModelConfigForm"
-import { showToastAtom } from "../atoms/toastState"
+import ModelConfigForm from "./ModelConfigForm"
+import { showToastAtom } from "../../atoms/toastState"
 
 const Setup = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const [config] = useAtom(configAtom)
   const isInitialSetup = location.pathname !== '/setup'
-  const [localProvider, setLocalProvider] = useState<ModelProvider>("openai")
-  const [, showToast] = useAtom(showToastAtom)
+  const [localProvider, setLocalProvider] = useState<InterfaceProvider>("openai")
+  const showToast = useSetAtom(showToastAtom)
 
   const handleSubmit = async (data: any) => {
     try {
@@ -37,7 +35,7 @@ const Setup = () => {
     <div className="setup-page">
       <div className="setup-container">
         {!isInitialSetup && (
-          <button 
+          <button
             className="back-btn"
             onClick={() => navigate(-1)}
           >
@@ -56,15 +54,13 @@ const Setup = () => {
         <ModelConfigForm
           provider={localProvider}
           fields={defaultInterface[localProvider]}
-          initialData={config?.configs[localProvider] || null}
           onSubmit={handleSubmit}
           onProviderChange={setLocalProvider}
           submitLabel="setup.submit"
-          showVerify={true}
         />
       </div>
     </div>
   )
 }
 
-export default React.memo(Setup) 
+export default React.memo(Setup)

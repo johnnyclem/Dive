@@ -4,7 +4,7 @@ import { useSetAtom, useAtom, useAtomValue } from "jotai"
 import { codeStreamingAtom } from "../atoms/codeStreaming"
 import { useTranslation } from "react-i18next"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
-import { hasActiveConfigAtom, hasConfigAtom } from "../atoms/configState"
+import { isConfigActiveAtom, isConfigNotInitializedAtom } from "../atoms/configState"
 import Setup from "./Setup"
 import { openOverlayAtom } from "../atoms/layerState"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
@@ -31,13 +31,13 @@ const Welcome = () => {
   const updateStreamingCode = useSetAtom(codeStreamingAtom)
   const histories = useAtomValue(historiesAtom)
   const loadHistories = useSetAtom(loadHistoriesAtom)
-  const hasConfig = useAtomValue(hasConfigAtom)
+  const isConfigNotInitialized = useAtomValue(isConfigNotInitializedAtom)
   const isComposing = useRef(false)
   const openOverlay = useSetAtom(openOverlayAtom)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const loadTools = useSetAtom(loadToolsAtom)
   const tools = useAtomValue(toolsAtom)
-  const hasActiveConfig = useAtomValue(hasActiveConfigAtom)
+  const hasActiveConfig = useAtomValue(isConfigActiveAtom)
 
   useEffect(() => {
     document.title = t("header.title")
@@ -135,7 +135,7 @@ const Welcome = () => {
     setUploadedFiles(prev => [...prev, ...validFiles])
   }
 
-  if (!hasConfig) {
+  if (isConfigNotInitialized) {
     return <Setup />
   }
 
