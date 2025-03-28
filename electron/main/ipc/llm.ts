@@ -72,6 +72,15 @@ export function ipcLlmHandler(win: BrowserWindow) {
 
   ipcMain.handle("llm:bedrockModelList", async (_, accessKeyId: string, secretAccessKey: string, sessionToken: string, region: string) => {
     try {
+      let modelPrefix = ""
+      if (region.startsWith("us-")) {
+        modelPrefix = "us."
+      } else if (region.startsWith("eu-")) {
+        modelPrefix = "eu."
+      } else if (region.startsWith("ap-")) {
+        modelPrefix = "apac."
+      }
+
       const client = new BedrockClient({
         region,
         credentials: {
@@ -83,7 +92,7 @@ export function ipcLlmHandler(win: BrowserWindow) {
       const command = new ListFoundationModelsCommand({})
       const response = await client.send(command)
       const models = response.modelSummaries
-      return models?.map((model) => model.modelId) ?? []
+      return models?.map((model) => `${modelPrefix}${model.modelId}`) ?? []
     } catch (error) {
       console.error(error)
       return []
