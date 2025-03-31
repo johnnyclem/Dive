@@ -126,7 +126,7 @@
     "theme": "Display Mode",
     "defaultInstructions": "speak in English",
     "autoDownload": "Auto Download Update",
-    "autoLaunch": "Run Dive AI on system startup",
+    "autoLaunch": "Run Dive AI on System Startup",
     "minimalToTray": "Minimize to System Tray"
   },
   "toast": {
