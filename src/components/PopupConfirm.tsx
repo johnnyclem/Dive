@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Behavior, useLayer } from "../hooks/useLayer";
 import PopupWindow, { PopupStylePorps } from "./PopupWindow";
 import { useTranslation } from "react-i18next"
+import Tooltip from "./Tooltip";
 
 type PopupConfirmProps = PopupStylePorps & {
 	title?: string
@@ -10,8 +11,10 @@ type PopupConfirmProps = PopupStylePorps & {
 	noBorder?: boolean
 	showClose?: boolean
 	confirmText?: string | React.ReactNode
+	confirmTooltip?: string
 	disabled?: boolean
 	cancelText?: string | React.ReactNode
+	cancelTooltip?: string
 	footerHint?: React.ReactNode | string
 	footerType?: "center" | "flex-end"
 	onClickOutside?: () => void
@@ -19,7 +22,7 @@ type PopupConfirmProps = PopupStylePorps & {
 	onCancel?: () => void
 }
 
-export default function PopupConfirm({ title, children, zIndex, noBackground, className, noBorder, showClose, onClickOutside, onConfirm, confirmText, disabled, onCancel, cancelText, footerHint, footerType }: PopupConfirmProps) {
+export default function PopupConfirm({ title, children, zIndex, noBackground, className, noBorder, showClose, onClickOutside, onConfirm, confirmText, confirmTooltip, disabled, onCancel, cancelText, cancelTooltip, footerHint, footerType }: PopupConfirmProps) {
 	const { t } = useTranslation()
   
   useEffect(() => {
@@ -55,6 +58,41 @@ export default function PopupConfirm({ title, children, zIndex, noBackground, cl
 		noBackground,
 	}
 
+	const ConfirmButton = () => {
+  const buttonElement = (
+			<button
+				className="confirm-btn"
+				onClick={onConfirm}
+				disabled={disabled}
+			>
+				{confirmText || t("common.confirm")}
+			</button>
+  )
+
+  return confirmTooltip ? (
+    <Tooltip content={confirmTooltip}>
+      {buttonElement}
+    </Tooltip>
+  ) : buttonElement
+}
+
+const CancelButton = () => {
+	const buttonElement = (
+		<button
+			className="cancel-btn"
+			onClick={onCancel}
+		>
+			{cancelText || t("common.cancel")}
+		</button>
+	)
+
+	return cancelTooltip ? (
+			<Tooltip content={cancelTooltip}>
+					{buttonElement}
+			</Tooltip>
+	) : buttonElement
+}
+
 	return (
 		<PopupWindow {...windowProps}>
 			<div className={`popup-confirm ${noBorder ? "no-border" : ""} ${className || ""}`}>
@@ -83,23 +121,8 @@ export default function PopupConfirm({ title, children, zIndex, noBackground, cl
 						</div>
 					}
 					<div className="popup-confirm-footer-btn">
-						{onCancel &&
-							<button
-								className="cancel-btn"
-								onClick={onCancel}
-							>
-								{cancelText || t("common.cancel")}
-							</button>
-						}
-						{onConfirm &&
-							<button
-								className="confirm-btn"
-								onClick={onConfirm}
-								disabled={disabled}
-							>
-								{confirmText || t("common.confirm")}
-							</button>
-						}
+						{onCancel && CancelButton()}
+						{onConfirm && ConfirmButton()}
 					</div>
 				</div>
 			</div>
