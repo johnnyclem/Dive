@@ -63,13 +63,16 @@
     "title": "工具管理(MCP)",
     "subtitle": "管理 MCP Server 的工具与设置",
     "editConfig": "编辑设置",
+    "editConfig.alt": "编辑 MCP Server 设置",
     "configTitle": "MCP Server 设置",
     "save": "保存",
     "cancel": "取消",
     "saveSuccess": "设置已保存",
     "saveFailed": "保存失败",
-    "openConfigFolder": "打开设置文件夹",
-    "addServer": "新增 MCP Server",
+    "openConfigFolder": "设置文件夹",
+    "openConfigFolder.alt": "打开设置文件夹",
+    "addServer": "新增",
+    "addServer.alt": "新增 MCP Server",
     "addServerTitle": "新增 MCP Server",
     "addServerSubtitle": "请直接粘贴 MCP Server Json",
     "fetchFailed": "加载工具列表失败",
@@ -77,7 +80,8 @@
     "invalidJson": "无效的 JSON 格式",
     "updateFailed": "{{serverName}} 启动失败：{{error}}",
     "installFailed": "安装失败",
-    "reloadMCPServers": "刷新 MCP Servers"
+    "reloadMCPServers": "⭮",
+    "reloadMCPServers.alt": "重新加载并更新 MCP Servers"
   },
   "modelConfig": {
     "title": "模型设置",
