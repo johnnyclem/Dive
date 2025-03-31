@@ -89,7 +89,7 @@ const System = () => {
           {/* language */}
           <div className="system-list-section">
             <div className="system-list-content">
-              <span className="system-list-name">{t("system.language")}：</span>
+              <span className="system-list-name">{t("system.language")}:</span>
             </div>
             <div className="system-list-switch-container">
               <Select
@@ -104,7 +104,7 @@ const System = () => {
           {/* theme */}
           <div className="system-list-section">
             <div className="system-list-content">
-              <span className="system-list-name">{t("system.theme")}：</span>
+              <span className="system-list-name">{t("system.theme")}:</span>
             </div>
             <div className="system-list-switch-container">
               <ThemeSwitch />
@@ -114,7 +114,7 @@ const System = () => {
           {/* auto download */}
           <div className="system-list-section">
             <div className="system-list-content">
-              <span className="system-list-name">{t("system.autoDownload")}：</span>
+              <span className="system-list-name">{t("system.autoDownload")}:</span>
             </div>
             <div className="system-list-switch-container">
               <Switch
@@ -130,7 +130,7 @@ const System = () => {
           {/* auto launch */}
           <div className="system-list-section">
             <div className="system-list-content">
-              <span className="system-list-name">{t("system.autoLaunch")}：</span>
+              <span className="system-list-name">{t("system.autoLaunch")}:</span>
             </div>
             <div className="system-list-switch-container">
               <Switch
@@ -143,7 +143,7 @@ const System = () => {
           {/* minimal to tray */}
           <div className="system-list-section">
             <div className="system-list-content">
-              <span className="system-list-name">{t("system.minimalToTray")}：</span>
+              <span className="system-list-name">{t("system.minimalToTray")}:</span>
             </div>
             <div className="system-list-switch-container">
               <Switch
