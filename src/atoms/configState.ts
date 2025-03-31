@@ -145,9 +145,6 @@ export const saveFirstConfigAtom = atom(
     const modelProvider = transformModelProvider(provider)
     config.active = true
     const configuration: any = {...config} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
-    delete configuration.active
-    delete configuration.checked
-    delete configuration.configuration
 
     if (config.modelProvider === "bedrock") {
       config.apiKey = (config as any).accessKeyId || (config as any).credentials.accessKeyId
@@ -169,11 +166,11 @@ export const saveFirstConfigAtom = atom(
 
     return set(writeRawConfigAtom, {
       providerConfigs: {
-        [`${modelProvider}-0-0`]: {
+        [`${modelProvider}-0-0`]: cleanUpModelConfig({
           ...config,
           modelProvider,
           configuration,
-        } as any
+        })
       },
       activeProvider: `${modelProvider}-0-0` as any
     })
@@ -212,7 +209,7 @@ export const writeRawConfigAtom = atom(
         delete config.configuration.sessionToken
       }
 
-      acc[key] = config as ModelConfig
+      acc[key] = cleanUpModelConfig(config) as ModelConfig
       return acc
     }, {} as ModelConfigMap)
 
@@ -244,3 +241,14 @@ export const writeRawConfigAtom = atom(
     }
   }
 )
+
+function cleanUpModelConfig(config: any) {
+  const _config = {...config}
+  delete _config.configuration.active
+  delete _config.configuration.checked
+  delete _config.configuration.modelProvider
+  delete _config.configuration.model
+  delete _config.configuration.apiKey
+  delete _config.configuration.name
+  return _config
+}
