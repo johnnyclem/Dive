@@ -295,7 +295,11 @@
 
 .tools-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 1152px;
+  flex-direction: column;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
   h1 {
     margin: 0 0 16px;
@@ -309,6 +313,8 @@
 }
 
 .tools-list {
+  width: 800px;
+
   .tool-section {
     margin-bottom: 16px;
     border-radius: 8px;
@@ -451,6 +457,7 @@
   align-items: flex-start;
   margin-bottom: 32px;
   position: relative;
+  width: 100%;
 
   .header-actions {
     display: flex;

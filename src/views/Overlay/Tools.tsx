@@ -233,8 +233,8 @@ const Tools = () => {
     }
   }
 
-  const updateMCPConfig = async (newConfig: Record<string, any> | string) => {
-    return await fetch("/api/config/mcpserver", {
+  const updateMCPConfig = async (newConfig: Record<string, any> | string, force = false) => {
+    return await fetch(`/api/config/mcpserver${force ? "?force=1" : ""}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -340,6 +340,12 @@ const Tools = () => {
     toolElement?.classList.toggle("expanded")
   }
 
+  const handleReloadMCPServers = async () => {
+    setIsLoading(true)
+    await updateMCPConfig(mcpConfig, true)
+    setIsLoading(false)
+  }
+
   const handleOpenConfigFolder = async () => {
     window.ipcRenderer.openScriptsDir()
   }
@@ -425,30 +431,47 @@ const Tools = () => {
             <p className="subtitle">{t("tools.subtitle")}</p>
           </div>
           <div className="header-actions">
-            <button
-              className="add-btn"
-              onClick={() => setShowAddModal(true)}
+            <Tooltip content={t("tools.addServer.alt")}>
+              <button
+                className="add-btn"
+                onClick={() => setShowAddModal(true)}
             >
               <svg width="16" height="16" viewBox="0 0 24 24">
                 <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-              </svg>
-              {t("tools.addServer")}
-            </button>
-            <button
-              className="edit-btn"
-              onClick={() => setShowConfigModal(true)}
-            >
-              {t("tools.editConfig")}
-            </button>
-            <button
-              className="folder-btn"
-              onClick={handleOpenConfigFolder}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24">
-                <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
-              </svg>
-              {t("tools.openConfigFolder")}
-            </button>
+                </svg>
+                {t("tools.addServer")}
+              </button>
+            </Tooltip>
+
+            <Tooltip content={t("tools.editConfig.alt")}>
+              <button
+                className="edit-btn"
+                onClick={() => setShowConfigModal(true)}
+              >
+                {t("tools.editConfig")}
+              </button>
+            </Tooltip>
+
+            <Tooltip content={t("tools.openConfigFolder.alt")}>
+              <button
+                className="folder-btn"
+                onClick={handleOpenConfigFolder}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24">
+                  <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+                </svg>
+                {t("tools.openConfigFolder")}
+              </button>
+            </Tooltip>
+
+            <Tooltip content={t("tools.reloadMCPServers.alt")}>
+              <button
+                className="folder-btn"
+                onClick={handleReloadMCPServers}
+              >
+                {t("tools.reloadMCPServers")}
+              </button>
+            </Tooltip>
           </div>
         </div>
 
