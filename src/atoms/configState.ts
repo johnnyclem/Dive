@@ -102,7 +102,7 @@ export const configDictAtom = atom<ModelConfigMap>((get) => get(configAtom).conf
 export const isConfigNotInitializedAtom = atom(
   (get) => {
     const config = get(configAtom)
-    return !config.activeProvider
+    return !config?.activeProvider
   }
 )
 
