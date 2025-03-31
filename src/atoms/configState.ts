@@ -102,7 +102,7 @@ export const configDictAtom = atom<ModelConfigMap>((get) => get(configAtom).conf
 export const isConfigNotInitializedAtom = atom(
   (get) => {
     const config = get(configAtom)
-    return !config.activeProvider
+    return !config?.activeProvider
   }
 )
 
@@ -145,17 +145,32 @@ export const saveFirstConfigAtom = atom(
     const modelProvider = transformModelProvider(provider)
     config.active = true
     const configuration: any = {...config} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
-    delete configuration.active
-    delete configuration.checked
-    delete configuration.configuration
+
+    if (config.modelProvider === "bedrock") {
+      config.apiKey = (config as any).accessKeyId || (config as any).credentials.accessKeyId
+      if (!((config as any).credentials)) {
+        ;(config as any).credentials = {
+          accessKeyId: (config as any).accessKeyId,
+          secretAccessKey: (config as any).secretAccessKey,
+          sessionToken: (config as any).sessionToken,
+        }
+      }
+
+      delete (config as any).accessKeyId
+      delete (config as any).secretAccessKey
+      delete (config as any).sessionToken
+      delete configuration.accessKeyId
+      delete configuration.secretAccessKey
+      delete configuration.sessionToken
+    }
 
     return set(writeRawConfigAtom, {
       providerConfigs: {
-        [`${modelProvider}-0-0`]: {
+        [`${modelProvider}-0-0`]: cleanUpModelConfig({
           ...config,
           modelProvider,
           configuration,
-        } as any
+        })
       },
       activeProvider: `${modelProvider}-0-0` as any
     })
@@ -173,7 +188,28 @@ export const writeRawConfigAtom = atom(
     const configs = Object.keys(providerConfigs).reduce((acc, key) => {
       const config = providerConfigs[key] as any
       config.modelProvider = transformModelProvider(config.modelProvider)
-      acc[key] = config as ModelConfig
+
+      // process bedrock config
+      if (config.modelProvider === "bedrock") {
+        if (!config.credentials && (config as any).accessKeyId) {
+          config.credentials = {
+            accessKeyId: (config as any).accessKeyId,
+            secretAccessKey: (config as any).secretAccessKey,
+            sessionToken: (config as any).sessionToken,
+          }
+        }
+
+        config.apiKey = (config as any).accessKeyId || (config as any).credentials?.accessKeyId
+
+        delete config.accessKeyId
+        delete config.secretAccessKey
+        delete config.sessionToken
+        delete config.configuration.accessKeyId
+        delete config.configuration.secretAccessKey
+        delete config.configuration.sessionToken
+      }
+
+      acc[key] = cleanUpModelConfig(config) as ModelConfig
       return acc
     }, {} as ModelConfigMap)
 
@@ -205,3 +241,14 @@ export const writeRawConfigAtom = atom(
     }
   }
 )
+
+function cleanUpModelConfig(config: any) {
+  const _config = {...config}
+  delete _config.configuration.active
+  delete _config.configuration.checked
+  delete _config.configuration.modelProvider
+  delete _config.configuration.model
+  delete _config.configuration.apiKey
+  delete _config.configuration.name
+  return _config
+}

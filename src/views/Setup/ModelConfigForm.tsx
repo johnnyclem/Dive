@@ -131,6 +131,17 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
       const _formData = prepareModelConfig(formData, provider)
 
+      if (modelProvider === "bedrock") {
+        _formData.apiKey = (_formData as any).accessKeyId || (_formData as any).credentials.accessKeyId
+        if (!((_formData as any).credentials)) {
+          ;(_formData as any).credentials = {
+            accessKeyId: (_formData as any).accessKeyId,
+            secretAccessKey: (_formData as any).secretAccessKey,
+            sessionToken: (_formData as any).sessionToken,
+          }
+        }
+      }
+
       const response = await fetch("/api/modelVerify", {
         method: "POST",
         headers: {
