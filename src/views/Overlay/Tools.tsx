@@ -466,10 +466,10 @@ const Tools = () => {
 
             <Tooltip content={t("tools.reloadMCPServers.alt")}>
               <button
-                className="folder-btn"
+                className="reload-btn"
                 onClick={handleReloadMCPServers}
               >
-                {t("tools.reloadMCPServers")}
+                <img src={"img://reload.svg"} />
               </button>
             </Tooltip>
           </div>

@@ -188,25 +188,12 @@ export class MCPServerManager implements IMCPServerManager {
 
       // Handle new or updated servers
       for (const serverName of configuredServers) {
-        const serverConfig = newConfig.mcpServers[serverName];
+        try {
+          const serverConfig = newConfig.mcpServers[serverName];
 
-        if (!currentServers.has(serverName)) {
-          // New server
-          logger.info(`Adding new server: ${serverName}`);
-          const result = await this.connectSingleServer(serverName, serverConfig, {});
-          if (!result.success) {
-            errorArray.push({
-              serverName,
-              error: result.error,
-            });
-          }
-        } else {
-          // Existing server, check properties
-          // check command, args(string[]), env(Record<string, string>)
-          const isPropertiesChanged = this.checkPropertiesChanged(serverName, serverConfig);
-          if (isPropertiesChanged) {
-            logger.info(`Properties changed for server: ${serverName}`);
-            await this.disconnectSingleServer(serverName);
+          if (!currentServers.has(serverName)) {
+            // New server
+            logger.info(`Adding new server: ${serverName}`);
             const result = await this.connectSingleServer(serverName, serverConfig, {});
             if (!result.success) {
               errorArray.push({
@@ -215,16 +202,37 @@ export class MCPServerManager implements IMCPServerManager {
               });
             }
           } else {
-            // check enabled
-            const isCurrentlyEnabled = this.toolInfos.find((info) => info.name === serverName)?.enabled;
-            if (serverConfig.enabled && !isCurrentlyEnabled) {
-              logger.info(`Enabling server: ${serverName}`);
-              await this.updateServerEnabledState(serverName, true);
-            } else if (!serverConfig.enabled && isCurrentlyEnabled) {
-              logger.info(`Disabling server: ${serverName}`);
-              await this.updateServerEnabledState(serverName, false);
+            // Existing server, check properties
+            // check command, args(string[]), env(Record<string, string>)
+            const isPropertiesChanged = this.checkPropertiesChanged(serverName, serverConfig);
+            if (isPropertiesChanged) {
+              logger.info(`Properties changed for server: ${serverName}`);
+              await this.disconnectSingleServer(serverName);
+              const result = await this.connectSingleServer(serverName, serverConfig, {});
+              if (!result.success) {
+                errorArray.push({
+                  serverName,
+                  error: result.error,
+                });
+              }
+            } else {
+              // check enabled
+              const isCurrentlyEnabled = this.toolInfos.find((info) => info.name === serverName)?.enabled;
+              if (serverConfig.enabled && !isCurrentlyEnabled) {
+                logger.info(`Enabling server: ${serverName}`);
+                await this.updateServerEnabledState(serverName, true);
+              } else if (!serverConfig.enabled && isCurrentlyEnabled) {
+                logger.info(`Disabling server: ${serverName}`);
+                await this.updateServerEnabledState(serverName, false);
+              }
             }
           }
+        } catch (error) {
+          logger.error(`Error during server configuration sync: ${error}`);
+          errorArray.push({
+            serverName,
+            error: error,
+          });
         }
       }
 
