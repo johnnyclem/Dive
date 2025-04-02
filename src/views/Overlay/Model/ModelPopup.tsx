@@ -584,11 +584,13 @@ const ModelPopup = ({
               <div className="model-list-verify-desc">
                 <div className="model-list-unverify-list">
                   <span>{t("models.verifyDesc")}</span>
-                  <ul>
-                    {listOptions?.filter(option => option.checked && option.verifyStatus == "unVerified").map(option => (
-                      <li key={option.name}>{option.name}</li>
-                    ))}
-                  </ul>
+                  <div className="model-list-unverify-ul-wrapper">
+                    <ul>
+                      {listOptions?.filter(option => option.checked && option.verifyStatus == "unVerified").map(option => (
+                        <li key={option.name}>{option.name}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             </PopupConfirm>
