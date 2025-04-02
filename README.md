@@ -13,7 +13,7 @@
 
 Dive is an open-source MCP Host Desktop Application that seamlessly integrates with any LLMs supporting function calling capabilities. ✨
 
-![Dive Demo](./docs/DiveAI.gif)
+![Dive Demo](./docs/EN_DiveGif_0.7.4.gif)
 
 
 ## Features 🎯
@@ -58,7 +58,7 @@ For Linux users: 🐧
 
 While the system comes with a default echo MCP Server, your LLM can access more powerful tools through MCP. Here's how to get started with two beginner-friendly tools: Fetch and Youtube-dl.
 
-![Set MCP](./docs/MCP_Screenshot.png)
+![Set MCP](./docs/DIVE_Screenshot_0.7.4.jpg)
 
 
 ### Quick Setup
