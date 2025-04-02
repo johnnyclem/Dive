@@ -1,8 +1,9 @@
-import { getVerifyStatus } from './../views/Overlay/Model/ModelVerify';
+import { getVerifyStatus } from './../views/Overlay/Model/ModelVerify'
 import { atom } from "jotai"
 import { EMPTY_PROVIDER, InterfaceProvider, ModelProvider } from "./interfaceState"
 import { getModelPrefix } from "../util"
 import { transformModelProvider } from "../helper/config"
+import { ignoreFieldsForModel } from '../constants'
 
 export type ProviderRequired = {
   apiKey: string
@@ -269,6 +270,68 @@ export const writeRawConfigAtom = atom(
     }
   }
 )
+
+export function prepareModelConfig(config: InterfaceModelConfig, provider: InterfaceProvider): InterfaceModelConfig {
+  const _config = {...config}
+  if (provider === "openai" && config.baseURL) {
+    delete (_config as any).baseURL
+  }
+
+  if (_config.topP === 0) {
+    delete (_config as any).topP
+  }
+
+  if (_config.temperature === 0) {
+    delete (_config as any).temperature
+  }
+
+  return Object.keys(_config).reduce((acc, key) => {
+    if (ignoreFieldsForModel.some(item => (item.model === _config.model || _config.model?.startsWith(item.prefix)) && item.fields.includes(key))) {
+      return acc
+    }
+
+    return {
+      ...acc,
+      [key]: _config[key as keyof InterfaceModelConfig]
+    }
+  }, {} as InterfaceModelConfig)
+}
+
+export async function verifyModelWithConfig(config: InterfaceModelConfig, signal?: AbortSignal) {
+  const modelProvider = transformModelProvider(config.modelProvider)
+  const configuration = {...config} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
+  delete configuration.configuration
+
+  const _formData = prepareModelConfig(config, config.modelProvider)
+
+  if (modelProvider === "bedrock") {
+    _formData.apiKey = (_formData as any).accessKeyId || (_formData as any).credentials.accessKeyId
+    if (!((_formData as any).credentials)) {
+      ;(_formData as any).credentials = {
+        accessKeyId: (_formData as any).accessKeyId,
+        secretAccessKey: (_formData as any).secretAccessKey,
+        sessionToken: (_formData as any).sessionToken,
+      }
+    }
+  }
+
+  console.log(modelProvider, _formData, configuration)
+  return await fetch("/api/modelVerify", {
+    signal,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      provider: modelProvider,
+      modelSettings: {
+        ..._formData,
+        modelProvider,
+        configuration,
+      },
+    }),
+  }).then(res => res.json())
+}
 
 function cleanUpModelConfig(config: any) {
   const _config = {...config}

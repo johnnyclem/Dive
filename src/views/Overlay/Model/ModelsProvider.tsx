@@ -1,9 +1,8 @@
 import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
-import { configAtom, configDictAtom, loadConfigAtom, MultiModelConfig, writeRawConfigAtom, InterfaceModelConfig } from "../../../atoms/configState";
+import { configAtom, configDictAtom, loadConfigAtom, MultiModelConfig, writeRawConfigAtom, InterfaceModelConfig, prepareModelConfig } from "../../../atoms/configState";
 import { useAtomValue, useSetAtom } from "jotai";
 import { FieldDefinition, InterfaceProvider } from "../../../atoms/interfaceState";
-import { ignoreFieldsForModel } from "../../../constants";
-import { compressData, extractData, transformModelProvider } from "../../../helper/config";
+import { compressData, extractData } from "../../../helper/config";
 import { getVerifyStatus, ModelVerifyStatus } from "./ModelVerify";
 
 export type ListOption = {
@@ -96,32 +95,6 @@ export default function ModelsProvider({
       localStorage.removeItem("ConfigParameter")
     }
   }, [multiModelConfigList])
-
-  const prepareModelConfig = useCallback((config: InterfaceModelConfig, provider: InterfaceProvider) => {
-    const _config = {...config}
-    if (provider === "openai" && config.baseURL) {
-      delete (_config as any).baseURL
-    }
-
-    if (_config.topP === 0) {
-      delete (_config as any).topP
-    }
-
-    if (_config.temperature === 0) {
-      delete (_config as any).temperature
-    }
-
-    return Object.keys(_config).reduce((acc, key) => {
-      if (ignoreFieldsForModel.some(item => (item.model === _config.model || _config.model?.startsWith(item.prefix)) && item.fields.includes(key))) {
-        return acc
-      }
-
-      return {
-        ...acc,
-        [key]: _config[key as keyof InterfaceModelConfig]
-      }
-    }, {} as InterfaceModelConfig)
-  }, [])
 
   const fetchListOptions = async (multiModelConfig: MultiModelConfig, fields: Record<string, FieldDefinition>) => {
     const localListOptions = localStorage.getItem("modelVerify")

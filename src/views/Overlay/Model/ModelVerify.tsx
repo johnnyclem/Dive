@@ -1,8 +1,5 @@
-import { InterfaceModelConfig, InterfaceModelConfigMap, ModelConfig } from "../../../atoms/configState"
+import { InterfaceModelConfig, InterfaceModelConfigMap, verifyModelWithConfig } from "../../../atoms/configState"
 import { useRef } from "react"
-import { InterfaceProvider } from "../../../atoms/interfaceState"
-import { ignoreFieldsForModel } from "../../../constants"
-import { transformModelProvider } from "../../../helper/config"
 
 export interface ModelVerifyDetail {
   name: string
@@ -44,7 +41,8 @@ export const useModelVerify = () => {
     }
 
     const addNewTask = () => {
-      if (isAbort.current || nextIndex >= entries.length) return null
+      if (isAbort.current || nextIndex >= entries.length)
+        return null
 
       const [key, value] = entries[nextIndex++]
       const _value = value as InterfaceModelConfig
@@ -115,58 +113,9 @@ export const useModelVerify = () => {
   return { verify, abort }
 }
 
-const prepareModelConfig = (config: InterfaceModelConfig, provider: InterfaceProvider) => {
-  const _config = {...config}
-  if (provider === "openai" && config.baseURL) {
-    delete (_config as any).baseURL
-  }
-
-  if (_config.topP === 0) {
-    delete (_config as any).topP
-  }
-
-  if (_config.temperature === 0) {
-    delete (_config as any).temperature
-  }
-
-  return Object.keys(_config).reduce((acc, key) => {
-    if (ignoreFieldsForModel.some(item => (item.model === _config.model || _config.model?.startsWith(item.prefix)) && item.fields.includes(key))) {
-      return acc
-    }
-
-    return {
-      ...acc,
-      [key]: _config[key as keyof ModelConfig]
-    }
-  }, {} as ModelConfig)
-}
-
 const verifyModel = async (modelConfig: InterfaceModelConfig, signal?: AbortSignal) => {
   try {
-    const modelProvider = transformModelProvider(modelConfig.modelProvider)
-    const configuration = {...modelConfig} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
-    delete configuration.configuration
-
-    const _formData = prepareModelConfig(modelConfig, modelConfig.modelProvider)
-
-    const response = await fetch("/api/modelVerify", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        provider: modelProvider,
-        modelSettings: {
-          ..._formData,
-          modelProvider,
-          configuration,
-        },
-      }),
-      signal
-    })
-
-    const data = await response.json()
-    return data
+    return await verifyModelWithConfig(modelConfig, signal)
   } catch (error) {
     console.error("Failed to verify model:", error)
     return false
