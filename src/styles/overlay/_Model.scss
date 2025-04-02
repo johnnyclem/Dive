@@ -775,11 +775,16 @@
         span {
           color: var(--text-weak);
         }
+
         ul {
           color: var(--text-ultraweak);
           margin: 0;
           margin-top: 5px;
           padding-left: 20px;
+          overflow-y: auto;
+          max-height: 300px;
+
+          @include scrollbar;
 
           li {
             white-space: nowrap;
