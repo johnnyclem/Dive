@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAtom } from "jotai"
 import { showToastAtom } from "../../../atoms/toastState"
@@ -14,9 +14,11 @@ import Tooltip from "../../../components/Tooltip"
 import Dropdown from "../../../components/DropDown"
 
 const ModelPopup = ({
+  defaultModel,
   onClose,
   onSuccess,
 }: {
+  defaultModel: string
   onClose: () => void
   onSuccess: () => void
 }) => {
@@ -58,7 +60,7 @@ const ModelPopup = ({
 
   useEffect(() => {
     ;(async () => {
-      await reloadModelList()
+      await reloadModelList(defaultModel)
     })()
 
     return () => {
@@ -69,7 +71,7 @@ const ModelPopup = ({
     }
   }, [multiModelConfig])
 
-  const reloadModelList = async () => {
+  const reloadModelList = async (_defaultModel?: string) => {
     if(!multiModelConfig)
       return
     setListOptions([])
@@ -77,7 +79,7 @@ const ModelPopup = ({
     let options = await fetchListOptions(multiModelConfig, defaultInterface[multiModelConfig.name])
     options = options.map(option => ({
       ...option,
-      checked: multiModelConfig.models.includes(option.name),
+      checked: _defaultModel ? option.name === _defaultModel : multiModelConfig.models.includes(option.name),
       verifyStatus: option.verifyStatus ?? "unVerified"
     })).sort((a, b) => {
       if (a.checked === b.checked) {
@@ -155,6 +157,37 @@ const ModelPopup = ({
       newModelConfigList[currentIndex].models = listOptions.filter(option => option.checked).map(option => option.name)
       setMultiModelConfigList([...newModelConfigList])
       const data = await saveConfig()
+
+      // save custom model list to local storage
+      const key = `${multiModelConfig.apiKey || multiModelConfig.baseURL}`
+      const customModelList = localStorage.getItem("customModelList")
+      const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
+      const newCustomModelList = listOptions.filter(option => option.isCustom).map(option => option.name)
+      if(newCustomModelList.length > 0){
+        localStorage.setItem("customModelList", JSON.stringify({
+          ...allCustomModelList,
+          [key as string]: newCustomModelList
+        }))
+      } else {
+        delete allCustomModelList[key]
+        localStorage.setItem("customModelList", JSON.stringify(allCustomModelList))
+      }
+
+      // if model is not in current listOptions, remove it from verifiedList
+      const localListOptions = localStorage.getItem("modelVerify")
+      const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+      const verifiedList = allVerifiedList[key] ?? {}
+      const cleanedVerifiedList = {} as Record<string, ModelVerifyStatus>
+      Object.keys(verifiedList).forEach(modelName => {
+        if (listOptions.some(option => option.name === modelName)) {
+          cleanedVerifiedList[modelName] = verifiedList[modelName]
+        }
+      })
+      localStorage.setItem("modelVerify", JSON.stringify({
+        ...allVerifiedList,
+        [key as string]: cleanedVerifiedList
+      }))
+
       await handleSubmit(data)
     } catch (error) {
       setMultiModelConfigList(_multiModelConfigList)
@@ -170,6 +203,12 @@ const ModelPopup = ({
     } else {
       await saveModel()
     }
+  }
+
+  const handleDeleteCustomModelID = (name: string) => {
+    setListOptions((prev: ListOption[]) => {
+      return prev.filter(option => option.name !== name)
+    })
   }
 
   const onVerifyConfirm = (needVerifyList?: Record<string, InterfaceModelConfig>, ifSave: boolean = true) => {
@@ -305,7 +344,18 @@ const ModelPopup = ({
         model: option.name
       } as InterfaceModelConfig
       menu.push({
-        label: t("models.verifyMenu1"),
+        label:
+          <div className="model-option-verify-menu-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M7 2.5L1.06389 4.79879C1.02538 4.8137 1 4.85075 1 4.89204V11.9315C1 11.9728 1.02538 12.0098 1.06389 12.0247L7 14.3235" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M7.5 10.5V7.5L12.8521 4.58066C12.9188 4.54432 13 4.59255 13 4.66845V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M1 5L7.5 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M7 2.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="15.5" cy="15.5" r="5.5" stroke="currentColor" strokeWidth="2"/>
+              <path d="M13 15.1448L14.7014 17L18 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            {t("models.verifyMenu1")}
+          </div>,
         onClick: () => {
           onVerifyConfirm(_option, false)
         }
@@ -315,7 +365,18 @@ const ModelPopup = ({
     // ignore verify model
     if(status !== "ignore" && status !== "success"){
       menu.push({
-        label: t("models.verifyMenu2"),
+        label:
+          <div className="model-option-verify-menu-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="15.5" cy="15.5" r="5.5" stroke="currentColor" strokeWidth="2"/>
+              <path d="M17.5 15.5H13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M7 2.5L1.06389 4.79879C1.02538 4.8137 1 4.85075 1 4.89204V11.9315C1 11.9728 1.02538 12.0098 1.06389 12.0247L7 14.3235" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M7.5 10.5V7.5L12.8521 4.58066C12.9188 4.54432 13 4.59255 13 4.66845V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M1 5L7.5 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M7 2.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            {t("models.verifyMenu2")}
+          </div>,
         onClick: () => {
           onVerifyIgnore([{
             ...option,
@@ -324,6 +385,24 @@ const ModelPopup = ({
             model: option.name
           } as ListOption], false)
         }
+      })
+    }
+
+    // delete custom model id
+    if(option.isCustom){
+      menu.push({
+        label:
+          <div className="model-option-verify-menu-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M3 5H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M17 7V18.2373C16.9764 18.7259 16.7527 19.1855 16.3778 19.5156C16.0029 19.8457 15.5075 20.0192 15 19.9983H7C6.49249 20.0192 5.99707 19.8457 5.62221 19.5156C5.24735 19.1855 5.02361 18.7259 5 18.2373V7" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+              <path d="M8 10.04L14 16.04" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+              <path d="M14 10.04L8 16.04" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+              <path d="M13.5 2H8.5C8.22386 2 8 2.22386 8 2.5V4.5C8 4.77614 8.22386 5 8.5 5H13.5C13.7761 5 14 4.77614 14 4.5V2.5C14 2.22386 13.7761 2 13.5 2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+            </svg>
+            {t("models.verifyMenu3")}
+          </div>,
+        onClick: () => handleDeleteCustomModelID(option.name)
       })
     }
 
@@ -414,10 +493,14 @@ const ModelPopup = ({
             </div>
             <div
               className="models-reload-btn"
-              onClick={reloadModelList}
+              onClick={() => reloadModelList()}
             >
               {t("models.reloadModelList")}
             </div>
+            <CustomIdPopup
+              listOptions={listOptions}
+              setListOptions={setListOptions}
+            />
           </div>
         </div>
         <div className="model-list">
@@ -429,8 +512,7 @@ const ModelPopup = ({
               searchListOptions?.length == 0 ?
                 <div className="model-list-empty">
                   {t("models.noResult")}
-                </div>
-              :
+                </div> :
                 <>
                   {searchListOptions?.map((option: ListOption) => (
                     <label
@@ -471,45 +553,45 @@ const ModelPopup = ({
                       </div>
                     </label>
                   ))}
-                  {showConfirmVerify &&
-                    <PopupConfirm
-                      zIndex={900}
-                      className="model-list-verify-popup"
-                      onConfirm={() => onVerifyConfirm()}
-                      confirmText={t("models.verify")}
-                      onCancel={() => onVerifyIgnore()}
-                      cancelText={t("models.verifyIgnore")}
-                      cancelTooltip={t("models.verifyIgnoreAlt")}
-                      footerHint={
-                        <Tooltip
-                          content={t("models.verifyNextTimeAlt")}
-                        >
-                          <div
-                            className="verify-next-time-button"
-                            onClick={onVerifyNextTime}
-                          >
-                            {t("models.verifyNextTime")}
-                          </div>
-                        </Tooltip>
-                      }
-                    >
-                      <h4 className="model-list-verify-title">
-                        {t("models.verifyTitle", { count: listOptions?.filter(option => option.checked && option.verifyStatus == "unVerified").length })}
-                      </h4>
-                      <div className="model-list-verify-desc">
-                        <div className="model-list-unverify-list">
-                          <span>{t("models.verifyDesc")}</span>
-                          <ul>
-                            {listOptions?.filter(option => option.checked && option.verifyStatus == "unVerified").map(option => (
-                              <li key={option.name}>{option.name}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </PopupConfirm>
-                  }
                 </>
             )
+          }
+          {showConfirmVerify &&
+            <PopupConfirm
+              zIndex={900}
+              className="model-list-verify-popup"
+              onConfirm={() => onVerifyConfirm()}
+              confirmText={t("models.verify")}
+              onCancel={() => onVerifyIgnore()}
+              cancelText={t("models.verifyIgnore")}
+              cancelTooltip={t("models.verifyIgnoreAlt")}
+              footerHint={
+                <Tooltip
+                  content={t("models.verifyNextTimeAlt")}
+                >
+                  <div
+                    className="verify-next-time-button"
+                    onClick={onVerifyNextTime}
+                  >
+                    {t("models.verifyNextTime")}
+                  </div>
+                </Tooltip>
+              }
+            >
+              <h4 className="model-list-verify-title">
+                {t("models.verifyTitle", { count: listOptions?.filter(option => option.checked && option.verifyStatus == "unVerified").length })}
+              </h4>
+              <div className="model-list-verify-desc">
+                <div className="model-list-unverify-list">
+                  <span>{t("models.verifyDesc")}</span>
+                  <ul>
+                    {listOptions?.filter(option => option.checked && option.verifyStatus == "unVerified").map(option => (
+                      <li key={option.name}>{option.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </PopupConfirm>
           }
         </div>
       </div>
@@ -518,3 +600,109 @@ const ModelPopup = ({
 }
 
 export default React.memo(ModelPopup)
+
+const CustomIdPopup = ({
+  listOptions,
+  setListOptions,
+}: {
+  listOptions: ListOption[]
+  setListOptions: Dispatch<SetStateAction<ListOption[]>>
+}) => {
+  const { t } = useTranslation()
+  const [showCustomModelID, setShowCustomModelID] = useState(false)
+  const [customModelID, setCustomModelID] = useState("")
+  const [customModelIDError, setCustomModelIDError] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    autoFocus()
+  }, [showCustomModelID])
+
+  const autoFocus = async () => {
+    await new Promise(resolve => setTimeout(resolve, 0))
+    inputRef.current?.focus()
+  }
+
+  const addCustomModelID = (name: string) => {
+    setCustomModelIDError("")
+    if(name.length == 0) {
+      // check if the model id is empty
+      setCustomModelIDError(t("models.customModelIDError1"))
+      return
+    } else if(listOptions.find(option => option.name === name)) {
+      // check if the model id is already in the list
+      setCustomModelIDError(t("models.customModelIDError2"))
+      return
+    }
+
+    setListOptions((prev: ListOption[]) => {
+      return [
+        {
+          name,
+          checked: true,
+          verifyStatus: "unVerified",
+          isCustom: true
+        },
+        ...prev
+      ]
+    })
+    setShowCustomModelID(false)
+    setCustomModelID("")
+    setCustomModelIDError("")
+  }
+
+  const handleCustomModelIDChange = (name: string) => {
+    setCustomModelID(name)
+    setCustomModelIDError("")
+  }
+
+  const handleCustomModelIDClose = () => {
+    setShowCustomModelID(false)
+    setCustomModelID("")
+    setCustomModelIDError("")
+  }
+  return (
+    <>
+      <button
+        className="model-list-add-key"
+        onClick={() => setShowCustomModelID(true)}
+      >
+        {t("models.addCustomModelID")}
+      </button>
+      {showCustomModelID && (
+        <PopupConfirm
+          zIndex={900}
+          className="model-customID-popup"
+          onConfirm={() => addCustomModelID(customModelID)}
+          onCancel={handleCustomModelIDClose}
+          onClickOutside={handleCustomModelIDClose}
+          footerType="center"
+          noBorder={true}
+        >
+          <div className="model-popup-content">
+            <div className="model-option-name-input-content">
+              <div className="model-popup-title">
+                {t("models.customModelIDTitle")}
+              </div>
+              <div className="model-option-name-input-wrapper">
+                <WrappedInput
+                  ref={inputRef}
+                  value={customModelID}
+                  onChange={(e) => handleCustomModelIDChange(e.target.value)}
+                  placeholder={t("models.customModelIDPlaceholder")}
+                  className="model-option-name-input"
+                  autoFocus={true}
+                />
+                {customModelIDError && (
+                  <div className="model-option-edit-error">
+                    {customModelIDError}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </PopupConfirm>
+      )}
+    </>
+  )
+}

@@ -146,7 +146,13 @@
     "verifyDesc": "Los siguientes modelos no están verificados, ¿desea verificarlos?",
     "progressVerifying": "Actualizando verificación de modelos, por favor espere...",
     "verifyMenu1": "Verificar Modelo",
-    "verifyMenu2": "Ignorar Verificación"
+    "verifyMenu2": "Ignorar Verificación",
+    "verifyMenu3": "Eliminar Modelo",
+    "addCustomModelID": "+ Agregar ID de Modelo Personalizado",
+    "customModelIDTitle": "ID de Modelo Personalizado",
+    "customModelIDPlaceholder": "Ingrese el ID del modelo personalizado...",
+    "customModelIDError1": "El ID del modelo no puede estar vacío",
+    "customModelIDError2": "El ID del modelo ya existe"
   },
   "system": {
     "title": "Configuración del Sistema",

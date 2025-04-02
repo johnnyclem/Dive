@@ -10,7 +10,8 @@ export type ListOption = {
   name: string
   checked: boolean
   supportTools?: boolean
-  verifyStatus?: ModelVerifyStatus
+  verifyStatus: ModelVerifyStatus
+  isCustom: boolean
 }
 
 type ContextType = {
@@ -123,6 +124,28 @@ export default function ModelsProvider({
   }, [])
 
   const fetchListOptions = async (multiModelConfig: MultiModelConfig, fields: Record<string, FieldDefinition>) => {
+    const localListOptions = localStorage.getItem("modelVerify")
+    const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+    const verifyList = allVerifiedList[multiModelConfig.apiKey || multiModelConfig.baseURL]
+    const newListOptions: ListOption[] = []
+
+    //get local custom model list
+    const customModelListText = localStorage.getItem("customModelList")
+    if(customModelListText){
+      const customModelList = JSON.parse(customModelListText)
+      const _customModelList = customModelList[`${multiModelConfig.apiKey || multiModelConfig.baseURL}`]
+      if(_customModelList){
+        _customModelList.forEach((option: string) => {
+          newListOptions.push({
+            name: option,
+            checked: multiModelConfig.models.includes(option),
+            verifyStatus:  getVerifyStatus(verifyList?.[option]) ?? "unVerified",
+            isCustom: true
+          })
+        })
+      }
+    }
+
     let options: string[] = []
     for (const [key, field] of Object.entries(fields)) {
       if (field.type === "list" && field.listCallback && field.listDependencies) {
@@ -135,15 +158,12 @@ export default function ModelsProvider({
       }
     }
 
-    const localListOptions = localStorage.getItem("modelVerify")
-    const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
-    const verifyList = allVerifiedList[multiModelConfig.apiKey || multiModelConfig.baseURL]
-    const newListOptions: ListOption[] = []
     options.forEach((option: string) => {
       newListOptions.push({
         name: option,
         checked: multiModelConfig.models.includes(option),
-        verifyStatus: getVerifyStatus(verifyList?.[option]) ?? "unVerified"
+        verifyStatus: getVerifyStatus(verifyList?.[option]) ?? "unVerified",
+        isCustom: false
       })
     })
     return newListOptions

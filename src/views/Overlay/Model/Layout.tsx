@@ -21,9 +21,9 @@ const PageLayout = () => {
   const [showDelete, setShowDelete] = useState(false)
   const [showClose, setShowClose] = useState(false)
   const [showKeyPopup, setShowKeyPopup] = useState(false)
+  const [defaultModel, setDefaultModel] = useState("")
   const [showModelPopup, setShowModelPopup] = useState(false)
   const [showNoModelAlert, setShowNoModelAlert] = useState(false)
-  const [stopNoModelAlert, setStopNoModelAlert] = useState(false)
   const [showParameterPopup, setShowParameterPopup] = useState(false)
   const showToast = useSetAtom(showToastAtom)
 
@@ -74,10 +74,10 @@ const PageLayout = () => {
     }
   }
 
-  const handleNewKeySubmit = () => {
+  const handleNewKeySubmit = (defaultModel?: string) => {
     setShowKeyPopup(false)
     setShowModelPopup(true)
-    setStopNoModelAlert(true)
+    setDefaultModel(defaultModel || "")
   }
 
   const getModelCount = (config: MultiModelConfig, ifSupport: boolean = true) => {
@@ -103,6 +103,7 @@ const PageLayout = () => {
   }
 
   const handleModelSubmit = () => {
+    setDefaultModel("")
     setShowModelPopup(false)
     if(multiModelConfigList?.[currentIndex]
       && multiModelConfigList?.[currentIndex]?.active
@@ -110,7 +111,6 @@ const PageLayout = () => {
       && getModelCount(multiModelConfigList?.[currentIndex], true) === 0) {
       setShowNoModelAlert(true)
     }
-    setStopNoModelAlert(false)
   }
 
   const handleConfirm = async (type: "delete" | "close") => {
@@ -142,6 +142,20 @@ const PageLayout = () => {
           message: successMsg,
           type: "success"
         })
+        if(type === "delete"){
+          // delete custom model list from local storage
+          const key = `${targetConfig?.apiKey || targetConfig?.baseURL}`
+          const customModelList = localStorage.getItem("customModelList")
+          const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
+          delete allCustomModelList[key]
+          localStorage.setItem("customModelList", JSON.stringify(allCustomModelList))
+
+          // delete verifiedList from local storage
+          const localListOptions = localStorage.getItem("modelVerify")
+          const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+          delete allVerifiedList[key]
+          localStorage.setItem("modelVerify", JSON.stringify(allVerifiedList))
+        }
       } else {
         showToast({
           message: data.error ?? errorMsg,
@@ -153,6 +167,7 @@ const PageLayout = () => {
       console.error("Failed to save config:", error)
       setMultiModelConfigList(_multiModelConfigList)
     }
+
     setShowDelete(false)
     setShowClose(false)
   }
@@ -348,7 +363,11 @@ const PageLayout = () => {
         )}
         {showModelPopup && (
           <ModelPopup
-            onClose={() => setShowModelPopup(false)}
+            defaultModel={defaultModel}
+            onClose={() => {
+              setShowModelPopup(false)
+              setDefaultModel("")
+            }}
             onSuccess={handleModelSubmit}
           />
         )}

@@ -146,7 +146,13 @@
     "verifyDesc": "以下模型尚未驗證，是否進行驗證？",
     "progressVerifying": "模型驗證更新中，請稍後......",
     "verifyMenu1": "驗證模型",
-    "verifyMenu2": "忽略驗證"
+    "verifyMenu2": "忽略驗證",
+    "verifyMenu3": "刪除模型",
+    "addCustomModelID": "+自訂模型ID",
+    "customModelIDTitle": "自訂模型ID",
+    "customModelIDPlaceholder": "輸入自訂模型ID...",
+    "customModelIDError1": "模型ID不能為空",
+    "customModelIDError2": "模型ID已存在"
   },
   "system": {
     "title": "系統設定",

@@ -15,7 +15,7 @@ const KeyPopup = ({
   onSuccess,
 }: {
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (customModelID?: string) => void
 }) => {
   const { t } = useTranslation()
   const [provider, setProvider] = useState<InterfaceProvider>(PROVIDERS[0])
@@ -23,6 +23,7 @@ const KeyPopup = ({
 
   const [formData, setFormData] = useState<InterfaceModelConfig>({active: true} as InterfaceModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [customModelID, setCustomModelID] = useState<string>("")
   const isVerifying = useRef(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
@@ -69,7 +70,7 @@ const KeyPopup = ({
   const handleSubmit = async (data: Record<string, any>) => {
     try {
       if (data.success) {
-        onSuccess()
+        onSuccess(customModelID)
       }
     } catch (error) {
       console.error("Failed to save config:", error)
@@ -128,14 +129,25 @@ const KeyPopup = ({
       setIsSubmitting(true)
       isVerifying.current = true
 
-      const listOptions = await fetchListOptions(multiModelConfig, fields)
+      if(!customModelID) {
+        const listOptions = await fetchListOptions(multiModelConfig, fields)
 
-      if (!listOptions?.length){
-        const newErrors: Record<string, string> = {}
-        newErrors["apiKey"] = t("models.apiKeyError")
-        setErrors(newErrors)
-        return
+        if (!listOptions?.length){
+          const newErrors: Record<string, string> = {}
+          newErrors["apiKey"] = t("models.apiKeyError")
+          setErrors(newErrors)
+          return
+        }
+      } else {
+        // save custom model list to local storage
+        const customModelList = localStorage.getItem("customModelList")
+        const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
+        localStorage.setItem("customModelList", JSON.stringify({
+          ...allCustomModelList,
+          [_formData.apiKey || _formData.baseURL]: [customModelID]
+        }))
       }
+
       setMultiModelConfigList([...(multiModelConfigList ?? []), multiModelConfig])
       setCurrentIndex((multiModelConfigList?.length ?? 0))
       const data = await saveConfig()
@@ -220,6 +232,22 @@ const KeyPopup = ({
             </div>
           )
         ))}
+        <div className="models-key-form-group">
+          <label className="models-key-field-title">
+            <>
+              {`Custom Model ID${t("models.optional")}`}
+            </>
+            <div className="models-key-field-description">Custom Model ID</div>
+          </label>
+          <input
+            type={"text"}
+            value={customModelID as string || ""}
+            onChange={e => setCustomModelID(e.target.value)}
+            placeholder={"YOUR_MODEL_ID"}
+            className={errors["customModelID"] ? "error" : ""}
+          />
+          {errors["customModelID"] && <div className="error-message">{errors["customModelID"]}</div>}
+        </div>
       </div>
     </PopupConfirm>
   )

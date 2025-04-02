@@ -146,7 +146,13 @@
     "verifyDesc": "The following models are not verified. Would you like to verify them?",
     "progressVerifying": "Model verification in progress, please wait...",
     "verifyMenu1": "Verify Model",
-    "verifyMenu2": "Ignore Verification"
+    "verifyMenu2": "Ignore Verification",
+    "verifyMenu3": "Delete Model",
+    "addCustomModelID": "+Custom Model ID",
+    "customModelIDTitle": "Custom Model ID",
+    "customModelIDPlaceholder": "Enter custom model ID...",
+    "customModelIDError1": "Model ID cannot be empty",
+    "customModelIDError2": "Model ID already exists"
   },
   "system": {
     "title": "System Settings",

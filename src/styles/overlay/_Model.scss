@@ -447,7 +447,7 @@
 }
 
 .model-popup {
-  width: 700px;
+  width: 900px;
   height: 500px;
 
   .popup-confirm-content .loading-spinner {
@@ -460,7 +460,7 @@
     flex: 1;
     flex-direction: column;
     gap: 12px;
-    padding: 0 30px;
+    padding: 0 20px;
     height: 100%;
 
     .model-list-header {
@@ -527,6 +527,23 @@
 
           &:hover {
             background: var(--bg-hover-cancel);
+          }
+        }
+
+        .model-list-add-key {
+          background: var(--bg-dark-ultrastrong);
+          border: 1px solid var(--stroke-dark-medium);
+          height: 40px;
+          color: var(--text-light);
+          border-radius: 12px;
+          font-size: 15px;
+          line-height: 1;
+          padding: 8px 10px;
+          white-space: nowrap;
+          transition: background $transition-fast ease-in-out;
+
+          &:hover {
+            background: var(--bg-op-dark-extremestrong);
           }
         }
       }
@@ -803,11 +820,62 @@
   }
 }
 
-.provider-edit-menu-item {
+.provider-edit-menu-item,
+.model-option-verify-menu-item {
   display: flex;
   gap: 10px;
 
   svg {
     color: var(--stroke-dark-medium);
+  }
+}
+
+.model-customID-popup{
+  .model-popup-content{
+    flex: 1;
+    padding: 0 20px;
+
+    .model-option-name-input-content {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 6px;
+
+      .model-popup-title {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .model-option-name-input-wrapper {
+        width: 100%;
+        position: relative;
+
+        .model-option-name-input {
+          width: 100%;
+          padding: 10px 12px;
+          border-radius: 6px;
+          border: 1px solid var(--border);
+          transition: all 0.3s;
+          color: var(--text);
+          background: var(--bg-input);
+
+          &:focus {
+            outline: none;
+          }
+        }
+
+        .model-option-edit-error {
+          color: var(--text-error);
+          font-size: 13px;
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          transform: translateY(100%);
+        }
+      }
+    }
   }
 }
