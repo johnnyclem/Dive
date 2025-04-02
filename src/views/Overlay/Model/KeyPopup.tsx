@@ -8,6 +8,7 @@ import { useAtom } from "jotai"
 import React from "react"
 import { useModelsProvider } from "./ModelsProvider"
 import { formatData } from "../../../helper/config"
+import CheckBox from "../../../components/CheckBox"
 
 const KeyPopup = ({
   onClose,
@@ -22,15 +23,14 @@ const KeyPopup = ({
 
   const [formData, setFormData] = useState<InterfaceModelConfig>({active: true} as InterfaceModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [verifiedCnt, setVerifiedCnt] = useState(0)
   const isVerifying = useRef(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
+  const [showOptional, setShowOptional] = useState<Record<string, boolean>>({})
 
   const { multiModelConfigList, setMultiModelConfigList,
     saveConfig, prepareModelConfig,
-    fetchListOptions, setListOptions,
-    setCurrentIndex, verifyModel
+    fetchListOptions, setCurrentIndex
   } = useModelsProvider()
 
   useEffect(() => {
@@ -84,7 +84,38 @@ const KeyPopup = ({
     if (!validateForm())
       return
 
-    const _formData = prepareModelConfig(formData, provider)
+    const __formData = {
+      ...formData,
+      baseURL: (!fields?.baseURL?.required && !showOptional[provider]) ? "" : formData.baseURL,
+    }
+
+    let existingIndex = -1
+    if(multiModelConfigList && multiModelConfigList.length > 0){
+      if (__formData.baseURL) {
+        if (__formData.apiKey) {
+          existingIndex = multiModelConfigList.findIndex(config =>
+            config.baseURL === __formData.baseURL &&
+            config.apiKey === __formData.apiKey
+          )
+        } else {
+          existingIndex = multiModelConfigList.findIndex(config =>
+            config.baseURL === __formData.baseURL
+          )
+        }
+      } else if (__formData.apiKey) {
+        existingIndex = multiModelConfigList.findIndex(config =>
+          config.apiKey === __formData.apiKey
+        )
+      }
+    }
+
+    if(existingIndex !== -1){
+      setCurrentIndex(existingIndex)
+      onSuccess()
+      return
+    }
+
+    const _formData = prepareModelConfig(__formData, provider)
     const multiModelConfig = {
       ...formatData(_formData),
       name: provider,
@@ -95,7 +126,6 @@ const KeyPopup = ({
     try {
       setErrors({})
       setIsSubmitting(true)
-      setVerifiedCnt(0)
       isVerifying.current = true
 
       const listOptions = await fetchListOptions(multiModelConfig, fields)
@@ -106,25 +136,6 @@ const KeyPopup = ({
         setErrors(newErrors)
         return
       }
-
-      const verifiedList = []
-      for(const index in listOptions){
-        const verifyResult = await verifyModel(multiModelConfig, listOptions[index].name)
-        if(!isVerifying.current) {
-          return
-        }
-
-        if(verifyResult && verifyResult.success){
-          const options = JSON.parse(JSON.stringify(listOptions))
-          options[index].supportTools = verifyResult.supportTools
-          verifiedList.push(options[index])
-        }
-
-        setVerifiedCnt((Number(index)+1) / listOptions.length)
-      }
-
-      sessionStorage.setItem(`model-list-${multiModelConfig.apiKey || multiModelConfig.baseURL}`, JSON.stringify(verifiedList))
-      setListOptions(verifiedList)
       setMultiModelConfigList([...(multiModelConfigList ?? []), multiModelConfig])
       setCurrentIndex((multiModelConfigList?.length ?? 0))
       const data = await saveConfig()
@@ -136,7 +147,6 @@ const KeyPopup = ({
       setMultiModelConfigList(_multiModelConfigList)
     } finally {
       setIsSubmitting(false)
-      setVerifiedCnt(0)
       isVerifying.current = false
     }
   }
@@ -184,35 +194,32 @@ const KeyPopup = ({
             <div key={key} className="models-key-form-group">
               <label className="models-key-field-title">
                 <>
-                  {field.label}
+                  {(key === "baseURL" && !field.required) ?
+                    <div className="models-key-field-optional">
+                      <CheckBox
+                        checked={showOptional[provider]}
+                        onChange={() => setShowOptional(prev => ({ ...prev, [provider]: !prev[provider] }))}
+                      ></CheckBox>
+                      {`${field.label}${t("models.optional")}`}
+                    </div>
+                  : field.label}
                   {field.required && <span className="required">*</span>}
                 </>
                 <div className="models-key-field-description">{field.description}</div>
               </label>
-              <input
-                type={"text"}
-                value={formData[key as keyof ModelConfig] as string || ""}
-                onChange={e => handleChange(key, e.target.value)}
-                placeholder={field.placeholder?.toString()}
-                className={errors[key] ? "error" : ""}
-              />
+              {(showOptional[provider] || key !== "baseURL" || field.required) && (
+                <input
+                  type={"text"}
+                  value={formData[key as keyof ModelConfig] as string || ""}
+                  onChange={e => handleChange(key, e.target.value)}
+                  placeholder={field.placeholder?.toString()}
+                  className={errors[key] ? "error" : ""}
+                />
+              )}
               {errors[key] && <div className="error-message">{errors[key]}</div>}
             </div>
           )
         ))}
-        {isVerifying.current && (
-          <div className="models-key-progress-wrapper">
-            {t("models.verifying")}
-            <div className="models-key-progress-container">
-              <div
-                className="models-key-progress"
-                style={{
-                  width: `${verifiedCnt * 100}%`
-                }}
-              />
-            </div>
-          </div>
-        )}
       </div>
     </PopupConfirm>
   )

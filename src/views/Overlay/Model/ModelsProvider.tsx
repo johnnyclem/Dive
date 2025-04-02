@@ -1,28 +1,29 @@
-import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
 import { configAtom, configDictAtom, loadConfigAtom, MultiModelConfig, writeRawConfigAtom, InterfaceModelConfig } from "../../../atoms/configState";
 import { useAtomValue, useSetAtom } from "jotai";
 import { FieldDefinition, InterfaceProvider } from "../../../atoms/interfaceState";
 import { ignoreFieldsForModel } from "../../../constants";
 import { compressData, extractData, transformModelProvider } from "../../../helper/config";
+import { getVerifyStatus, ModelVerifyStatus } from "./ModelVerify";
 
 export type ListOption = {
   name: string
   checked: boolean
   supportTools?: boolean
+  verifyStatus?: ModelVerifyStatus
 }
 
 type ContextType = {
   multiModelConfigList?: MultiModelConfig[]
-  setMultiModelConfigList: (multiModelConfigList: MultiModelConfig[]) => void
+  setMultiModelConfigList: Dispatch<SetStateAction<MultiModelConfig[]>>
   parameter: Record<string, number>
   setParameter: (parameter: Record<string, number>) => void
   currentIndex: number
   setCurrentIndex: (currentIndex: number) => void
   listOptions: ListOption[]
-  setListOptions: (listOptions: ListOption[]) => void
+  setListOptions: Dispatch<SetStateAction<ListOption[]>>
   fetchListOptions: (multiModelConfig: MultiModelConfig, fields: Record<string, FieldDefinition>) => Promise<ListOption[]>
   prepareModelConfig: (config: InterfaceModelConfig, provider: InterfaceProvider) => InterfaceModelConfig
-  verifyModel: (multiModelConfig: MultiModelConfig, model: string) => Promise<{ success: boolean, supportTools?: boolean }>
   saveConfig: (activeProvider?: InterfaceProvider) => Promise<{ success: boolean, error?: string }>
 }
 
@@ -134,61 +135,18 @@ export default function ModelsProvider({
       }
     }
 
+    const localListOptions = localStorage.getItem("modelVerify")
+    const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
+    const verifyList = allVerifiedList[multiModelConfig.apiKey || multiModelConfig.baseURL]
     const newListOptions: ListOption[] = []
     options.forEach((option: string) => {
       newListOptions.push({
         name: option,
-        checked: multiModelConfig.models.includes(option)
+        checked: multiModelConfig.models.includes(option),
+        verifyStatus: getVerifyStatus(verifyList?.[option]) ?? "unVerified"
       })
     })
     return newListOptions
-  }
-
-  const verifyModel = async (multiModelConfig: MultiModelConfig, model: string) => {
-    return {
-      success: true,
-      supportTools: true,
-    }
-
-    try {
-      const modelProvider = transformModelProvider(multiModelConfig.name)
-      const formData = {
-        apiKey: multiModelConfig.apiKey,
-        baseURL: multiModelConfig.baseURL,
-        model: model,
-        modelProvider: multiModelConfig.name,
-        configuration: {},
-        active: multiModelConfig.active,
-        topP: multiModelConfig.topP,
-        temperature: multiModelConfig.temperature
-      } as InterfaceModelConfig
-
-      const configuration = {...formData} as InterfaceModelConfig
-      delete (configuration as any).configuration
-
-      const _formData = prepareModelConfig(formData, multiModelConfig.name)
-
-      const response = await fetch("/api/modelVerify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          provider: multiModelConfig.name,
-          modelSettings: {
-            ..._formData,
-            modelProvider,
-            configuration,
-          },
-        }),
-      })
-
-      const data = await response.json()
-      return data
-    } catch (error) {
-      console.error("Failed to verify model:", error)
-      return false
-    }
   }
 
   const saveConfig = async (newActiveProvider?: InterfaceProvider) => {
@@ -232,7 +190,6 @@ export default function ModelsProvider({
       setListOptions,
       fetchListOptions,
       prepareModelConfig,
-      verifyModel,
       saveConfig
     }}>
       {children}
