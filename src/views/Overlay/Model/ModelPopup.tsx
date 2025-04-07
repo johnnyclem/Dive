@@ -223,6 +223,7 @@ const ModelPopup = ({
         apiKey: multiModelConfig?.apiKey,
         baseURL: multiModelConfig?.baseURL,
         model: value.name,
+        modelProvider: multiModelConfig?.name
       } as InterfaceModelConfig
       return acc
     }, {} as Record<string, InterfaceModelConfig>)
@@ -341,7 +342,8 @@ const ModelPopup = ({
       _option[option.name] = {
         apiKey: multiModelConfig?.apiKey,
         baseURL: multiModelConfig?.baseURL,
-        model: option.name
+        model: option.name,
+        modelProvider: multiModelConfig?.name
       } as InterfaceModelConfig
       menu.push({
         label:
