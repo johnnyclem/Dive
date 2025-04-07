@@ -74,6 +74,8 @@ async function createWindow() {
   win = new BrowserWindow({
     title: "Dive AI",
     icon: path.join(process.env.VITE_PUBLIC, "favicon.ico"),
+    minHeight: 320,
+    minWidth: 400,
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
