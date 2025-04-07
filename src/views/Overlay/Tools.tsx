@@ -234,12 +234,20 @@ const Tools = () => {
   }
 
   const updateMCPConfig = async (newConfig: Record<string, any> | string, force = false) => {
+    const config = typeof newConfig === "string" ? JSON.parse(newConfig) : newConfig
+    Object.keys(config.mcpServers).forEach(key => {
+      const cfg = config.mcpServers[key]
+      if (cfg.url && !cfg.transport) {
+        config.mcpServers[key].transport = "sse"
+      }
+    })
+
     return await fetch(`/api/config/mcpserver${force ? "?force=1" : ""}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: typeof newConfig === "string" ? newConfig : JSON.stringify(newConfig),
+      body: JSON.stringify(config),
     })
       .then(async (response) => await response.json())
       .catch((error) => {
@@ -358,7 +366,7 @@ const Tools = () => {
     }
 
     mergedConfig.mcpServers = configKeys.reduce((acc, key) => {
-      if ("command" in newConfig[key] && "args" in newConfig[key]) {
+      if (("command" in newConfig[key] && "args" in newConfig[key]) || "url" in newConfig[key]) {
         acc[key] = { ...(mergedConfig.mcpServers[key] || {}), ...newConfig[key] }
       }
       return acc
