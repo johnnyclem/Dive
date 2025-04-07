@@ -328,6 +328,18 @@ const Tools = () => {
       newConfig.mcpServers[tool.name].enabled = !currentEnabled
 
       const data = await updateMCPConfig(newConfig)
+      if (data.errors && Array.isArray(data.errors) && data.errors.length) {
+        data.errors
+          .map((e: any) => e.serverName)
+          .forEach((serverName: string) => {
+            newConfig.mcpServers[serverName].enabled = false
+            newConfig.mcpServers[serverName].disabled = true
+          })
+
+        // reset enable
+        await updateMCPConfig(newConfig)
+      }
+
       if (data.success) {
         setMcpConfig(newConfig)
         await fetchTools()
