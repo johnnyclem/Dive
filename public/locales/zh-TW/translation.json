@@ -51,8 +51,8 @@
     "saveFailed": "儲存失敗",
     "back": "返回",
     "parameters": "參數設定",
-    "topPDescription": "Top P 參數是一種用來控制 GPT 模型生成文本的多樣性的參數。當 GPT 模型生成文本時，它會對每個生成的字或子字在詞彙表中的概率分佈進行計算。Top P 參數控制了有多少最高概率的字或子字被選擇進入生成文本。例如，如果 top_p=0.9，那麼閾值就設定為概率在最高概率的字或子字中排名第 90 的那個。",
-    "temperatureDescription": "Temperature 參數是一種用來控制GPT 模型生成文本的“創造性”或隨機性的參數。一個較高的Temperature (例如 0.7) 會導致更多元和創新的輸出，而一個較低的 Temperature (例如 0.2) 會使輸出更確定和集中。"
+    "topPDescription": "Top-P 參數是控制模型選字的範圍。數值為 0 為使用預設值；數值越小，僅選高機率詞，回答為保守；數值越大，詞彙範圍更廣，回答多變。",
+    "temperatureDescription": "Temperature 參數是控制回答的隨機性，數值為 0 為使用預設值；數值越小，回答更精確穩定；數值越大，回答具創意但較不嚴謹。"
   },
   "sidebar": {
     "tools": "工具管理(MCP)",
@@ -87,9 +87,9 @@
   },
   "modelConfig": {
     "title": "模型設定",
-    "customInstructions": "自訂指令",
-    "customInstructionsPlaceholder": "輸入自訂的模型指令...",
-    "customInstructionsDescription": "這些指令會被添加到每個請求的系統提示中。",
+    "customInstructions": "系統提示詞",
+    "customInstructionsPlaceholder": "輸入自訂的系統提示詞...",
+    "customInstructionsDescription": "這些提示詞會添加到每次請求的系統提示末端",
     "saveInstructions": "儲存指令",
     "customRulesSaved": "自訂指令已儲存",
     "customRulesFailed": "儲存自訂指令失敗",

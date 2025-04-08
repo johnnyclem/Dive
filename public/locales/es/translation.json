@@ -51,8 +51,8 @@
     "saveFailed": "Error al guardar configuración",
     "back": "Volver",
     "parameters": "Parámetros",
-    "topPDescription": "Top P es un parámetro que controla la diversidad del texto generado por el modelo GPT. Cuando se genera texto, el modelo calcula las distribuciones de probabilidad para cada palabra o token generado en el vocabulario. Top P controla cuántos de los tokens con las probabilidades más altas se seleccionan para la generación de texto. Por ejemplo, si top_p=0.9, el umbral se establece para incluir tokens que suman 90% de la masa de probabilidad.",
-    "temperatureDescription": "La temperatura es un parámetro que controla la 'creatividad' o aleatoriedad del texto generado por el modelo GPT. Una temperatura más alta (ejemplo: 0.7) lleva a salidas más diversas e innovadoras, mientras que una temperatura más baja (ejemplo: 0.2) hace que la salida sea más determinista y enfocada."
+    "topPDescription": "El parámetro Top-P controla el rango de selección de palabras del modelo. Un valor de 0 usa el valor predeterminado; valores más bajos seleccionan solo palabras de alta probabilidad, generando respuestas más conservadoras; valores más altos amplían el rango de vocabulario, produciendo respuestas más variadas.",
+    "temperatureDescription": "El parámetro Temperature controla la aleatoriedad de las respuestas. Un valor de 0 usa el valor predeterminado; valores más bajos generan respuestas más precisas y estables; valores más altos producen respuestas más creativas pero menos rigurosas."
   },
   "sidebar": {
     "tools": "Gestión de Herramientas (MCP)",
@@ -87,9 +87,9 @@
   },
   "modelConfig": {
     "title": "Configuración del Modelo",
-    "customInstructions": "Instrucciones Personalizadas",
-    "customInstructionsPlaceholder": "Ingresa instrucciones personalizadas para el modelo...",
-    "customInstructionsDescription": "Estas instrucciones se agregan al final del prompt del sistema enviado con cada solicitud.",
+    "customInstructions": "Instrucciones del Sistema",
+    "customInstructionsPlaceholder": "Ingrese instrucciones personalizadas...",
+    "customInstructionsDescription": "Estas instrucciones se agregarán al final de cada solicitud de sistema",
     "saveInstructions": "Guardar Instrucciones",
     "customRulesSaved": "Instrucciones personalizadas guardadas",
     "customRulesFailed": "Error al guardar instrucciones personalizadas",

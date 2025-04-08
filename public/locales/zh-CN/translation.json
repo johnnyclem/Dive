@@ -51,8 +51,8 @@
     "saveFailed": "保存失败",
     "back": "返回",
     "parameters": "参数设置",
-    "topPDescription": "Top P 参数是一种用来控制 GPT 模型生成文本的多样性的参数。当 GPT 模型生成文本时，它会对每个生成的字或子字在词汇表中的概率分布进行计算。Top P 参数控制了有多少最高概率的字或子字被选择进入生成文本。例如，如果 top_p=0.9，那么阈值就设定为概率在最高概率的字或子字中排名第 90 的那个。",
-    "temperatureDescription": "Temperature 参数是一种用来控制GPT 模型生成文本的\"创造性\"或随机性的参数。一个较高的Temperature (例如 0.7) 会导致更多元和创新的输出，而一个较低的 Temperature (例如 0.2) 会使输出更确定和集中。"
+    "topPDescription": "Top-P 参数用于控制模型选词的范围。数值为 0 时使用默认值；数值越小，仅选择高概率词，回答更保守；数值越大，词汇范围更广，回答更多变。",
+    "temperatureDescription": "Temperature 参数用于控制回答的随机性，数值为 0 时使用默认值；数值越小，回答更精确稳定；数值越大，回答更具创意但较不严谨。"
   },
   "sidebar": {
     "tools": "工具管理(MCP)",
@@ -87,9 +87,9 @@
   },
   "modelConfig": {
     "title": "模型设置",
-    "customInstructions": "自定义指令",
-    "customInstructionsPlaceholder": "输入自定义的模型指令...",
-    "customInstructionsDescription": "这些指令会被添加到每个请求的系统提示中。",
+    "customInstructions": "系统提示词",
+    "customInstructionsPlaceholder": "输入自定义的系统提示词...",
+    "customInstructionsDescription": "这些提示词会添加到每次请求的系统提示末端",
     "saveInstructions": "保存指令",
     "customRulesSaved": "自定义指令已保存",
     "customRulesFailed": "保存自定义指令失败",

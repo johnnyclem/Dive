@@ -263,60 +263,76 @@
 .models-parameter-popup-confirm {
   min-height: 700px;
   max-height: 750px;
+  min-width: 700px;
 
   .popup-confirm-content {
-    padding: 40px;
+    padding: 50px 60px 20px 60px;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
   }
 }
 
 .models-parameter-popup {
   flex: 1;
-  gap: 20px;
   display: flex;
   flex-direction: column;
+  width: 100%;
 
   .models-parameter {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 10px;
     align-items: flex-start;
     justify-content: center;
-    padding: 20px;
-    border: 2px solid var(--stroke-dark-weak);
-    border-radius: 24px;
 
     > label {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 700;
+    }
+
+    &:not(:first-child) {
+      padding-top: 20px;
+    }
+
+    &:not(:last-child) {
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--stroke-dark-weak);
+    }
+
+    &.instructions {
+      flex: 1;
     }
 
     .parameters-container {
       width: 100%;
       display: flex;
-      flex-direction: column;
-      gap:18px;
+      gap: 50px;
+      padding: 0 16px;
     }
 
     .parameter-label {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 10px;
       cursor: default;
+      font-size: 18px;
     }
 
     .parameters-grid {
       display: flex;
-      flex-direction: column;
-      gap: 7px;
+      gap: 15px;
+      white-space: nowrap;
 
       input {
-        width: 100%;
-        height: 36px;
+        width: 100px;
+        height: 42px;
         border: 1px solid var(--stroke-dark-weak);
-        border-radius: 5px;
+        border-radius: 10px;
         text-align: center;
         background: var(--bg-input);
         color: var(--text);
+        font-size: 15px;
 
         &[type="number"] {
           -moz-appearance: textfield;
@@ -345,6 +361,7 @@
       transition: all 0.3s ease;
       background: var(--bg-input);
       color: var(--text);
+      flex: 1;
 
       &::placeholder {
         color: var(--text-inverted-weak);
@@ -361,9 +378,11 @@
   }
 
   .instructions-content {
+    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 20px;
+    flex: 1;
 
     .instructions-description {
       font-size: 16px;
