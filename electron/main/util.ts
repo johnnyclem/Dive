@@ -58,30 +58,6 @@ export function setNodePath() {
   process.env.NODE_PATH = path.join(process.resourcesPath, "node", "node_modules")
 }
 
-export function getNvmPath(): string {
-  const home = process.env.HOME
-  if (!home) return ""
-
-  const nvmPath = path.join(home, ".nvm", "versions", "node")
-
-  try {
-    if (fse.existsSync(nvmPath)) {
-      const currentVersion = fse.readdirSync(nvmPath)
-        .filter(dir => dir.startsWith("v"))
-        .sort()
-        .pop()
-
-      if (currentVersion) {
-        return path.join(nvmPath, currentVersion, "bin")
-      }
-    }
-  } catch (error) {
-    console.error("Error getting NVM path:", error)
-  }
-
-  return ""
-}
-
 export function getLatestVersion(): Promise<string> {
   return fetch("https://api.github.com/repos/OpenAgentPlatform/Dive/releases/latest")
     .then(res => res.json())

@@ -5,7 +5,7 @@ import path from "node:path"
 import os from "node:os"
 import AppState from "./state"
 import { cleanup, initMCPClient } from "./service"
-import { getDarwinSystemPath, getNvmPath, modifyPath } from "./util"
+import { getDarwinSystemPath, modifyPath } from "./util"
 import { binDirList, darwinPathList } from "./constant"
 import { update } from "./update"
 import { ipcHandler } from "./ipc"
@@ -62,11 +62,6 @@ async function onReady() {
     }
 
     darwinPathList.forEach(modifyPath)
-
-    const nvmPath = getNvmPath()
-    if (nvmPath) {
-      modifyPath(nvmPath)
-    }
   }
 
   initMCPClient()
