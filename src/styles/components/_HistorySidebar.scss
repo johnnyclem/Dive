@@ -9,7 +9,6 @@
   display: flex;
   flex-direction: column;
   background: var(--bg);
-  border-right: 1px solid var(--border-weak);
 
   > * {
     white-space: nowrap;
@@ -17,6 +16,7 @@
 
   &.visible {
     width: $sidebar-width;
+    border-right: 1px solid var(--border-weak);
   }
 
   @media (max-width: $breakpoint-m) {
