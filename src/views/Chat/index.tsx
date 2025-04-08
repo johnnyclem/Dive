@@ -2,7 +2,6 @@ import React, { useRef, useState, useCallback, useEffect } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import ChatMessages, { Message } from "./ChatMessages"
 import ChatInput from "./ChatInput"
-import CodeModal from './CodeModal'
 import { useAtom, useSetAtom } from 'jotai'
 import { codeStreamingAtom } from '../../atoms/codeStreaming'
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
@@ -425,7 +424,6 @@ const ChatWindow = () => {
           />
         </div>
       </div>
-      <CodeModal />
     </div>
   )
 }

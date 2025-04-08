@@ -3,11 +3,13 @@
 
 .chat-page {
   display: flex;
+  flex: 1;
   justify-content: center;
   overflow: hidden;
   gap: 20px;
   padding: 0 $page-h-padding;
-  height: calc(100vh - $header-height);
+  height: 100vh;
+  padding-top: $header-height;
 }
 
 .chat-container {
@@ -282,7 +284,6 @@
 }
 
 .message {
-  width: max-content;
   max-width: 100%;
   margin: 10px 0;
   padding: 10px 15px;
@@ -582,9 +583,7 @@
 
 .code-modal {
   flex: 1;
-  height: calc(100vh - $header-height);
-  margin: auto 0;
-  max-width: calc(100vw - $chat-width - $page-h-padding * 2 - 20px);
+  height: 100vh;
 
   .code-modal-content {
     height: 100%;
@@ -592,7 +591,6 @@
     color: var(--text-light);
     display: flex;
     flex-direction: column;
-    border-radius: 8px;
     box-shadow: 0 4px 12px var(--shadow-modal);
 
     .code-modal-header {
@@ -632,7 +630,7 @@
           border-radius: 20px;
           padding: 4px;
           gap: 2px;
-          
+
           .tab-btn {
             outline: none;
             background: none;
@@ -643,12 +641,12 @@
             font-size: 14px;
             border-radius: 20px;
             transition: all 0.2s;
-            
+
             &:hover {
               color: #fff;
               background: rgba(255, 255, 255, 0.1);
             }
-            
+
             &.active {
               color: white;
               background: rgba(255, 255, 255, 0.15);
@@ -685,6 +683,11 @@
         height: 100%;
         border: none;
         background: transparent;
+      }
+
+      code {
+        word-break: break-all;
+        white-space: break-spaces !important;
       }
     }
 
