@@ -2,6 +2,7 @@
 
 .history-sidebar {
   width: 0;
+  max-height: 100vh;
   overflow: hidden;
   transition: width $transition-normal ease;
   z-index: $z-sidebar;
