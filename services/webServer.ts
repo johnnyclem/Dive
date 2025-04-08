@@ -305,23 +305,26 @@ export class WebServer {
         const model = await initChatModel(modelName, {
           ...(modelSettings as ModelSettings),
           baseUrl,
-          max_tokens: 5,
+          max_tokens: 100,
         });
 
         const testTools = [
           {
             type: "function",
             function: {
-              name: "test",
-              description: "meaningless tool",
+              name: "web_search",
+              description:
+                "Web search",
               parameters: {
                 type: "object",
                 properties: {
-                  url: { description: "test" },
+                  query: {
+                    type: "string",
+                    description: "Search query",
+                  }
                 },
-                required: ["url"],
+                required: ["query"],
                 additionalProperties: false,
-                title: "test",
               },
             },
           },
@@ -348,7 +351,7 @@ export class WebServer {
 
         // check if support tools
         try {
-          const result = await model.invoke("Only return 'Hi' strictly", {
+          const result = await model.invoke("Use [web_search] tool to search 'iphone16'", {
             tools: testTools,
           });
           supportTools = true;

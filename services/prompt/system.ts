@@ -10,9 +10,9 @@ export const systemPrompt = (customRules: string) => {
   - Always check and comply with User_Defined_Rules first before applying any other rules or guidelines
 
   I will strictly follow these directives and rules in the following XML tags:
-    - <User_Defined_Rules> (HIGHEST PRIORITY)
-    - <Core_Guidelines>
-    - <System_Specific_Rules>
+    - User_Defined_Rules (HIGHEST PRIORITY)
+    - Core_Guidelines
+    - System_Specific_Rules
 
   <User_Defined_Rules>
     ${customRules}

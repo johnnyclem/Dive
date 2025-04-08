@@ -56,7 +56,7 @@ class ModelVerificationService {
       let fullResponse = "";
       let hasGenToolCall = false;
 
-      for await (const chunk of await model.stream("Use the web_search tool to search for 'iphone16'", {
+      for await (const chunk of await model.stream("Use [web_search] tool to search 'iphone16'", {
         tools: testTools,
         signal,
       })) {
@@ -97,7 +97,7 @@ class ModelVerificationService {
     const model = await initChatModel(modelName, {
       ...settings,
       baseUrl,
-      max_tokens: 5,
+      max_tokens: 100,
     });
 
     const modelResult: ModelVerificationResult = {
@@ -236,36 +236,13 @@ const testTools = [
     function: {
       name: "web_search",
       description:
-        "Performs a web search using SearXNG, ideal for general queries, news, articles and online content. Supports multiple search categories, languages, time ranges and safe search filtering. Returns relevant results from multiple search engines combined.",
+        "Web search",
       parameters: {
         type: "object",
         properties: {
           query: {
             type: "string",
             description: "Search query",
-          },
-          page: {
-            type: "number",
-            description: "Page number (default 1)",
-          },
-          language: {
-            type: "string",
-            description: "Search language code (e.g. 'en', 'zh', 'jp', 'all')",
-          },
-          categories: {
-            type: "array",
-            items: {
-              type: "string",
-              enum: ["general", "news", "science", "files", "images", "videos", "music", "social media", "it"],
-            },
-          },
-          time_range: {
-            type: "string",
-            enum: ["none", "day", "week", "month", "year"],
-          },
-          safesearch: {
-            type: "number",
-            description: "0: None, 1: Moderate, 2: Strict",
           },
         },
         required: ["query"],
