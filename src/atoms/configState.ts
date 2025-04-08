@@ -333,6 +333,28 @@ export async function verifyModelWithConfig(config: InterfaceModelConfig, signal
   }).then(res => res.json())
 }
 
+export const writeEmptyConfigAtom = atom(
+  null,
+  async (get, set) => {
+    const config = {
+      configs: {},
+      enable_tools: true,
+      activeProvider: EMPTY_PROVIDER,
+    }
+
+    await fetch("/api/config/model/replaceAll", {
+      method: "POST",
+      headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(config),
+      }
+    )
+
+    set(configAtom, config)
+  }
+)
+
 function cleanUpModelConfig(config: any) {
   const _config = {...config}
   delete _config.configuration.active

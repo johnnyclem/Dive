@@ -1,21 +1,37 @@
 @use "../variables" as *;
 
 .history-sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: $sidebar-width;
-  transform: translateX(-100%);
-  transition: transform $transition-normal ease;
+  width: 0;
+  max-height: 100vh;
+  overflow: hidden;
+  transition: width $transition-normal ease;
   z-index: $z-sidebar;
   display: flex;
   flex-direction: column;
   background: var(--bg);
-  border-right: 1px solid var(--border-weak);
+
+  > * {
+    white-space: nowrap;
+  }
 
   &.visible {
-    transform: translateX(0);
+    width: $sidebar-width;
+    border-right: 1px solid var(--border-weak);
+  }
+
+  @media (max-width: $breakpoint-m) {
+    width: $sidebar-width;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    transition: transform $transition-normal ease;
+    z-index: $z-overlay+1;
+
+    &.visible {
+      transform: translateX(0);
+    }
   }
 
   .history-list {

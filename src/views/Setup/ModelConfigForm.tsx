@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { FieldDefinition, InterfaceProvider, PROVIDER_LABELS, PROVIDERS } from "../../atoms/interfaceState"
-import { InterfaceModelConfig, ModelConfig, prepareModelConfig, saveFirstConfigAtom, verifyModelWithConfig } from "../../atoms/configState"
+import { InterfaceModelConfig, ModelConfig, prepareModelConfig, saveFirstConfigAtom, verifyModelWithConfig, writeEmptyConfigAtom } from "../../atoms/configState"
 import { useSetAtom } from "jotai"
 import { loadConfigAtom } from "../../atoms/configState"
 import useDebounce from "../../hooks/useDebounce"
@@ -34,6 +34,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const initProvider = useRef(provider)
   const loadConfig = useSetAtom(loadConfigAtom)
   const saveConfig = useSetAtom(saveFirstConfigAtom)
+  const writeEmptyConfig = useSetAtom(writeEmptyConfigAtom)
   const showToast = useSetAtom(showToastAtom)
 
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
@@ -185,6 +186,10 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     return true
   }
 
+  const handleSkip = () => {
+    writeEmptyConfig()
+  }
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="form-group">
@@ -259,6 +264,11 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
           ) : t(submitLabel)}
         </button>
       </div>
+
+      <div className="form-actions">
+        <div className="skip-btn" onClick={handleSkip}>Skip</div>
+      </div>
+
     </form>
   )
 }
