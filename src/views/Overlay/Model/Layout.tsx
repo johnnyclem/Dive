@@ -311,20 +311,24 @@ const PageLayout = () => {
                       {(multiModelConfig as any).secretAccessKey && <div>SecretKey： ***{(multiModelConfig as any).secretAccessKey.slice(-5)}</div>}
                       {multiModelConfig.baseURL && <div>{multiModelConfig.baseURL}</div>}
                     </div>
-                    <button
-                      type="button"
-                      className="edit-btn"
-                      onClick={() => {
-                        setShowKeyPopupEdit(true)
-                        setCurrentIndex(index)
-                      }}
-                      title={t("models.editProvider")}
+                    <Tooltip
+                      content={t("models.editProvider")}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
-                        <path d="M3 13.6684V18.9998H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M2.99991 13.5986L12.5235 4.12082C13.9997 2.65181 16.3929 2.65181 17.869 4.12082V4.12082C19.3452 5.58983 19.3452 7.97157 17.869 9.44058L8.34542 18.9183" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
+                      <button
+                          type="button"
+                          className="edit-btn"
+                        onClick={() => {
+                          setShowKeyPopupEdit(true)
+                          setCurrentIndex(index)
+                        }}
+                        title={t("models.editProvider")}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                          <path d="M3 13.6684V18.9998H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M2.99991 13.5986L12.5235 4.12082C13.9997 2.65181 16.3929 2.65181 17.869 4.12082V4.12082C19.3452 5.58983 19.3452 7.97157 17.869 9.44058L8.34542 18.9183" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    </Tooltip>
                   </div>
                   <div>
                     <div className="models-popup-btn-container">
