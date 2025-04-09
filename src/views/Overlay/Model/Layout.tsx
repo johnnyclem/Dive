@@ -1,4 +1,4 @@
-import { useSetAtom } from "jotai"
+import { useAtomValue, useSetAtom } from "jotai"
 import React, { useState } from "react"
 import { useTranslation } from "react-i18next"
 import Switch from "../../../components/Switch"
@@ -15,6 +15,7 @@ import { getVerifyStatus } from "./ModelVerify"
 import Dropdown from "../../../components/DropDown"
 import Tooltip from "../../../components/Tooltip"
 import KeyPopupEdit from "./KeyPopupEdit"
+import { systemThemeAtom, userThemeAtom } from "../../../atoms/themeState"
 
 const PageLayout = () => {
   const { t } = useTranslation()
@@ -28,6 +29,8 @@ const PageLayout = () => {
   const [showNoModelAlert, setShowNoModelAlert] = useState(false)
   const [showParameterPopup, setShowParameterPopup] = useState(false)
   const showToast = useSetAtom(showToastAtom)
+  const systemTheme = useAtomValue(systemThemeAtom)
+  const userTheme = useAtomValue(userThemeAtom)
 
   const { multiModelConfigList, setMultiModelConfigList,
           currentIndex, setCurrentIndex, saveConfig
@@ -180,6 +183,20 @@ const PageLayout = () => {
     setShowClose(false)
   }
 
+  const isProviderIconNoFilter = (model: string) => {
+    const isLightMode = userTheme === "system" ? systemTheme === "light" : userTheme === "light"
+    switch (model) {
+      case "ollama":
+      case "openai_compatible":
+      case "bedrock":
+        return true
+      case "mistralai":
+        return isLightMode
+      default:
+        return model.startsWith("google") && isLightMode
+    }
+  }
+
   return (
     <div className="models-page overlay-page">
       <button
@@ -281,7 +298,7 @@ const PageLayout = () => {
                     <img
                       src={PROVIDER_ICONS[multiModelConfig.name as InterfaceProvider]}
                       alt={multiModelConfig.name}
-                      className={`provider-icon ${multiModelConfig.name === "ollama" || multiModelConfig.name === "openai_compatible" ? "no-filter" : ""}`}
+                      className={`provider-icon ${isProviderIconNoFilter(multiModelConfig.name as InterfaceProvider) ? "no-filter" : ""}`}
                     />
                     <div className="provider-name">
                       {PROVIDER_LABELS[multiModelConfig.name as InterfaceProvider]}

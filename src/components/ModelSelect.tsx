@@ -39,6 +39,7 @@ const ModelSelect = () => {
     switch (model) {
       case "ollama":
       case "openai_compatible":
+      case "bedrock":
         return true
       case "mistralai":
         return isLightMode
