@@ -103,14 +103,6 @@ const KeyPopupEdit = ({
     }
   }, [modelConfig]);
 
-  const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newProvider = e.target.value as InterfaceProvider;
-    setProvider(newProvider);
-    setFormData({ active: true } as InterfaceModelConfig);
-    setFields(defaultInterface[newProvider]);
-    setErrors({});
-  };
-
   const handleChange = (key: string, value: any) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
@@ -421,9 +413,6 @@ const KeyPopupEdit = ({
           <div className="models-key-form-group">
             <label className="models-key-field-title">
               <>{`Custom Model ID${t("models.optional")}`}</>
-              <div className="models-key-field-description">
-                Custom Model ID
-              </div>
             </label>
             <input
               type={"text"}

@@ -70,6 +70,15 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
     },
   },
   openai_compatible: {
+    apiKey: {
+      type: "string",
+      inputType: "password",
+      label: "API Key",
+      description: "",
+      required: false,
+      default: "",
+      placeholder: "YOUR_API_KEY"
+    },
     baseURL: {
       type: "string",
       inputType: "text",
@@ -78,15 +87,6 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       required: false,
       default: "",
       placeholder: ""
-    },
-    apiKey: {
-      type: "string",
-      inputType: "password",
-      label: "API Key",
-      description: "API Key",
-      required: false,
-      default: "",
-      placeholder: "YOUR_API_KEY"
     },
     model: {
       type: "list",

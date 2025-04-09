@@ -259,7 +259,6 @@ const KeyPopup = ({
                 <span className="required">*</span>
               : t("models.optional")}
             </>
-            <div className="models-key-field-description">Custom Model ID</div>
           </label>
           <input
             type={"text"}
