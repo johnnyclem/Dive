@@ -228,7 +228,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       inputType: "password",
       label: "AWS Access Key ID",
       description: "",
-      required: false,
+      required: true,
       default: "",
       placeholder: "YOUR_AWS_ACCESS_KEY_ID"
     },
@@ -237,7 +237,7 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       inputType: "password",
       label: "AWS Secret Access Key",
       description: "",
-      required: false,
+      required: true,
       default: "",
       placeholder: "YOUR_AWS_SECRET_ACCESS_KEY"
     },
@@ -271,9 +271,16 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
         if (results.error) {
           throw new Error(results.error)
         }
-        return results.results
+        return []
       },
       listDependencies: ["accessKeyId", "secretAccessKey", "sessionToken", "region"]
     },
+    customModelId: {
+      type: "string",
+      label: "Custom Model ID",
+      description: "",
+      required: true,
+      default: ""
+    }
   }
 }

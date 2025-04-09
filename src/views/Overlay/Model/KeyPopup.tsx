@@ -16,7 +16,7 @@ const KeyPopup = ({
   onSuccess,
 }: {
   onClose: () => void
-  onSuccess: (customModelID?: string) => void
+  onSuccess: (customModelId?: string) => void
 }) => {
   const { t } = useTranslation()
   const [provider, setProvider] = useState<InterfaceProvider>(PROVIDERS[0])
@@ -24,7 +24,7 @@ const KeyPopup = ({
 
   const [formData, setFormData] = useState<InterfaceModelConfig>({active: true} as InterfaceModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [customModelID, setCustomModelID] = useState<string>("")
+  const [customModelId, setCustomModelId] = useState<string>("")
   const [verifyError, setVerifyError] = useState<string>("")
   const isVerifying = useRef(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -58,10 +58,14 @@ const KeyPopup = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
     Object.entries(fields).forEach(([key, field]) => {
-      if (field.required && !formData[key as keyof InterfaceModelConfig]) {
+      if (field.required && !formData[key as keyof InterfaceModelConfig] && key !== "customModelId") {
         newErrors[key] = t("setup.required")
       }
     })
+
+    if(fields["customModelId"]?.required && !customModelId) {
+      newErrors["customModelId"] = t("setup.required")
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -73,7 +77,7 @@ const KeyPopup = ({
   const handleSubmit = async (data: Record<string, any>) => {
     try {
       if (data.success) {
-        onSuccess(customModelID)
+        onSuccess(customModelId)
       }
     } catch (error) {
       console.error("Failed to save config:", error)
@@ -133,22 +137,27 @@ const KeyPopup = ({
       setIsSubmitting(true)
       isVerifying.current = true
 
-      if(!customModelID) {
+      //if custom model id is required, still need to check if the key is valid
+      if(!customModelId || fields["customModelId"]?.required) {
         const listOptions = await fetchListOptions(multiModelConfig, fields)
 
-        if (!listOptions?.length){
+        //if custom model id is required, it doesn't need to check if listOptions is empty
+        //because fetchListOptions in pre step will throw error if the key is invalid
+        if (!listOptions?.length && !fields["customModelId"]?.required){
           const newErrors: Record<string, string> = {}
           newErrors["apiKey"] = t("models.apiKeyError")
           setErrors(newErrors)
           return
         }
-      } else {
+      }
+
+      if(customModelId) {
         // save custom model list to local storage
         const customModelList = localStorage.getItem("customModelList")
         const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
         localStorage.setItem("customModelList", JSON.stringify({
           ...allCustomModelList,
-          [_formData.apiKey || _formData.baseURL]: [customModelID]
+          [_formData.apiKey || _formData.baseURL || _formData.accessKeyId]: [customModelId]
         }))
       }
 
@@ -157,9 +166,6 @@ const KeyPopup = ({
       const data = await saveConfig()
       await handleSubmit(data)
     } catch (error) {
-      const newErrors: Record<string, string> = {}
-      // newErrors["apiKey"] = t("models.apiKeyError")
-      // setErrors(newErrors)
       setVerifyError((error as Error).message)
       setMultiModelConfigList(_multiModelConfigList)
     } finally {
@@ -215,7 +221,7 @@ const KeyPopup = ({
           </select>
         </div>
         {Object.entries(fields).map(([key, field]) => (
-          key !== "model" && (
+          key !== "model" && key !== "customModelId" && (
             <div key={key} className="models-key-form-group">
               <label className="models-key-field-title">
                 <>
@@ -248,18 +254,21 @@ const KeyPopup = ({
         <div className="models-key-form-group">
           <label className="models-key-field-title">
             <>
-              {`Custom Model ID${t("models.optional")}`}
+              {`Custom Model ID`}
+              {fields["customModelId"]?.required ?
+                <span className="required">*</span>
+              : t("models.optional")}
             </>
             <div className="models-key-field-description">Custom Model ID</div>
           </label>
           <input
             type={"text"}
-            value={customModelID as string || ""}
-            onChange={e => setCustomModelID(e.target.value)}
+            value={customModelId as string || ""}
+            onChange={e => setCustomModelId(e.target.value)}
             placeholder={"YOUR_MODEL_ID"}
-            className={errors["customModelID"] ? "error" : ""}
+            className={errors["customModelId"] ? "error" : ""}
           />
-          {errors["customModelID"] && <div className="error-message">{errors["customModelID"]}</div>}
+          {errors["customModelId"] && <div className="error-message">{errors["customModelId"]}</div>}
         </div>
         {verifyError && (
           <Tooltip content={t("models.copyContent")}>

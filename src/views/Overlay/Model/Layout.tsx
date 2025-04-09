@@ -144,7 +144,7 @@ const PageLayout = () => {
         })
         if(type === "delete"){
           // delete custom model list from local storage
-          const key = `${targetConfig?.apiKey || targetConfig?.baseURL}`
+          const key = `${targetConfig?.apiKey || targetConfig?.baseURL || targetConfig?.accessKeyId}`
           const customModelList = localStorage.getItem("customModelList")
           const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
           delete allCustomModelList[key]
@@ -281,7 +281,8 @@ const PageLayout = () => {
                   </div>
                   <div className="api-key">
                     {multiModelConfig.apiKey && <div>Key： ***{multiModelConfig.apiKey.slice(-5)}</div>}
-                    {(multiModelConfig as any).accessKeyId && <div>Key： ***{(multiModelConfig as any).accessKeyId.slice(-5)}</div>}
+                    {(multiModelConfig as any).accessKeyId && <div>KeyId： ***{(multiModelConfig as any).accessKeyId.slice(-5)}</div>}
+                    {(multiModelConfig as any).secretAccessKey && <div>SecretKey： ***{(multiModelConfig as any).secretAccessKey.slice(-5)}</div>}
                     {multiModelConfig.baseURL && <div>{multiModelConfig.baseURL}</div>}
                   </div>
                   <div>

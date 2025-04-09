@@ -106,7 +106,7 @@ export default function ModelsProvider({
     const customModelListText = localStorage.getItem("customModelList")
     if(customModelListText){
       const customModelList = JSON.parse(customModelListText)
-      const _customModelList = customModelList[`${multiModelConfig.apiKey || multiModelConfig.baseURL}`]
+      const _customModelList = customModelList[`${multiModelConfig.apiKey || multiModelConfig.baseURL || multiModelConfig.accessKeyId}`]
       if(_customModelList){
         _customModelList.forEach((option: string) => {
           newListOptions.push({
@@ -119,26 +119,39 @@ export default function ModelsProvider({
       }
     }
 
-    let options: string[] = []
-    for (const [key, field] of Object.entries(fields)) {
-      if (field.type === "list" && field.listCallback && field.listDependencies) {
-        const deps = field.listDependencies.reduce((acc, dep) => ({
-          ...acc,
-          [dep]: multiModelConfig[dep as keyof MultiModelConfig] || (multiModelConfig as any).credentials?.[dep] || ""
-        }), {})
 
-        options = await field.listCallback!(deps)
+    try {
+      let options: string[] = []
+      for (const [key, field] of Object.entries(fields)) {
+        if (field.type === "list" && field.listCallback && field.listDependencies) {
+          const deps = field.listDependencies.reduce((acc, dep) => ({
+            ...acc,
+            [dep]: multiModelConfig[dep as keyof MultiModelConfig] || (multiModelConfig as any).credentials?.[dep] || ""
+          }), {})
+
+          options = await field.listCallback!(deps)
+        }
+      }
+
+      options.forEach((option: string) => {
+        newListOptions.push({
+          name: option,
+          checked: multiModelConfig.models.includes(option),
+          verifyStatus: getVerifyStatus(verifyList?.[option]) ?? "unVerified",
+          isCustom: false
+        })
+      })
+    } catch (error) {
+      // if listCallback failed and custom model list is empty, throw error
+      if(!customModelListText) {
+        throw error
+      }
+      const customModelList = JSON.parse(customModelListText)
+      const _customModelList = customModelList[`${multiModelConfig.apiKey || multiModelConfig.baseURL || multiModelConfig.accessKeyId}`]
+      if(!_customModelList || !_customModelList.length) {
+        throw error
       }
     }
-
-    options.forEach((option: string) => {
-      newListOptions.push({
-        name: option,
-        checked: multiModelConfig.models.includes(option),
-        verifyStatus: getVerifyStatus(verifyList?.[option]) ?? "unVerified",
-        isCustom: false
-      })
-    })
     return newListOptions
   }
 

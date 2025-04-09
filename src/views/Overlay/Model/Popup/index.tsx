@@ -73,24 +73,33 @@ const ModelPopup = ({
   }, [multiModelConfig])
 
   const reloadModelList = async (_defaultModel?: string) => {
-    if(!multiModelConfig)
-      return
-    setListOptions([])
-    setIsFetching(true)
-    let options = await fetchListOptions(multiModelConfig, defaultInterface[multiModelConfig.name])
-    options = options.map(option => ({
-      ...option,
-      checked: _defaultModel ? option.name === _defaultModel : multiModelConfig.models.includes(option.name),
-      verifyStatus: option.verifyStatus ?? "unVerified"
-    })).sort((a, b) => {
-      if (a.checked === b.checked) {
-        return (a as any).originalIndex - (b as any).originalIndex
-      }
-      return a.checked ? -1 : 1
-    })
-    setListOptions(options)
-    setCheckboxState(options.every(option => option.checked) ? "all" : options.some(option => option.checked) ? "-" : "")
-    setIsFetching(false)
+    try {
+      if(!multiModelConfig)
+        return
+      setListOptions([])
+      setIsFetching(true)
+      let options = await fetchListOptions(multiModelConfig, defaultInterface[multiModelConfig.name])
+      options = options.map(option => ({
+        ...option,
+        checked: _defaultModel ? option.name === _defaultModel : multiModelConfig.models.includes(option.name),
+        verifyStatus: option.verifyStatus ?? "unVerified"
+      })).sort((a, b) => {
+        if (a.checked === b.checked) {
+          return (a as any).originalIndex - (b as any).originalIndex
+        }
+        return a.checked ? -1 : 1
+      })
+      setListOptions(options)
+      setCheckboxState(options.every(option => option.checked) ? "all" : options.some(option => option.checked) ? "-" : "")
+      setIsFetching(false)
+    } catch (error) {
+      showToast({
+        message: (error as Error).message,
+        type: "error"
+      })
+      setListOptions([])
+      setIsFetching(false)
+    }
   }
 
   const handleGroupClick = () => {
@@ -160,7 +169,7 @@ const ModelPopup = ({
       const data = await saveConfig()
 
       // save custom model list to local storage
-      const key = `${multiModelConfig.apiKey || multiModelConfig.baseURL}`
+      const key = `${multiModelConfig.apiKey || multiModelConfig.baseURL || multiModelConfig.accessKeyId}`
       const customModelList = localStorage.getItem("customModelList")
       const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
       const newCustomModelList = listOptions.filter(option => option.isCustom).map(option => option.name)
