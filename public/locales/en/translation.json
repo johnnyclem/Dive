@@ -29,7 +29,8 @@
     "cancel": "Cancel",
     "save": "Save",
     "toolCalls": "🛠 {{name}} Tool Call Result",
-    "unsupportTools": "{{model}} does not support Tool Calls"
+    "unsupportTools": "{{model}} does not support Tool Calls",
+    "dragFiles": "Drop files here to add to chat"
   },
   "welcome": {
     "title": "Welcome to Dive AI",

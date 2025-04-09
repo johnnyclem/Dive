@@ -29,7 +29,8 @@
     "cancel": "Cancelar",
     "save": "Guardar",
     "toolCalls": "🛠 Resultado de la llamada a la herramienta {{name}}",
-    "unsupportTools": "{{model}} no admite llamadas a herramientas"
+    "unsupportTools": "{{model}} no admite llamadas a herramientas",
+    "dragFiles": "Arrastra archivos aquí para agregar a la conversación"
   },
   "welcome": {
     "title": "Bienvenido a Dive AI",

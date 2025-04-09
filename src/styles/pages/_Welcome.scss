@@ -19,6 +19,44 @@
   .welcome-input-wrapper {
     position: relative;
 
+    .drag-overlay {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      background: var(--bg);
+      border: 3px dashed var(--bg-hover-blue);
+      border-radius: 12px;
+      overflow: hidden;
+      z-index: 1;
+      display: none;
+
+      &.show {
+        display: block;
+      }
+
+      .drag-overlay-bg {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: var(--bg-hover-blue);
+        opacity: 0.5;
+      }
+
+      .drag-overlay-text {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        pointer-events: none;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        color: var(--text-pri-blue);
+      }
+    }
+
     .chat-input-banner {
       display: flex;
       padding: 8px 12px 13px;

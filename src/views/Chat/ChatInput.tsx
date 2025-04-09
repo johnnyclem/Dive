@@ -38,6 +38,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   const hasActiveConfig = useAtomValue(isConfigActiveAtom)
   const supportTools = useAtomValue(currentModelSupportToolsAtom)
   const activeConfig = useAtomValue(activeConfigAtom)
+  const [isDragging, setIsDragging] = useState(false)
 
   const formatFileSize = useCallback((bytes: number): string => {
     if (bytes < 1024) return bytes + ' B'
@@ -258,6 +259,10 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
       return
     }
 
+    if (e.key === "Enter" && disabled) {
+      return
+    }
+
     e.preventDefault()
     handleSubmit(e)
   }
@@ -280,6 +285,25 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
     }
   }
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    if (e.dataTransfer.files) {
+      handleFiles(Array.from(e.dataTransfer.files))
+    }
+  }
+
   return (
     <div className="chat-input-wrapper">
       {activeConfig?.model && activeConfig?.model !== "none" && !supportTools && (
@@ -292,7 +316,26 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
           {t("chat.noModelBanner")}
         </div>
       )}
-      <footer className="chat-input">
+      <footer
+        className="chat-input"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        <div
+          className={`drag-overlay ${isDragging ? 'show' : ''}`}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <div className="drag-overlay-bg"
+          onDrop={handleDrop}></div>
+          <div className="drag-overlay-text">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 22 22" width="22" height="22">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"></path>
+              <path fill="currentColor" d="M6.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM3 16l4-4 2 2 6-4.5 4 4.5v1.999L3 16Z"></path>
+            </svg>
+            {t('chat.dragFiles')}
+          </div>
+        </div>
         <div className="input-wrapper">
           <Textarea
             ref={textareaRef}
@@ -303,7 +346,6 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
             onCompositionEnd={handleCompositionEnd}
             placeholder={t('chat.placeholder')}
             rows={1}
-            disabled={disabled}
           />
         </div>
         <div className="input-actions">

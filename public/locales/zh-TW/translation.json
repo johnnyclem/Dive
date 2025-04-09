@@ -29,7 +29,8 @@
     "cancel": "取消",
     "save": "儲存",
     "toolCalls": "🛠 呼叫 {{name}} 工具結果",
-    "unsupportTools": "{{model}} 不支援Tool Calls"
+    "unsupportTools": "{{model}} 不支援Tool Calls",
+    "dragFiles": "拖放文件到此處以添加到對話"
   },
   "welcome": {
     "title": "歡迎使用 Dive AI",
