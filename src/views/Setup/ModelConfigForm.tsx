@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { FieldDefinition, InterfaceProvider, PROVIDER_LABELS, PROVIDERS } from "../../atoms/interfaceState"
-import { InterfaceModelConfig, ModelConfig, saveFirstConfigAtom, writeEmptyConfigAtom } from "../../atoms/configState"
-import { ignoreFieldsForModel } from "../../constants"
+import { InterfaceModelConfig, ModelConfig, prepareModelConfig, saveFirstConfigAtom, verifyModelWithConfig, writeEmptyConfigAtom } from "../../atoms/configState"
 import { useSetAtom } from "jotai"
 import { loadConfigAtom } from "../../atoms/configState"
 import useDebounce from "../../hooks/useDebounce"
 import { showToastAtom } from "../../atoms/toastState"
 import Input from "../../components/WrappedInput"
-import { transformModelProvider } from "../../helper/config"
+import Tooltip from "../../components/Tooltip"
 
 interface ModelConfigFormProps {
   provider: InterfaceProvider
@@ -28,6 +27,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const { t } = useTranslation()
   const [formData, setFormData] = useState<InterfaceModelConfig>({} as InterfaceModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [verifyError, setVerifyError] = useState<string>("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [isVerifyingNoTool, setIsVerifyingNoTool] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -41,6 +41,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
     try {
+      setVerifyError("")
       const options = await field.listCallback!(deps)
       setListOptions(prev => ({
         ...prev,
@@ -51,10 +52,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         handleChange(key, options[0])
       }
     } catch (error) {
-      showToast({
-        message: t("setup.verifyError"),
-        type: "error"
-      })
+      setVerifyError((error as Error).message)
     }
   }, 100)
 
@@ -101,64 +99,10 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     setIsVerified(false)
   }
 
-  const prepareModelConfig = useCallback((config: InterfaceModelConfig, provider: InterfaceProvider) => {
-    const _config = {...config}
-    if (_config.topP === 0) {
-      delete (_config as any).topP
-    }
-
-    if (_config.temperature === 0) {
-      delete (_config as any).temperature
-    }
-
-    return Object.keys(_config).reduce((acc, key) => {
-      if (ignoreFieldsForModel.some(item => (item.model === _config.model || _config.model?.startsWith(item.prefix)) && item.fields.includes(key))) {
-        return acc
-      }
-
-      return {
-        ...acc,
-        [key]: _config[key as keyof ModelConfig]
-      }
-    }, {} as InterfaceModelConfig)
-  }, [])
-
   const verifyModel = async () => {
     try {
       setIsVerifying(true)
-      const modelProvider = transformModelProvider(provider)
-      const configuration = {...formData} as Partial<Pick<ModelConfig, "configuration">> & Omit<ModelConfig, "configuration">
-      delete configuration.configuration
-
-      const _formData = prepareModelConfig(formData, provider)
-
-      if (modelProvider === "bedrock") {
-        _formData.apiKey = (_formData as any).accessKeyId || (_formData as any).credentials.accessKeyId
-        if (!((_formData as any).credentials)) {
-          ;(_formData as any).credentials = {
-            accessKeyId: (_formData as any).accessKeyId,
-            secretAccessKey: (_formData as any).secretAccessKey,
-            sessionToken: (_formData as any).sessionToken,
-          }
-        }
-      }
-
-      const response = await fetch("/api/modelVerify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          provider,
-          modelSettings: {
-            ..._formData,
-            modelProvider,
-            configuration,
-          },
-        }),
-      })
-
-      const data = await response.json()
+      const data = await verifyModelWithConfig(formData)
       if (data.success) {
         setIsVerified(true)
         if(data.connectingSuccess && data.supportTools) {
@@ -206,8 +150,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
     try {
       setIsSubmitting(true)
-      const data = await saveConfig({ data: _formData, provider })
-      await onSubmit(data)
+      await onSubmit(await saveConfig({ data: _formData, provider }))
       loadConfig()
     } finally {
       setIsSubmitting(false)
@@ -245,6 +188,14 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
   const handleSkip = () => {
     writeEmptyConfig()
+  }
+
+  const handleCopiedError = async (text: string) => {
+    await navigator.clipboard.writeText(text)
+    showToast({
+      message: t("toast.copiedToClipboard"),
+      type: "success"
+    })
   }
 
   return (
@@ -299,6 +250,20 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
           {errors[key] && <div className="error-message">{errors[key]}</div>}
         </div>
       ))}
+
+        {verifyError && (
+          <Tooltip content={t("models.copyContent")}>
+            <div onClick={() => handleCopiedError(verifyError)} className="error-message">
+              {verifyError}
+              <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 22 22" fill="transparent">
+                <path d="M13 20H2V6H10.2498L13 8.80032V20Z" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
+                <path d="M13 9H10V6L13 9Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 3.5V2H17.2498L20 4.80032V16H16" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
+                <path d="M20 5H17V2L20 5Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </Tooltip>
+        )}
 
       <div className="form-actions">
         <button

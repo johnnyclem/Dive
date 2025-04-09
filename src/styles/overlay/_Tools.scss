@@ -81,6 +81,7 @@
   min-height: 100vh;
   padding: 20px;
   background: var(--bg-medium);
+  width: 100%;
 }
 
 .setup-container {
@@ -146,10 +147,18 @@
     }
 
     .error-message {
-      color: var(--text-error);
-      font-size: 14px;
       margin-top: 4px;
     }
+  }
+
+  .error-message {
+    color: var(--text-error);
+    font-size: 14px;
+  }
+
+  > form > .error-message {
+    cursor: pointer;
+    word-break: break-all;
   }
 
   .form-actions {
@@ -264,6 +273,8 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      height: 36px;
+      width: fit-content;
       padding: 8px 16px;
       border: none;
       border-radius: 6px;
