@@ -8,8 +8,6 @@ import { ignoreFieldsForModel } from '../constants'
 export type ProviderRequired = {
   apiKey: string
   baseURL: string
-  accessKeyId: string
-  secretAccessKey: string
   model: string | null
 }
 
