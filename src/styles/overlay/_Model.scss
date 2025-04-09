@@ -122,6 +122,10 @@
 
       &:hover {
         background: var(--bg-btn-hover);
+
+        .edit-btn {
+          display: flex;
+        }
       }
 
       &.head {
@@ -167,8 +171,9 @@
 
       .api-key {
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
 
         div {
           @include line-clamp(1);
@@ -421,6 +426,17 @@
   flex-direction: column;
   gap: 12px;
   padding: 0 30px;
+
+  &.edit{
+    padding: 20px 86px 0 62px;
+
+    .title{
+      font-weight: 700 !important;
+      font-size: 20px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+  }
 
   .models-key-form-group {
     display: flex;
@@ -935,5 +951,56 @@
         }
       }
     }
+  }
+}
+
+.edit-btn {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  height: 25px;
+  padding: 4px 7px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  background: transparent;
+  border: none;
+  color: var(--text-weak);
+
+  svg {
+    color: var(--stroke-dark-medium);
+  }
+}
+
+.api-key-input-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.api-key-actions {
+  position: absolute;
+  right: -9px;
+  transform: translateX(+100%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img{
+    width: 20px;
+    height: 20px;
   }
 }

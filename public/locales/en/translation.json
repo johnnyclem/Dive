@@ -153,7 +153,12 @@
     "customModelIDPlaceholder": "Enter custom model ID...",
     "customModelIDError1": "Model ID cannot be empty",
     "customModelIDError2": "Model ID already exists",
-    "copyContent": "Copy Content"
+    "copyContent": "Copy Content",
+    "editProvider": "Edit Provider Config",
+    "editProviderTitle": "Edit {{provider}} Config",
+    "hide": "Hide",
+    "display": "Display",
+    "copy": "Copy"
   },
   "system": {
     "title": "System Settings",
