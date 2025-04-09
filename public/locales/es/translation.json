@@ -152,7 +152,8 @@
     "customModelIDTitle": "ID de Modelo Personalizado",
     "customModelIDPlaceholder": "Ingrese el ID del modelo personalizado...",
     "customModelIDError1": "El ID del modelo no puede estar vacío",
-    "customModelIDError2": "El ID del modelo ya existe"
+    "customModelIDError2": "El ID del modelo ya existe",
+    "copyContent": "Contenido"
   },
   "system": {
     "title": "Configuración del Sistema",

@@ -426,11 +426,6 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-
-    .error-message {
-      color: var(--text-error);
-      font-size: 14px;
-    }
   }
 
   .models-key-field-optional {
@@ -462,6 +457,39 @@
   }
   select {
     background: var(--bg-select);
+  }
+
+  .models-key-progress-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    font-size: 12px;
+    gap: 7.5px;
+
+    .models-key-progress-container {
+      width: 100%;
+      height: 4px;
+      background: var(--bg-op-dark-ultraweak);
+      border-radius: 4px;
+
+      .models-key-progress {
+        height: 100%;
+        border-radius: 4px;
+        background: var(--bg-pri-green);
+        transition: width 0.3s;
+      }
+    }
+  }
+
+  .error-message {
+    color: var(--text-error);
+    font-size: 14px;
+  }
+
+  > .error-message {
+    cursor: pointer;
+    word-break: break-all;
   }
 }
 

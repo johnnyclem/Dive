@@ -7,6 +7,7 @@ import { loadConfigAtom } from "../../atoms/configState"
 import useDebounce from "../../hooks/useDebounce"
 import { showToastAtom } from "../../atoms/toastState"
 import Input from "../../components/WrappedInput"
+import Tooltip from "../../components/Tooltip"
 
 interface ModelConfigFormProps {
   provider: InterfaceProvider
@@ -26,6 +27,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const { t } = useTranslation()
   const [formData, setFormData] = useState<InterfaceModelConfig>({} as InterfaceModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [verifyError, setVerifyError] = useState<string>("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [isVerifyingNoTool, setIsVerifyingNoTool] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -39,6 +41,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
     try {
+      setVerifyError("")
       const options = await field.listCallback!(deps)
       setListOptions(prev => ({
         ...prev,
@@ -49,10 +52,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
         handleChange(key, options[0])
       }
     } catch (error) {
-      showToast({
-        message: t("setup.verifyError"),
-        type: "error"
-      })
+      setVerifyError((error as Error).message)
     }
   }, 100)
 
@@ -190,6 +190,14 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     writeEmptyConfig()
   }
 
+  const handleCopiedError = async (text: string) => {
+    await navigator.clipboard.writeText(text)
+    showToast({
+      message: t("toast.copiedToClipboard"),
+      type: "success"
+    })
+  }
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="form-group">
@@ -242,6 +250,20 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
           {errors[key] && <div className="error-message">{errors[key]}</div>}
         </div>
       ))}
+
+        {verifyError && (
+          <Tooltip content={t("models.copyContent")}>
+            <div onClick={() => handleCopiedError(verifyError)} className="error-message">
+              {verifyError}
+              <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 22 22" fill="transparent">
+                <path d="M13 20H2V6H10.2498L13 8.80032V20Z" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
+                <path d="M13 9H10V6L13 9Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 3.5V2H17.2498L20 4.80032V16H16" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
+                <path d="M20 5H17V2L20 5Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </Tooltip>
+        )}
 
       <div className="form-actions">
         <button

@@ -152,7 +152,8 @@
     "customModelIDTitle": "自訂模型ID",
     "customModelIDPlaceholder": "輸入自訂模型ID...",
     "customModelIDError1": "模型ID不能為空",
-    "customModelIDError2": "模型ID已存在"
+    "customModelIDError2": "模型ID已存在",
+    "copyContent": "複製內容"
   },
   "system": {
     "title": "系統設定",

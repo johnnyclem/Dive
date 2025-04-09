@@ -9,6 +9,7 @@ import React from "react"
 import { useModelsProvider } from "./ModelsProvider"
 import { formatData } from "../../../helper/config"
 import CheckBox from "../../../components/CheckBox"
+import Tooltip from "../../../components/Tooltip"
 
 const KeyPopup = ({
   onClose,
@@ -24,6 +25,7 @@ const KeyPopup = ({
   const [formData, setFormData] = useState<InterfaceModelConfig>({active: true} as InterfaceModelConfig)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [customModelID, setCustomModelID] = useState<string>("")
+  const [verifyError, setVerifyError] = useState<string>("")
   const isVerifying = useRef(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, showToast] = useAtom(showToastAtom)
@@ -46,6 +48,7 @@ const KeyPopup = ({
     setFormData({active: true} as InterfaceModelConfig)
     setFields(defaultInterface[newProvider])
     setErrors({})
+    setVerifyError("")
   }
 
   const handleChange = (key: string, value: any) => {
@@ -126,6 +129,7 @@ const KeyPopup = ({
 
     try {
       setErrors({})
+      setVerifyError("")
       setIsSubmitting(true)
       isVerifying.current = true
 
@@ -154,8 +158,9 @@ const KeyPopup = ({
       await handleSubmit(data)
     } catch (error) {
       const newErrors: Record<string, string> = {}
-      newErrors["apiKey"] = t("models.apiKeyError")
-      setErrors(newErrors)
+      // newErrors["apiKey"] = t("models.apiKeyError")
+      // setErrors(newErrors)
+      setVerifyError((error as Error).message)
       setMultiModelConfigList(_multiModelConfigList)
     } finally {
       setIsSubmitting(false)
@@ -171,6 +176,14 @@ const KeyPopup = ({
       })
     }
     onClose()
+  }
+
+  const handleCopiedError = async (text: string) => {
+    await navigator.clipboard.writeText(text)
+    showToast({
+      message: t("toast.copiedToClipboard"),
+      type: "success"
+    })
   }
 
   return (
@@ -248,6 +261,19 @@ const KeyPopup = ({
           />
           {errors["customModelID"] && <div className="error-message">{errors["customModelID"]}</div>}
         </div>
+        {verifyError && (
+          <Tooltip content={t("models.copyContent")}>
+            <div onClick={() => handleCopiedError(verifyError)} className="error-message">
+              {verifyError}
+              <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 22 22" fill="transparent">
+                <path d="M13 20H2V6H10.2498L13 8.80032V20Z" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
+                <path d="M13 9H10V6L13 9Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 3.5V2H17.2498L20 4.80032V16H16" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
+                <path d="M20 5H17V2L20 5Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          </Tooltip>
+        )}
       </div>
     </PopupConfirm>
   )

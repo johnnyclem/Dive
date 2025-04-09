@@ -152,7 +152,8 @@
     "customModelIDTitle": "Custom Model ID",
     "customModelIDPlaceholder": "Enter custom model ID...",
     "customModelIDError1": "Model ID cannot be empty",
-    "customModelIDError2": "Model ID already exists"
+    "customModelIDError2": "Model ID already exists",
+    "copyContent": "Copy Content"
   },
   "system": {
     "title": "System Settings",
