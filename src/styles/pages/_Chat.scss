@@ -75,7 +75,7 @@
   overflow-y: auto;
   padding: 15px 15px 0;
   margin-bottom: 0;
-  padding-bottom: 45px;
+  padding-bottom: 85px;
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -112,7 +112,7 @@
 
 .chat-input-wrapper {
   position: relative;
-  bottom: 20px;
+  bottom: 0;
   left: 0;
   right: 0;
   max-width: $chat-width;
