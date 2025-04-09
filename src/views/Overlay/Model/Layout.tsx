@@ -14,6 +14,7 @@ import { InterfaceProvider, PROVIDER_ICONS, PROVIDER_LABELS } from "../../../ato
 import { getVerifyStatus } from "./ModelVerify"
 import Dropdown from "../../../components/DropDown"
 import Tooltip from "../../../components/Tooltip"
+import KeyPopupEdit from "./KeyPopupEdit"
 
 const PageLayout = () => {
   const { t } = useTranslation()
@@ -21,6 +22,7 @@ const PageLayout = () => {
   const [showDelete, setShowDelete] = useState(false)
   const [showClose, setShowClose] = useState(false)
   const [showKeyPopup, setShowKeyPopup] = useState(false)
+  const [showKeyPopupEdit, setShowKeyPopupEdit] = useState(false)
   const [defaultModel, setDefaultModel] = useState("")
   const [showModelPopup, setShowModelPopup] = useState(false)
   const [showNoModelAlert, setShowNoModelAlert] = useState(false)
@@ -76,6 +78,12 @@ const PageLayout = () => {
 
   const handleNewKeySubmit = (defaultModel?: string) => {
     setShowKeyPopup(false)
+    setShowModelPopup(true)
+    setDefaultModel(defaultModel || "")
+  }
+
+  const handleKeyPopupEditSubmit = (defaultModel?: string) => {
+    setShowKeyPopupEdit(false)
     setShowModelPopup(true)
     setDefaultModel(defaultModel || "")
   }
@@ -280,10 +288,26 @@ const PageLayout = () => {
                     </div>
                   </div>
                   <div className="api-key">
-                    {multiModelConfig.apiKey && <div>Key： ***{multiModelConfig.apiKey.slice(-5)}</div>}
-                    {(multiModelConfig as any).accessKeyId && <div>KeyId： ***{(multiModelConfig as any).accessKeyId.slice(-5)}</div>}
-                    {(multiModelConfig as any).secretAccessKey && <div>SecretKey： ***{(multiModelConfig as any).secretAccessKey.slice(-5)}</div>}
-                    {multiModelConfig.baseURL && <div>{multiModelConfig.baseURL}</div>}
+                    <div>
+                      {multiModelConfig.apiKey && <div>Key： ***{multiModelConfig.apiKey.slice(-5)}</div>}
+                      {(multiModelConfig as any).accessKeyId && <div>KeyId： ***{(multiModelConfig as any).accessKeyId.slice(-5)}</div>}
+                      {(multiModelConfig as any).secretAccessKey && <div>SecretKey： ***{(multiModelConfig as any).secretAccessKey.slice(-5)}</div>}
+                      {multiModelConfig.baseURL && <div>{multiModelConfig.baseURL}</div>}
+                    </div>
+                    <button
+                      type="button"
+                      className="edit-btn"
+                      onClick={() => {
+                        setShowKeyPopupEdit(true)
+                        setCurrentIndex(index)
+                      }}
+                      title={t("models.editProvider")}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <path d="M3 13.6684V18.9998H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M2.99991 13.5986L12.5235 4.12082C13.9997 2.65181 16.3929 2.65181 17.869 4.12082V4.12082C19.3452 5.58983 19.3452 7.97157 17.869 9.44058L8.34542 18.9183" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
                   </div>
                   <div>
                     <div className="models-popup-btn-container">
@@ -360,6 +384,12 @@ const PageLayout = () => {
           <KeyPopup
             onClose={() => setShowKeyPopup(false)}
             onSuccess={handleNewKeySubmit}
+          />
+        )}
+        {showKeyPopupEdit && (
+          <KeyPopupEdit
+            onClose={() => setShowKeyPopupEdit(false)}
+            onSuccess={handleKeyPopupEditSubmit}
           />
         )}
         {showModelPopup && (
