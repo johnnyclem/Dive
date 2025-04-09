@@ -152,7 +152,7 @@ const PageLayout = () => {
         })
         if(type === "delete"){
           // delete custom model list from local storage
-          const key = `${targetConfig?.apiKey || targetConfig?.baseURL || targetConfig?.accessKeyId}`
+          const key = `${targetConfig?.accessKeyId || targetConfig?.apiKey || targetConfig?.baseURL}`
           const customModelList = localStorage.getItem("customModelList")
           const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
           delete allCustomModelList[key]

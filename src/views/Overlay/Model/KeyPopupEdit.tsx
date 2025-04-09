@@ -74,9 +74,6 @@ const KeyPopupEdit = ({
         active: modelConfig.active !== false,
         modelProvider: modelProvider,
         configuration: {
-          apiKey: modelConfig.apiKey,
-          baseURL: modelConfig.baseURL,
-          model: modelConfig.model,
           topP: modelConfig.topP,
           temperature: modelConfig.temperature,
         },

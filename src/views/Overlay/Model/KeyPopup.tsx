@@ -157,7 +157,7 @@ const KeyPopup = ({
         const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
         localStorage.setItem("customModelList", JSON.stringify({
           ...allCustomModelList,
-          [_formData.apiKey || _formData.baseURL || _formData.accessKeyId]: [customModelId]
+          [formData.accessKeyId || _formData.apiKey || _formData.baseURL]: [customModelId]
         }))
       }
 

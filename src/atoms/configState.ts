@@ -16,13 +16,19 @@ export type ModelParameter = {
   temperature: number
 }
 
+export type BedrockCredentials = {
+  accessKeyId: string
+  secretAccessKey: string
+  sessionToken: string
+}
+
 export type ModelConfig = ProviderRequired & ModelParameter & {
   modelProvider: ModelProvider
-  configuration: ProviderRequired & ModelParameter
+  configuration: Partial<ProviderRequired> & ModelParameter
   active: boolean
 }
 
-export type InterfaceModelConfig = Omit<ModelConfig, "modelProvider"> & {
+export type InterfaceModelConfig = Omit<ModelConfig, "modelProvider"> & Partial<ModelParameter> & Partial<BedrockCredentials> & {
   modelProvider: InterfaceProvider
 }
 
@@ -34,7 +40,7 @@ export type RawModelConfig = {
   configs: ModelConfigMap
 }
 
-export type MultiModelConfig = ProviderRequired & ModelParameter & {
+export type MultiModelConfig = ProviderRequired & ModelParameter & Partial<BedrockCredentials> & {
   name: InterfaceProvider
   active: boolean
   checked: boolean
