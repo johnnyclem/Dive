@@ -361,8 +361,8 @@ const KeyPopupEdit = ({
                               <img
                                 src={
                                   isApiKeyVisible
-                                    ? "/icons/Hide.svg"
-                                    : "/icons/Show.svg"
+                                    ? "img://Hide.svg"
+                                    : "img://Show.svg"
                                 }
                                 alt={
                                   isApiKeyVisible
@@ -400,7 +400,7 @@ const KeyPopupEdit = ({
                                 </svg>
                               ) : (
                                 <img
-                                  src="/icons/Copy.svg"
+                                  src="img://Copy.svg"
                                   alt={t("models.copy")}
                                   width="20"
                                   height="20"
