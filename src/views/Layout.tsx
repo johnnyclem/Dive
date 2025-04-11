@@ -17,7 +17,14 @@ const Layout = () => {
 
   return (
     <div className="app-container" data-theme={theme === "system" ? systemTheme : theme}>
-      <div className="app-content">
+      <div className="
+        app-content 
+        min-h-screen 
+        bg-gradient-to-b 
+        from-slate-900 
+        via-blue-900 
+        to-blue-400
+      ">
         {!isConfigNotInitialized && <HistorySidebar />}
         <div className="outlet-container">
           {!isConfigNotInitialized && <Header showHelpButton showModelSelect />}

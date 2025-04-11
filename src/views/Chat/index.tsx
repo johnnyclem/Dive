@@ -48,7 +48,7 @@ const ChatWindow = () => {
 
       if (data.success) {
         currentChatId.current = id
-        document.title = `${data.data.chat.title} - Dive AI`
+        document.title = `${data.data.chat.title} - Souls`
 
         const convertedMessages = data.data.messages.map((msg: any) => ({
           id: msg.messageId || msg.id || String(currentId.current++),
@@ -319,7 +319,7 @@ const ChatWindow = () => {
                 break
 
               case "chat_info":
-                document.title = `${data.content.title} - Dive AI`
+                document.title = `${data.content.title} - Souls`
                 currentChatId.current = data.content.id
                 navigate(`/chat/${data.content.id}`, { replace: true })
                 break
@@ -408,9 +408,9 @@ const ChatWindow = () => {
   }, [updateStreamingCode, chatId])
 
   return (
-    <div className="chat-page">
-      <div className="chat-container">
-        <div className="chat-window">
+    <div className="flex flex-1 justify-center h-screen overflow-hidden py-0 px-4">
+      <div className="flex flex-1 justify-center p-0 m-0 overflow-hidden transition-all duration-300 h-[calc(100vh-var(--header-height))] text-[var(--text)]">
+        <div className="w-full flex flex-col border-none flex-1 overflow-hidden relative">
           <ChatMessages
             messages={messages}
             isLoading={isChatStreaming}

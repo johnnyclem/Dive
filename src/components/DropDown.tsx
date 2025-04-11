@@ -1,88 +1,69 @@
+import React from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { forwardRef } from 'react';
 
-export type DropDownOptionType = {
-  label: string | React.ReactNode
-  icon?: React.ReactNode
-  leftSlot?: React.ReactNode,
-  rightSlot?: React.ReactNode,
-  visible?: boolean
-  disabled?: boolean
-  onClick?: (e: React.MouseEvent<HTMLElement>) => void
+interface DropdownItem {
+  label: string;
+  icon?: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
 }
 
-type Props = {
-  children: React.ReactNode
-  placement?: "top" | "right" | "bottom" | "left"
-  align?: "center" | "start" | "end"
-  options?: DropDownOptionType[]
-  content?: React.ReactNode
-  contentClassName?: string
-  maxHeight?: number
-  size?: 'm' | 'l'
-  width?: 'auto' | 'fill'
+interface DropdownProps {
+  items: DropdownItem[];
+  trigger: React.ReactNode;
+  align?: 'start' | 'center' | 'end';
+  side?: 'top' | 'right' | 'bottom' | 'left';
+  fill?: boolean;
+  className?: string;
 }
 
-const Dropdown = forwardRef<HTMLButtonElement|null, Props>(({
-  children,
-  placement = "bottom",
-  align = "end",
-  options,
-  content,
-  contentClassName,
-  maxHeight,
-  size = 'l',
-  width,
-  ...rest
-}, ref) => {
-
+export const Dropdown: React.FC<DropdownProps> = ({
+  items,
+  trigger,
+  align = 'start',
+  side = 'bottom',
+  fill = false,
+  className = '',
+}) => {
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild ref={ref} {...rest} >
-        {children}
+      <DropdownMenu.Trigger asChild>
+        {trigger}
       </DropdownMenu.Trigger>
+
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          style={maxHeight ? {maxHeight: `${maxHeight}px`} : {}}
+          className={`
+            bg-bg-medium text-text-medium shadow-modal rounded-md py-2 z-[2500] overflow-y-auto
+            min-w-[250px] max-w-[300px]
+            ${fill ? 'w-[var(--radix-popper-anchor-width)] max-w-none' : ''}
+            ${className}
+          `}
           align={align}
-          side={placement}
-          collisionPadding={{ left: 16, right: 16 }}
-          className={`dropdown-container-wrapper, dropdown-container-wrapper ${size} ${width === "fill" ? "fill" : ""} ${contentClassName}`}
-          onCloseAutoFocus={(e) => e.preventDefault()}
+          side={side}
+          sideOffset={5}
         >
-          { content && content}
-          { options && options.map((item, index) => {
-            if(item.visible === false){
-              return null;
-            }
-
-            return (
-              <DropdownMenu.Item key={index} disabled={item.disabled}>
-                <div
-                  className={`item ${item.disabled ? "disabled" : ""}`}
-                  onClick={item.onClick}
-                >
-                  { item.leftSlot &&
-                    <div className={"left-slot"}>
-                      {item.leftSlot}
-                    </div>
-                  }
-                  { item.icon && item.icon}
-                  {item.label}
-                  { item.rightSlot &&
-                    <div className={"right-slot"}>
-                      {item.rightSlot}
-                    </div>
-                  }
-                </div>
-              </DropdownMenu.Item>
-            )
-          })}
+          {items.map((item, index) => (
+            <DropdownMenu.Item
+              key={index}
+              className="outline-none data-[highlighted]:bg-bg-op-dark-ultraweak"
+              disabled={item.disabled}
+              onSelect={item.onClick}
+            >
+              <div className="flex items-center gap-3 px-2 py-1.5 cursor-pointer select-none">
+                {item.icon && (
+                  <div className="m-0">
+                    {item.icon}
+                  </div>
+                )}
+                <span className="flex-1">{item.label}</span>
+              </div>
+            </DropdownMenu.Item>
+          ))}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
-  )
-})
+  );
+};
 
-Dropdown.displayName = 'Dropdown'
-export default Dropdown
+export default Dropdown;

@@ -1,56 +1,46 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+@import "./styles/theme.css";
+
+@layer base {
+  :root {
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .scrollbar {
+    @apply scrollbar-thin scrollbar-track-transparent scrollbar-thumb-bg-op-dark-weak;
+  }
+
+  .loading-spinner {
+    @apply w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin;
+  }
+}
+
+@layer utilities {
+  .line-clamp-2 {
+    @apply overflow-hidden text-ellipsis break-words;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+/* Keep existing CSS variables and any custom styling not covered by Tailwind */
+:root {
   color-scheme: light dark;
   color: var(--text);
   background-color: var(--bg);
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: var(--text-link);
-  text-decoration: inherit;
-}
-a:hover {
-  color: var(--text-link-hover);
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: var(--bg-input-inverted);
-  cursor: pointer;
-  transition: border-color 0.25s;
-  color: var(--text);
-}
-button:hover {
-  border-color: var(--border-input-hover);
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+/* Any styles here will be available alongside Tailwind */
+/* We can gradually remove these as we convert elements to use Tailwind classes */

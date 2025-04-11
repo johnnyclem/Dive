@@ -39,3 +39,36 @@ export function safeBase64Decode(str: string): string {
     return str
   }
 }
+
+export function date2unix(date: Date) {
+  return Math.floor(date.getTime() / 1000);
+}
+
+export function unix2date(unix: number) {
+  return new Date(unix * 1000);
+}
+
+export function fileSize(sizeInBytes: number) {
+  const i = Math.floor(Math.log(sizeInBytes) / Math.log(1024));
+  return (
+    (sizeInBytes / 1024 ** i).toFixed(1) + ['B', 'KB', 'MB', 'GB', 'TB'][i]
+  );
+}
+
+export function paddingZero(num: number, length: number) {
+  return (Array(length).join('0') + num).slice(-length);
+}
+
+export function fmtDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
+}
+
+export function fmtDateTime(date: Date) {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${fmtDate(date)} ${hours}:${minutes}:${seconds}`;
+}

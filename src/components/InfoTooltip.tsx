@@ -1,46 +1,63 @@
-import * as RadixTooltip from "@radix-ui/react-tooltip";
-import {ReactNode, forwardRef} from "react";
+import React from 'react';
 
-type Props = {
-  children: ReactNode;
-  content: string | ReactNode;
-  maxWidth?: number;
-  side?: "top" | "right" | "bottom" | "left";
-};
+interface InfoTooltipProps {
+  children: React.ReactNode;
+  content: string;
+  side?: 'top' | 'right' | 'bottom' | 'left';
+  className?: string;
+}
 
-/** info hint tooltip */
-const InfoTooltip = forwardRef<HTMLButtonElement | null, Props>(({children, content, side = "top", maxWidth, ...rest}, ref) => {
+export const InfoTooltip: React.FC<InfoTooltipProps> = ({
+  children,
+  content,
+  side = 'top',
+  className = '',
+}) => {
+  const getAnimationClass = () => {
+    switch (side) {
+      case 'top':
+        return 'animate-slideDownAndFade';
+      case 'right':
+        return 'animate-slideLeftAndFade';
+      case 'bottom':
+        return 'animate-slideUpAndFade';
+      case 'left':
+        return 'animate-slideRightAndFade';
+      default:
+        return 'animate-slideDownAndFade';
+    }
+  };
 
   return (
-    <RadixTooltip.Provider delayDuration={300}>
-      <RadixTooltip.Root>
-        <RadixTooltip.Trigger
-          asChild
-          ref={ref} {...rest}
-          // avoid trigger tooltip when click icon
-          onClick={(event) => event.preventDefault()}
-        >
-          {children}
-        </RadixTooltip.Trigger>
-        <RadixTooltip.Portal>
-          <RadixTooltip.Content
-            className="infotooltip-content"
-            sideOffset={4}
-            side={side}
-            style={maxWidth ? {maxWidth: maxWidth + "px"} : {}}
-            // avoid trigger tooltip when click icon
-            onPointerDownOutside={(event) => {
-              event.preventDefault();
-            }}
-          >
-            {content}
-          </RadixTooltip.Content>
-        </RadixTooltip.Portal>
-      </RadixTooltip.Root>
-    </RadixTooltip.Provider>
-  )
-})
-
-InfoTooltip.displayName = "InfoTooltip";
+    <div className="relative inline-block group">
+      {children}
+      <div
+        className={`
+          absolute z-[2500] flex items-center gap-1 p-4 rounded text-sm leading-5
+          bg-bg-weak text-text-medium select-none whitespace-pre-line
+          shadow-[0px_3px_7px_var(--shadow)]
+          will-change-transform-opacity
+          ${getAnimationClass()}
+          ${className}
+          ${side === 'top' ? 'bottom-full mb-2' : ''}
+          ${side === 'right' ? 'left-full ml-2' : ''}
+          ${side === 'bottom' ? 'top-full mt-2' : ''}
+          ${side === 'left' ? 'right-full mr-2' : ''}
+        `}
+      >
+        {content}
+        <div
+          className={`
+            absolute w-2 h-2 rotate-45
+            ${side === 'top' ? 'bottom-[-4px] left-1/2 -translate-x-1/2 bg-bg-weak' : ''}
+            ${side === 'right' ? 'left-[-4px] top-1/2 -translate-y-1/2 bg-bg-weak' : ''}
+            ${side === 'bottom' ? 'top-[-4px] left-1/2 -translate-x-1/2 bg-bg-weak' : ''}
+            ${side === 'left' ? 'right-[-4px] top-1/2 -translate-y-1/2 bg-bg-weak' : ''}
+          `}
+        />
+      </div>
+    </div>
+  );
+};
 
 export default InfoTooltip;

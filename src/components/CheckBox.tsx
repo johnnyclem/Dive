@@ -1,54 +1,73 @@
-import { InputHTMLAttributes, ReactElement, forwardRef } from 'react';
+import React from 'react';
 
-interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>{
-  label?: string | ReactElement
-  indeterminate?: boolean
-  size?: 'm' | 's'
-  hideHover?: boolean
+interface CheckboxProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  size?: 'default' | 's';
+  label?: string;
+  className?: string;
 }
 
-function CheckIcon(){
-  return (
-    <svg viewBox="0 0 17 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M1.49667 5.99182L6.44109 10.9362L14.8602 2.37127" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  )
-}
-
-function IndeterminateIcon(){
-  return (
-    <svg viewBox="0 0 16 4" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M1.58325 2H14.4166" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-    </svg>
-  )
-}
-
-const CheckBox = forwardRef<HTMLInputElement, Props>(({
+export const Checkbox: React.FC<CheckboxProps> = ({
+  checked,
+  onChange,
+  disabled = false,
+  size = 'default',
   label,
-  indeterminate,
-  size = 'm',
-  hideHover,
-  ...rest
-}, ref) => {
-
-  const { checked, disabled } = rest;
+  className = '',
+}) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.checked);
+  };
 
   return (
-    <div className={`checkbox-content ${size} ${hideHover ? 'hideHover' : ''} ${disabled ? 'disabled' : ''}`}>
-      <label>
-        <div className="touch-area'">
-          <input type="checkbox" autoComplete="off" checked={checked} ref={ref} {...rest} />
-          <span className="box" data-indeterminate={indeterminate}>
+    <div className={`inline-block leading-none ${className}`}>
+      <label 
+        className={`
+          cursor-pointer inline-flex items-center gap-2 m-0 leading-normal
+          ${disabled ? 'cursor-default' : ''}
+          ${size === 's' ? 'gap-2' : 'gap-2'}
+        `}
+      >
+        <div className={`
+          flex items-center justify-center
+          ${size === 's' ? 'w-4 h-4' : 'w-[22px] h-[22px]'}
+          ${disabled ? 'opacity-30' : ''}
+        `}>
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={handleChange}
+            disabled={disabled}
+            className="hidden"
+          />
+          <div 
+            className={`
+              flex items-center justify-center relative z-0
+              ${size === 's' ? 'w-4 h-4 rounded-[2px]' : 'w-[22px] h-[22px] rounded'}
+              ${checked 
+                ? 'bg-pri-green border-2 border-pri-green' 
+                : 'border-2 border-stroke-dark-weak'
+              }
+              ${!disabled && 'hover:border-stroke-dark-weak hover:before:content-[""] hover:before:block hover:before:bg-bg-inverted-op-dark-mediumweak hover:before:rounded-full hover:before:opacity-100 hover:before:cursor-pointer hover:before:z-[-1] hover:before:absolute hover:before:-top-[9px] hover:before:-left-[9px] hover:before:-right-[9px] hover:before:-bottom-[9px]'}
+            `}
+          >
             {checked && (
-              indeterminate ? <IndeterminateIcon /> : <CheckIcon />
+              <svg 
+                className="text-stroke-light-extremestrong w-[22px] h-[22px]"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              </svg>
             )}
-          </span>
+          </div>
         </div>
-        { label && <>{label}</>}
+        {label && <span>{label}</span>}
       </label>
     </div>
-  )
-})
+  );
+};
 
-CheckBox.displayName = 'CheckBox'
-export default CheckBox;
+export default Checkbox;

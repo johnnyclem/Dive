@@ -305,30 +305,30 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
   }
 
   return (
-    <div className="chat-input-wrapper">
+    <div className="relative bottom-0 left-0 right-0 max-w-[740px] w-full mx-auto">
       {activeConfig?.model && activeConfig?.model !== "none" && !supportTools && (
-        <div className="chat-input-banner">
+        <div className="flex p-2 pb-3 bg-[var(--bg-op-dark-weak)] rounded-t-lg text-xs text-[var(--text-weak)] absolute w-[calc(100%-20px)] left-[10px] top-[-15px] -translate-y-full z-10">
           {t("chat.unsupportTools", { model: activeConfig?.model })}
         </div>
       )}
       {(!activeConfig?.model || activeConfig?.model == "none") && (
-        <div className="chat-input-banner">
+        <div className="flex p-2 pb-3 bg-[var(--bg-op-dark-weak)] rounded-t-lg text-xs text-[var(--text-weak)] absolute w-[calc(100%-20px)] left-[10px] top-[-15px] -translate-y-full z-10">
           {t("chat.noModelBanner")}
         </div>
       )}
       <footer
-        className="chat-input"
+        className="p-2 flex flex-col border border-[var(--border-weak)] rounded-xl relative bottom-5 z-10 bg-[var(--bg)] text-[var(--text)] max-w-[740px] mx-auto w-full"
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
         <div
-          className={`drag-overlay ${isDragging ? 'show' : ''}`}
+          className={`absolute w-full h-full left-0 top-0 bg-[var(--bg)] border-3 border-dashed border-[var(--bg-hover-blue)] rounded-xl overflow-hidden z-10 ${isDragging ? 'block' : 'hidden'}`}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <div className="drag-overlay-bg"
+          <div className="absolute w-full h-full bg-[var(--bg-hover-blue)] opacity-50"
           onDrop={handleDrop}></div>
-          <div className="drag-overlay-text">
+          <div className="flex items-center gap-[5px] pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--text-pri-blue)]">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 22 22" width="22" height="22">
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"></path>
               <path fill="currentColor" d="M6.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM3 16l4-4 2 2 6-4.5 4 4.5v1.999L3 16Z"></path>
@@ -336,7 +336,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
             {t('chat.dragFiles')}
           </div>
         </div>
-        <div className="input-wrapper">
+        <div className="w-full">
           <Textarea
             ref={textareaRef}
             value={message}
@@ -346,19 +346,20 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
             onCompositionEnd={handleCompositionEnd}
             placeholder={t('chat.placeholder')}
             rows={1}
+            className="w-full p-2 border-none rounded-lg outline-none resize-none leading-5 max-h-[120px] overflow-y-auto bg-[var(--bg)] text-[var(--text)]"
           />
         </div>
-        <div className="input-actions">
+        <div className="flex items-center justify-between gap-[10px]">
           <input
             type="file"
             ref={fileInputRef}
             multiple
             accept={ACCEPTED_FILE_TYPES}
-            style={{ display: "none" }}
+            className="hidden"
             onChange={handleFileChange}
           />
           <button
-            className="upload-btn"
+            className="bg-transparent border-none cursor-pointer p-[5px] hover:bg-[var(--bg-btn-hover)]"
             onClick={handleFileClick}
             disabled={disabled}
             title={t('chat.uploadFile')}
@@ -370,7 +371,7 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
           {(disabled && !isAborting) ? (
             <Tooltip type="controls" content={<>{t("chat.abort")}<span className="key">Esc</span></>}>
               <button
-                className="abort-btn"
+                className="cursor-pointer bg-transparent border-none h-11 w-11 p-2 rounded-full hover:bg-[var(--bg-btn-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => {
                   setIsAborting(true)
                   onAbort()
@@ -385,11 +386,11 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
           ) : (
             <Tooltip type="controls" content={!hasActiveConfig ? t("chat.noModelAlert") : t('chat.send')}>
               <button
-                className="send-btn"
+                className="bg-transparent border-none cursor-pointer h-11 w-11 p-2 rounded-full hover:bg-[var(--bg-btn-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleSubmit}
                 disabled={disabled || !hasActiveConfig}
               >
-                <svg width="24" height="24" viewBox="0 0 24 24">
+                <svg width="24" height="24" viewBox="0 0 24 24" className="fill-[var(--stroke-extremestrong)]">
                   <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
               </button>
@@ -397,26 +398,26 @@ const ChatInput: React.FC<Props> = ({ onSendMessage, disabled, onAbort }) => {
           )}
         </div>
         {previews.length > 0 && (
-          <div className="file-previews">
+          <div className="flex flex-wrap gap-2 mt-2">
             {previews.map((preview, index) => (
-              <div key={index} className={`preview-item ${preview.type}`}>
+              <div key={index} className={`relative rounded-lg overflow-hidden border border-[var(--border)] ${preview.type === 'image' ? 'w-[120px] h-[80px]' : 'p-2 w-[180px]'}`}>
                 {preview.type === 'image' ? (
-                  <img src={preview.url} alt={preview.name} />
+                  <img src={preview.url} alt={preview.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="file-info">
-                    <div className="file-icon">
+                  <div className="flex items-center gap-2">
+                    <div className="text-[var(--text-weak)]">
                       <svg width="24" height="24" viewBox="0 0 24 24">
                         <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                       </svg>
                     </div>
-                    <div className="file-details">
-                      <div className="file-name">{preview.name}</div>
-                      <div className="file-size">{preview.size}</div>
+                    <div className="flex-1 overflow-hidden">
+                      <div className="truncate text-sm">{preview.name}</div>
+                      <div className="text-xs text-[var(--text-weak)]">{preview.size}</div>
                     </div>
                   </div>
                 )}
                 <button
-                  className="remove-preview"
+                  className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-black bg-opacity-50 text-white rounded-full text-xs"
                   onClick={(e) => removeFile(index, e)}
                   type="button"
                 >

@@ -17,15 +17,10 @@ import { themeAtom } from "../../atoms/themeState";
 import Textarea from "../../components/WrappedTextarea"
 import { isChatStreamingAtom } from "../../atoms/chatState"
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      "tool-call": {
-        children: any
-        name: string
-      };
-    }
-  }
+// Define the custom element type for tool-call
+interface ToolCallProps {
+  children: React.ReactNode;
+  name: string;
 }
 
 interface MessageProps {
@@ -88,26 +83,27 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
     }
 
     return (
-      <div className="edit-text">
+      <div className="w-full">
         <Textarea
           value={editedText}
           onChange={(e) => setEditedText(e.target.value)}
+          className="w-full p-2 border border-[var(--border-weak)] rounded bg-[var(--bg)] text-[var(--text)] resize-none min-h-[100px]"
         />
-        <div className="edit-text-footer">
-          <div className="edit-text-footer-left">
+        <div className="flex justify-between items-center mt-2">
+          <div className="text-sm text-[var(--text-weak)]">
             <span>{t("chat.editDescription")}</span>
           </div>
-          <div className="edit-text-footer-right">
+          <div className="flex gap-2">
             <button
               type="button"
-              className="cancel-btn"
+              className="px-3 py-1 text-sm border border-[var(--border-weak)] rounded hover:bg-[var(--bg-ultraweak)]"
               onClick={onCancel}
             >
               {t("chat.cancel")}
             </button>
             <button
               type="button"
-              className="save-btn"
+              className="px-3 py-1 text-sm bg-[var(--bg-btn-active)] text-[var(--text-btn-active)] rounded hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={onSave}
               disabled={editedText === ""}
             >
@@ -205,7 +201,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
 
               return (
                 <button
-                  className="code-block-button"
+                  className="flex items-center gap-2 p-2 mt-2 text-xs bg-[var(--bg-light)] hover:bg-[var(--bg-op-dark-weak)] rounded text-[var(--text-weak)]"
                   onClick={handleClick}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24">
@@ -217,11 +213,11 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
             }
 
             return (
-              <div className="code-block">
-                <div className="code-header">
-                  <span className="language">{language}</span>
+              <div className="my-2 rounded overflow-hidden bg-[var(--bg-light)] dark:bg-[var(--bg-dark)]">
+                <div className="flex justify-between items-center px-3 py-2 text-sm bg-[var(--bg-op-dark-weak)]">
+                  <span className="text-xs text-[var(--text-weak)]">{language}</span>
                   <button
-                    className="copy-btn"
+                    className="text-xs text-[var(--text-link)] hover:text-[var(--text-link-hover)]"
                     onClick={() => copyToClipboard(code)}
                   >
                     {t("chat.copyCode")}
@@ -250,8 +246,8 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
 
   if (isEditing) {
     return (
-      <div className="message-container">
-        <div className={`message sent edit`}>
+      <div className="py-2.5 px-0 flex flex-col items-end relative max-w-[740px] mx-auto">
+        <div className="w-full px-4 py-3 rounded-lg bg-[var(--bg-inverted)] text-[var(--text-inverted)]">
           {editText}
         </div>
       </div>
@@ -259,22 +255,22 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
   }
 
   return (
-    <div className="message-container">
-      <div className={`message ${isSent ? "sent" : "received"} ${isError ? "error" : ""}`}>
+    <div className="py-2.5 px-0 flex flex-col items-end relative max-w-[740px] mx-auto hover:group">
+      <div className={`w-full px-4 py-3 rounded-lg ${isSent ? 'bg-[var(--bg-inverted)] text-[var(--text-inverted)]' : 'bg-[var(--bg-light)] text-[var(--text)]'} ${isError ? 'bg-[var(--bg-error)] text-[var(--text-error)]' : ''}`}>
         {formattedText}
         {files && files.length > 0 && <FilePreview files={files} />}
         {isLoading && (
-          <div className="loading-dots">
-            <span></span>
-            <span></span>
-            <span></span>
+          <div className="flex gap-1 mt-2 items-center">
+            <span className="w-2 h-2 rounded-full bg-[var(--text-weak)] opacity-40 animate-[bounce_1.4s_infinite_0.0s]"></span>
+            <span className="w-2 h-2 rounded-full bg-[var(--text-weak)] opacity-40 animate-[bounce_1.4s_infinite_0.2s]"></span>
+            <span className="w-2 h-2 rounded-full bg-[var(--text-weak)] opacity-40 animate-[bounce_1.4s_infinite_0.4s]"></span>
           </div>
         )}
         {!isLoading && !isChatStreaming && (
-          <div className="message-tools">
+          <div className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               type="button"
-              className="tools-btn"
+              className="flex items-center gap-2 px-2 py-1 text-xs rounded hover:bg-[var(--bg-ultraweak)] text-[var(--text-weak)]"
               onClick={() => onCopy(messageId, isSent ? content : text)}
               title={t("chat.copy")}
             >
@@ -301,7 +297,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
               <>
                 <button
                   type="button"
-                  className="tools-btn"
+                  className="flex items-center gap-2 px-2 py-1 text-xs rounded hover:bg-[var(--bg-ultraweak)] text-[var(--text-weak)]"
                   onClick={handleEdit}
                   title={t("chat.edit")}
                 >
@@ -317,7 +313,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
                 {messageId.includes("-") && (  //if messageId doesn't contain "-" then it's aborted before ready then it can't retry
                   <button
                     type="button"
-                    className="tools-btn"
+                    className="flex items-center gap-2 px-2 py-1 text-xs rounded hover:bg-[var(--bg-ultraweak)] text-[var(--text-weak)]"
                     onClick={onRetry}
                     title={t("chat.retry")}
                   >

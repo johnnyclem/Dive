@@ -3,7 +3,8 @@ import Layout from "./views/Layout"
 import Chat from "./views/Chat"
 import Welcome from "./views/Welcome"
 import Setup from "./views/Setup"
-
+import KnowledgePage from "./views/KnowledgePage"
+import PersonasPage from "./views/PersonasPage"
 export const router = createHashRouter([
   {
     path: "/",
@@ -24,6 +25,14 @@ export const router = createHashRouter([
       {
         path: "setup",
         element: <Setup />
+      },
+      {
+        path: "knowledge",
+        element: <KnowledgePage />
+      },
+      {
+        path: "personas",
+        element: <PersonasPage />
       }
     ]
   }

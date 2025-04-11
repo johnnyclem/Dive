@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate, useLocation, Link } from "react-router-dom"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import { sidebarVisibleAtom } from "../atoms/sidebarState"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
@@ -12,7 +12,6 @@ import { useSidebarLayer } from "../hooks/useLayer"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
 import { currentChatIdAtom } from "../atoms/chatState"
 import PopupConfirm from "./PopupConfirm"
-import { newVersionAtom } from "../atoms/globalState"
 import UpdateButton from "./UpdateButton"
 
 interface Props {
@@ -57,7 +56,6 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
   const showToast = useSetAtom(showToastAtom)
   const _openOverlay = useSetAtom(openOverlayAtom)
-  const newVersion = useAtomValue(newVersionAtom)
   const closeAllOverlays = useSetAtom(closeAllOverlaysAtom)
   const [isVisible, setVisible] = useSidebarLayer(sidebarVisibleAtom)
   const [currentChatId, setCurrentChatId] = useAtom(currentChatIdAtom)
@@ -76,7 +74,9 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   }, [isVisible, loadHistories])
 
   useHotkeyEvent("chat:delete", () => {
-    currentChatId && setDeletingChatId(currentChatId)
+    if (currentChatId) {
+      setDeletingChatId(currentChatId)
+    }
   })
 
   const confirmDelete = (e: React.MouseEvent, chatId: string) => {
@@ -111,7 +111,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
           type: "error"
         })
       }
-    } catch (error) {
+    } catch {
       showToast({
         message: t("chat.deleteFailed"),
         type: "error"
@@ -158,72 +158,101 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
   return (
     <>
-      <div className={`history-sidebar ${isVisible ? "visible" : ""}`} tabIndex={0} onBlur={onBlur} ref={containerRef}>
+      <div 
+        className={`
+          flex flex-col bg-[var(--bg)] overflow-hidden transition-all duration-300 ease-in-out z-[var(--z-sidebar)]
+          ${isVisible ? 'w-[var(--sidebar-width)] border-r border-[var(--border-weak)]' : 'w-0'}
+          md:absolute md:left-0 md:top-0 md:bottom-0 md:transform md:-translate-x-full md:z-[var(--z-overlay)+1]
+          ${isVisible ? 'md:translate-x-0' : ''}
+        `}
+        tabIndex={0} 
+        onBlur={onBlur} 
+        ref={containerRef}
+      >
         <Header />
-        <div className="history-header">
+        <div className="p-4 px-5">
           <Tooltip
             content={`${t("chat.newChatTooltip")} Ctrl + Shift + O`}
           >
-            <button className="new-chat-btn" onClick={handleNewChat}>
+            <button 
+              className="w-full p-2.5 border-none rounded-lg bg-[var(--bg-pri-blue)] text-white font-medium cursor-pointer transition-colors duration-200 hover:bg-[var(--bg-hover-blue)] active:bg-[var(--bg-active-blue)]"
+              onClick={handleNewChat}
+            >
               + {t("chat.newChat")}
             </button>
           </Tooltip>
         </div>
-        <div className="history-list">
+        <div className="flex-1 overflow-y-auto px-5 scrollbar-thin scrollbar-thumb-[var(--bg-op-dark-weak)] scrollbar-track-transparent">
           {histories.map(chat => (
             <div
               key={chat.id}
-              className={`history-item ${chat.id === currentChatId ? "active" : ""}`}
+              className={`
+                flex items-center justify-between p-3 rounded-lg cursor-pointer mb-2
+                hover:bg-[var(--bg-op-dark-ultraweak)]
+                ${chat.id === currentChatId ? 'bg-[rgba(var(--bg-pri-blue),0.1)]' : ''}
+              `}
               onClick={() => loadChat(chat.id)}
             >
-              <div className="history-content">
-                <div className="history-title">{chat.title || t("chat.untitledChat")}</div>
-                <div className="history-date">
+              <div className="flex-1 min-w-0 mr-2">
+                <div className="font-medium mb-1 truncate">{chat.title || t("chat.untitledChat")}</div>
+                <div className="text-xs text-[var(--text-weak)]">
                   {new Date(chat.createdAt).toLocaleString()}
                 </div>
               </div>
               <button
-                className="delete-btn"
+                className="opacity-0 p-1 bg-transparent border-none rounded cursor-pointer transition-all duration-200 hover:bg-[var(--bg-op-dark-ultraweak)] group-hover:opacity-100"
                 onClick={(e) => confirmDelete(e, chat.id)}
                 title={t("chat.deleteChat")}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24">
+                <svg width="16" height="16" viewBox="0 0 24 24" className="fill-current">
                   <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                 </svg>
               </button>
             </div>
           ))}
         </div>
-        <div className="sidebar-footer">
+        <div className="mt-auto p-4 border-t border-[var(--border-weak)]">
+        <button className="sidebar-footer-btn" onClick={() => handleTools()}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v15H6.5A2.5 2.5 0 0 1 4 14.5V4A2 2 0 0 1 6 2z"/>
+            </svg>
+            {t("sidebar.knowledge", "Knowledge")}
+          </button>
+          <Link to="#" className="sidebar-footer-btn" onClick={() => setVisible(true)}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v15H6.5A2.5 2.5 0 0 1 4 14.5V4A2 2 0 0 1 6 2z"/>
+            </svg>
+            {t("sidebar.tools", "Tools")}
+          </Link>
+
           <button
-            className="sidebar-footer-btn"
+            className="flex items-center gap-2 w-full p-2 px-3 border-none rounded-md bg-transparent text-inherit cursor-pointer transition-all duration-200 hover:bg-[var(--bg-op-dark-extremeweak)]"
             onClick={handleTools}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24">
-              <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
+            <svg width="16" height="16" viewBox="0 0 24 24" className="fill-[var(--stroke-op-dark-extremestrong)]">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
             </svg>
-            {t("sidebar.tools")}
+            {t("chat.tools")}
           </button>
           <button
-            className="sidebar-footer-btn"
+            className="flex items-center gap-2 w-full p-2 px-3 border-none rounded-md bg-transparent text-inherit cursor-pointer transition-all duration-200 hover:bg-[var(--bg-op-dark-extremeweak)] mt-2"
             onClick={handleModels}
           >
-            <svg width="20px" height="20px" viewBox="0 0 20 20">
-              <g id="surface1">
-                <path d="M 8.015625 2.808594 C 5.308594 4.160156 5.589844 3.765625 5.589844 6.25 L 5.589844 8.367188 L 3.792969 9.292969 L 1.984375 10.21875 L 1.984375 15.367188 L 4.042969 16.425781 C 5.175781 17.015625 6.191406 17.5 6.292969 17.5 C 6.398438 17.5 7.28125 17.089844 8.28125 16.601562 L 10.074219 15.691406 L 11.851562 16.601562 C 12.839844 17.089844 13.71875 17.5 13.808594 17.5 C 14.074219 17.5 17.71875 15.632812 17.910156 15.398438 C 18.042969 15.234375 18.089844 14.5 18.058594 12.707031 L 18.015625 10.21875 L 16.21875 9.292969 L 14.410156 8.367188 L 14.410156 6.265625 C 14.410156 4.441406 14.382812 4.132812 14.160156 3.941406 C 13.765625 3.589844 10.339844 1.910156 10.042969 1.925781 C 9.898438 1.925781 8.984375 2.324219 8.015625 2.808594 Z M 11.324219 3.808594 L 12.425781 4.382812 L 11.21875 4.96875 L 10.03125 5.558594 L 8.867188 4.957031 L 7.691406 4.351562 L 8.808594 3.808594 C 9.425781 3.5 10 3.25 10.074219 3.25 C 10.160156 3.25 10.71875 3.5 11.324219 3.808594 Z M 8.234375 6.03125 L 9.410156 6.617188 L 9.410156 8.089844 C 9.410156 8.898438 9.382812 9.558594 9.339844 9.558594 C 9.292969 9.558594 8.734375 9.292969 8.089844 8.96875 L 6.910156 8.382812 L 6.910156 6.910156 C 6.910156 6.101562 6.941406 5.441406 6.984375 5.441406 C 7.03125 5.441406 7.589844 5.707031 8.234375 6.03125 Z M 13.089844 6.910156 L 13.089844 8.382812 L 11.910156 8.96875 C 11.265625 9.292969 10.707031 9.558594 10.660156 9.558594 C 10.617188 9.558594 10.589844 8.910156 10.589844 8.117188 L 10.589844 6.675781 L 11.808594 6.074219 C 12.46875 5.734375 13.03125 5.457031 13.058594 5.457031 C 13.074219 5.441406 13.089844 6.101562 13.089844 6.910156 Z M 7.425781 11.207031 L 6.265625 11.792969 L 5.074219 11.21875 L 3.898438 10.632812 L 5.074219 10.03125 L 6.25 9.441406 L 7.425781 10.03125 L 8.601562 10.617188 Z M 14.925781 11.207031 L 13.765625 11.792969 L 12.574219 11.21875 L 11.398438 10.632812 L 12.574219 10.03125 L 13.75 9.441406 L 14.925781 10.03125 L 16.101562 10.617188 Z M 5.589844 14.351562 L 5.589844 15.839844 L 3.089844 14.542969 L 3.089844 11.617188 L 5.589844 12.851562 Z M 9.351562 14.515625 C 9.308594 14.617188 8.734375 14.96875 8.089844 15.28125 L 6.910156 15.851562 L 6.910156 12.851562 L 8.132812 12.265625 L 9.339844 11.660156 L 9.382812 12.984375 C 9.398438 13.71875 9.398438 14.398438 9.351562 14.515625 Z M 13.089844 14.351562 L 13.089844 15.839844 L 10.589844 14.542969 L 10.589844 11.617188 L 13.089844 12.851562 Z M 16.851562 14.515625 C 16.808594 14.617188 16.234375 14.96875 15.589844 15.28125 L 14.410156 15.851562 L 14.410156 12.851562 L 15.632812 12.265625 L 16.839844 11.660156 L 16.882812 12.984375 C 16.898438 13.71875 16.898438 14.398438 16.851562 14.515625 Z M 16.851562 14.515625 "/>
-              </g>
+            <svg width="16" height="16" viewBox="0 0 24 24" className="fill-[var(--stroke-op-dark-extremestrong)]">
+              <path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44c-.32-.17-.53-.5-.53-.88V7.5c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9z"/>
             </svg>
-            {t("sidebar.models")}
+            {t("chat.models")}
           </button>
           <button
-            className="sidebar-footer-btn system-btn"
+            className="flex items-center gap-2 w-full p-2 px-3 border-none rounded-md bg-transparent text-inherit cursor-pointer transition-all duration-200 hover:bg-[var(--bg-op-dark-extremeweak)] mt-2"
             onClick={handleSystem}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 22 22" fill="none">
-              <path d="M11 15C13.2091 15 15 13.2091 15 11C15 8.79086 13.2091 7 11 7C8.79086 7 7 8.79086 7 11C7 13.2091 8.79086 15 11 15Z" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10"/>
-              <path d="M13.5404 2.49103L12.4441 3.94267C11.3699 3.71161 10.2572 3.72873 9.19062 3.99275L8.04466 2.58391C6.85499 2.99056 5.76529 3.64532 4.84772 4.50483L5.55365 6.17806C4.82035 6.99581 4.28318 7.97002 3.98299 9.02659L2.19116 9.31422C1.94616 10.5476 1.96542 11.8188 2.24768 13.0442L4.05324 13.2691C4.38773 14.3157 4.96116 15.27 5.72815 16.0567L5.07906 17.7564C6.02859 18.5807 7.14198 19.1945 8.34591 19.5574L9.44108 18.1104C10.5154 18.3413 11.6283 18.3245 12.6951 18.0613L13.8405 19.4692C15.0302 19.0626 16.12 18.4079 17.0375 17.5483L16.3321 15.876C17.0654 15.0576 17.6027 14.0829 17.9031 13.0259L19.6949 12.7382C19.9396 11.5049 19.9203 10.2337 19.6384 9.00827L17.8291 8.77918C17.4946 7.73265 16.9211 6.77831 16.1541 5.99166L16.8023 4.29248C15.8544 3.46841 14.7427 2.85442 13.5404 2.49103Z" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10"/>
+            <svg width="16" height="16" viewBox="0 0 24 24" className="fill-none stroke-[var(--stroke-op-dark-extremestrong)]">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
             </svg>
-            {t("sidebar.system")}
+            {t("chat.system")}
           </button>
           <UpdateButton />
         </div>
@@ -238,4 +267,4 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   )
 }
 
-export default React.memo(HistorySidebar)
+export default HistorySidebar

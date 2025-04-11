@@ -54,14 +54,14 @@ const ChatMessages = ({ messages, isLoading, onRetry, onEdit }: Props) => {
     return false
   }
 
-  const handleScroll = (_: React.WheelEvent<HTMLDivElement>) => {
+  const handleScroll = () => {
     mouseWheelRef.current = !checkIfAtBottom()
     setShowScrollButton(!checkIfAtBottom())
   }
 
   return (
-    <div className="chat-messages-container" onWheel={handleScroll}>
-      <div className="chat-messages" ref={scrollContainerRef}>
+    <div className="flex flex-1 overflow-auto relative" onWheel={handleScroll}>
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-[85px] scrollbar scrollbar-thumb-[var(--bg-op-dark-weak)] scrollbar-w-1.5 scrollbar-thumb-rounded" ref={scrollContainerRef}>
         {messages.map((message, index) => (
           <Message
             key={message.id}
@@ -78,7 +78,10 @@ const ChatMessages = ({ messages, isLoading, onRetry, onEdit }: Props) => {
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <button className={`scroll-to-bottom-btn ${showScrollButton ? 'show' : ''}`} onClick={scrollToBottom}>
+      <button 
+        className={`absolute bottom-5 left-1/2 -translate-x-1/2 -translate-y-full z-10 w-[38px] h-[38px] p-2 bg-[var(--bg)] rounded-full border border-[var(--border)] transition-opacity duration-300 ${showScrollButton ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} hover:bg-[var(--bg-ultraweak)]`} 
+        onClick={scrollToBottom}
+      >
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
           <path d="M4 12L11 19L18 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M11 18L11 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>

@@ -1,0 +1,79 @@
+import { Button } from '@fluentui/react-components';
+import useNav from '@/hooks/useNav';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+// import Empty from '@/renderer/components/Empty';
+import { ICollection } from 'types/knowledge';
+// import useKnowledgeStore from '@/stores/useKnowledgeStore';
+import { debounce } from 'lodash';
+import Grid from './Grid';
+
+export default function Knowledge() {
+  const { t } = useTranslation();
+  const navigate = useNav();
+  const { listCollections, collectionChangedAt } = useKnowledgeStore();
+  const [collections, setCollections] = useState<ICollection[]>([]);
+
+  const debouncedLoad = useRef(
+    debounce(
+      () => {
+        listCollections().then((collections: ICollection[]) => {
+          setCollections(collections);
+        });
+      },
+      1000,
+      { leading: true },
+    ),
+  ).current;
+
+  useEffect(() => {
+    debouncedLoad();
+  }, [collectionChangedAt]);
+
+  return (
+    <div className="page h-full">
+      <div className="page-top-bar" />
+      <div className="page-header">
+        <div className="flex items-center justify-between w-full">
+          <h1 className="text-2xl shrink-0 mr-6">
+            {t('Common.Knowledge')}
+          </h1>
+          <div className="flex justify-end w-full items-center gap-2">
+            <Button
+              appearance="primary"
+              onClick={() => navigate('/knowledge/collection-form')}
+            >
+              {t('Common.New')}
+            </Button>
+          </div>
+        </div>
+      </div>
+      <div className="mt-2.5 pb-12 h-full -mr-5 overflow-y-auto">
+        {collections.length ? (
+          <div className="mr-5 flex justify-start gap-2 flex-wrap">
+            <Grid collections={collections} />
+          </div>
+        ) : (
+          <Empty image="knowledge" text={t('No knowledge base yet.')} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+
+
+// import React from 'react';
+
+// const KnowledgePage: React.FC = () => {
+//   return (
+//     <div>
+//       <h1>Knowledge Page</h1>
+//       <p>Welcome to the Knowledge Page!</p>
+//     </div>
+//   );
+// };
+
+// export default KnowledgePage; 

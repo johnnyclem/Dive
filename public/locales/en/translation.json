@@ -1,6 +1,6 @@
 {
   "header": {
-    "title": "Dive AI"
+    "title": "Souls"
   },
   "chat": {
     "placeholder": "Send any message...",
@@ -33,7 +33,7 @@
     "dragFiles": "Drop files here to add to chat"
   },
   "welcome": {
-    "title": "Welcome to Dive AI",
+    "title": "Welcome to Souls",
     "subtitle": "Start your AI conversation",
     "startChat": "Start Chat"
   },
@@ -167,7 +167,7 @@
     "theme": "Display Mode",
     "defaultInstructions": "speak in English",
     "autoDownload": "Auto Download Update",
-    "autoLaunch": "Run Dive AI on System Startup",
+    "autoLaunch": "Run Souls on System Startup",
     "minimalToTray": "Minimize to System Tray"
   },
   "toast": {

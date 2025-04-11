@@ -1,37 +1,50 @@
-import React from "react"
-import * as Portal from "@radix-ui/react-portal"
-import { DismissableLayer } from "@radix-ui/react-dismissable-layer"
-import { useAtom } from "jotai"
-import { sidebarVisibleAtom } from "../atoms/sidebarState"
+import React from 'react';
 
-export type PopupStylePorps = {
-  zIndex?: number
-  noBackground?: boolean
+interface PopupWindowProps {
+  children: React.ReactNode;
+  isVisible: boolean;
+  variant?: 'default' | 'transparent' | 'overlay';
+  fullWidth?: boolean;
+  isSidebarVisible?: boolean;
+  className?: string;
 }
 
-type PopupWindowProps = PopupStylePorps & {
-  children: React.ReactNode
-  overlay?: boolean
-  onClickOutside?: () => void
-}
-
-export default function PopupWindow({
+export const PopupWindow: React.FC<PopupWindowProps> = ({
   children,
-  zIndex = 100,
-  onClickOutside = () => {},
-  overlay = false,
-  noBackground = false,
-}: PopupWindowProps) {
-  const [isSidebarVisible] = useAtom(sidebarVisibleAtom)
-  const root = document.body
+  isVisible,
+  variant = 'default',
+  fullWidth = false,
+  isSidebarVisible = false,
+  className = '',
+}) => {
+  if (!isVisible) return null;
+
+  const getContainerClasses = () => {
+    const baseClasses = 'fixed flex justify-center items-center inset-0';
+    
+    switch (variant) {
+      case 'transparent':
+        return `${baseClasses} bg-transparent pointer-events-none [&>div]:pointer-events-auto`;
+      case 'overlay':
+        return `
+          ${baseClasses} bg-bg-op-dark-ultrastrong z-[900]
+          ${isSidebarVisible && !fullWidth
+            ? 'left-[300px] w-[calc(100vw-300px)] md:left-0 md:w-full'
+            : 'left-0 w-full'
+          }
+          transition-all duration-300 ease-in-out
+          [&>div]:w-full [&>div]:h-full
+        `;
+      default:
+        return `${baseClasses} bg-bg-overlay pointer-events-auto`;
+    }
+  };
 
   return (
-    <Portal.Root container={root}>
-      <div className={`container-wrapper ${noBackground ? "transparent" : ""} ${overlay ? "overlay" : ""} ${!isSidebarVisible ? "full-width" : ""}`} style={{ zIndex }}>
-        <DismissableLayer onPointerDownOutside={onClickOutside}>
-          {children}
-        </DismissableLayer>
-      </div>
-    </Portal.Root>
-  )
-}
+    <div className={`${getContainerClasses()} ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+export default PopupWindow;
