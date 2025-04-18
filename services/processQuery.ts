@@ -83,7 +83,7 @@ export async function handleProcessQuery(
   try {
     // Handle input format
     const messages: BaseMessage[] = [...history]; // Copy the history array to avoid modifying the original
-    
+
     // Extract query text for canvas detection and other analysis
     let queryText = "";
     if (typeof input === "string") {
@@ -110,19 +110,19 @@ export async function handleProcessQuery(
         }
       }
     }
-    
+
     // Check if this is a canvas-related query
     if (queryText) {
       const canvasToolHandler = CanvasToolHandler.getInstance();
       if (canvasToolHandler.isCanvasQuery(queryText)) {
         logger.info(`[${chatId}] Detected canvas-related query: ${queryText}`);
         const result = canvasToolHandler.handleCanvasQuery(queryText);
-        
+
         // Return the canvas operation result
-        const responseMessage = result.success 
+        const responseMessage = result.success
           ? result.message
           : `I tried to perform your canvas operation but encountered an error: ${result.message}`;
-        
+
         // Send to stream if available
         onStream?.(
           JSON.stringify({
@@ -130,7 +130,7 @@ export async function handleProcessQuery(
             content: responseMessage,
           } as iStreamMessage)
         );
-        
+
         // If there's data, also send as tool result
         if (result.data) {
           onStream?.(
@@ -143,14 +143,14 @@ export async function handleProcessQuery(
             } as iStreamMessage)
           );
         }
-        
-        return { 
-          result: responseMessage, 
+
+        return {
+          result: responseMessage,
           tokenUsage: {
             totalInputTokens: queryText.length / 4, // Rough estimation
             totalOutputTokens: responseMessage.length / 4, // Rough estimation
             totalTokens: (queryText.length + responseMessage.length) / 4, // Rough estimation
-          } 
+          }
         };
       }
     }
@@ -209,7 +209,7 @@ export async function handleProcessQuery(
     let hasToolCalls = true;
 
     // Check if the query is asking about available tools
-    const isAskingAboutTools = typeof input === 'string' && 
+    const isAskingAboutTools = typeof input === 'string' &&
       input.toLowerCase().match(/(what|which|list|show|tell me about).*(tools|functions|capabilities|can you use)/i);
 
     const tools = currentModelSettings?.modelProvider === "google-genai" ? openAIConvertToGeminiTools(availableTools) : availableTools;
@@ -222,10 +222,10 @@ export async function handleProcessQuery(
     const correctedTools = tools.map(tool => {
       const params = tool.function?.parameters;
       // Check if parameters exist, are an object, have type 'object', and lack 'properties'
-      if (params && typeof params === 'object' && !Array.isArray(params) && 
-          'type' in params && params.type === 'object' && 
-          !('properties' in params)) {
-            
+      if (params && typeof params === 'object' && !Array.isArray(params) &&
+        'type' in params && params.type === 'object' &&
+        !('properties' in params)) {
+
         // Deep copy to avoid modifying the original tool definition in availableTools
         const correctedTool = JSON.parse(JSON.stringify(tool));
         // Ensure parameters is still treated as an object for assignment
@@ -484,16 +484,16 @@ export async function handleProcessQuery(
               try {
                 const ensUtility = ENSUtility.getInstance();
                 const ensClient = ensUtility.createClient();
-                
+
                 // Use the client's callTool method instead of direct method access
                 const result = await ensClient.callTool({
                   name: toolName,
                   arguments: toolArgs
                 });
-                
+
                 // Log the result
                 logger.info(`[ENS Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
-                
+
                 onStream?.(
                   JSON.stringify({
                     type: "tool_result",
@@ -503,7 +503,7 @@ export async function handleProcessQuery(
                     },
                   } as iStreamMessage)
                 );
-                
+
                 return {
                   tool_call_id: toolCall.id,
                   role: "tool" as const,
@@ -628,7 +628,7 @@ export async function handleProcessQuery(
       } as iStreamMessage));
       return { result: response, tokenUsage };
     }
-    
+
     // Handle invalid tool errors gracefully
     if (err.message.includes("Invalid schema for function")) {
       const toolName = err.message.match(/function '([^']+)'/)?.[1];
@@ -640,7 +640,7 @@ export async function handleProcessQuery(
       } as iStreamMessage));
       return { result: userFriendlyError, tokenUsage };
     }
-    
+
     // For other errors, provide a generic but helpful message
     const genericError = "I encountered an error while processing your request. Could you please rephrase your question or try a different approach?";
     logger.error(`Error in handleProcessQuery: ${err.message}`);
@@ -648,9 +648,9 @@ export async function handleProcessQuery(
       type: "text",
       content: genericError,
     } as iStreamMessage));
-    return { 
-      result: genericError, 
-      tokenUsage 
+    return {
+      result: genericError,
+      tokenUsage
     };
   } finally {
     // Clean up AbortController
