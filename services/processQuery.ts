@@ -134,9 +134,39 @@ export async function handleProcessQuery(
 
     let hasToolCalls = true;
 
+    // Check if the query is asking about available tools
+    const isAskingAboutTools = typeof input === 'string' && 
+      input.toLowerCase().match(/(what|which|list|show|tell me about).*(tools|functions|capabilities|can you use)/i);
+
     const tools = currentModelSettings?.modelProvider === "google-genai" ? openAIConvertToGeminiTools(availableTools) : availableTools;
 
-    const runModel = modelManager.enableTools ? model.bindTools?.(tools) || model : model;
+    // --- Add logging for tools list ---
+    logger.debug(`[${chatId}] Tools to be bound (before schema correction): ${JSON.stringify(tools, null, 2)}`);
+    // --- End logging ---
+
+    // --- Correct tool schemas before binding ---
+    const correctedTools = tools.map(tool => {
+      const params = tool.function?.parameters;
+      // Check if parameters exist, are an object, have type 'object', and lack 'properties'
+      if (params && typeof params === 'object' && !Array.isArray(params) && 
+          'type' in params && params.type === 'object' && 
+          !('properties' in params)) {
+            
+        // Deep copy to avoid modifying the original tool definition in availableTools
+        const correctedTool = JSON.parse(JSON.stringify(tool));
+        // Ensure parameters is still treated as an object for assignment
+        if (correctedTool.function?.parameters && typeof correctedTool.function.parameters === 'object') {
+          (correctedTool.function.parameters as Record<string, unknown>).properties = {};
+        }
+        return correctedTool;
+      }
+      return tool;
+    });
+    logger.debug(`[${chatId}] Tools to be bound (after schema correction): ${JSON.stringify(correctedTools, null, 2)}`);
+    // --- End schema correction ---
+
+    // Only bind tools if we're not asking about them and tools are enabled
+    const runModel = (isAskingAboutTools || !modelManager.enableTools) ? model : (model.bindTools?.(correctedTools) || model);
 
     const isOllama = currentModelSettings?.modelProvider === "ollama";
     const isDeepseek =
@@ -517,10 +547,37 @@ export async function handleProcessQuery(
       // If aborted, return saved response
       logger.info(`[${chatId}] has been aborted`);
       const abortedResponse = abortedResponseMap.get(chatId || "");
-      return { result: abortedResponse?.content || finalResponse || "", tokenUsage };
+      const response = abortedResponse?.content || finalResponse || "";
+      onStream?.(JSON.stringify({
+        type: "text",
+        content: response,
+      } as iStreamMessage));
+      return { result: response, tokenUsage };
     }
+    
+    // Handle invalid tool errors gracefully
+    if (err.message.includes("Invalid schema for function")) {
+      const toolName = err.message.match(/function '([^']+)'/)?.[1];
+      const userFriendlyError = `I apologize, but I tried to use a tool called "${toolName}" that isn't available. Let me help you with what I can do instead.`;
+      logger.error(`Error in handleProcessQuery: ${err.message}`);
+      onStream?.(JSON.stringify({
+        type: "text",
+        content: userFriendlyError,
+      } as iStreamMessage));
+      return { result: userFriendlyError, tokenUsage };
+    }
+    
+    // For other errors, provide a generic but helpful message
+    const genericError = "I encountered an error while processing your request. Could you please rephrase your question or try a different approach?";
     logger.error(`Error in handleProcessQuery: ${err.message}`);
-    throw err;
+    onStream?.(JSON.stringify({
+      type: "text",
+      content: genericError,
+    } as iStreamMessage));
+    return { 
+      result: genericError, 
+      tokenUsage 
+    };
   } finally {
     // Clean up AbortController
     if (chatId) {

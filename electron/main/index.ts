@@ -256,7 +256,7 @@ async function createWindow() {
   // resolve cors
   win.webContents.session.webRequest.onBeforeSendHeaders(
     (details, callback) => {
-      console.log("onBeforeSendHeaders", details.requestHeaders)
+      // console.log("onBeforeSendHeaders", details.requestHeaders)
       callback({ requestHeaders: { ...details.requestHeaders, Origin: '*' } });
     },
   );
