@@ -15,8 +15,18 @@ const SystemSettingsPage = () => {
   const [minimalToTray, setMinimalToTray] = useState(false)
 
   useEffect(() => {
-    window.electron.ipcRenderer.getAutoLaunch().then(setAutoLaunch)
-    window.electron.ipcRenderer.getMinimalToTray().then(setMinimalToTray)
+    window.electron.ipcRenderer.getAutoLaunch()
+      .then(setAutoLaunch)
+      .catch(err => {
+        console.warn('system:getAutoLaunch handler not found', err)
+        setAutoLaunch(false)
+      })
+    window.electron.ipcRenderer.getMinimalToTray()
+      .then(setMinimalToTray)
+      .catch(err => {
+        console.warn('system:getMinimalToTray handler not found', err)
+        setMinimalToTray(false)
+      })
     setAutoDownload(getAutoDownload())
   }, [])
 

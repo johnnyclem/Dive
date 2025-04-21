@@ -1,9 +1,9 @@
 import React, { useRef, useState, useCallback, useEffect } from "react"
-import { useLocation, useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams, useLocation } from "react-router-dom"
 import ChatMessages, { Message } from "./ChatMessages"
 import ChatInput from "./ChatInput"
 import SidePanel from './SidePanel';
-import { useAtom, useSetAtom, useAtomValue } from 'jotai'
+import { useAtom, useSetAtom } from 'jotai'
 import { codeStreamingAtom } from '../../atoms/codeStreaming'
 import { useUIStore } from '../../stores/uiStore';
 import useHotkeyEvent from "../../hooks/useHotkeyEvent"
@@ -11,8 +11,6 @@ import { showToastAtom } from "../../atoms/toastState"
 import { useTranslation } from "react-i18next"
 import { currentChatIdAtom, isChatStreamingAtom, lastMessageAtom } from "../../atoms/chatState"
 import { safeBase64Encode } from "../../util"
-import { isConfigNotInitializedAtom } from "../../atoms/configState"
-import Header from "../../components/Header"
 
 interface ToolCall {
   name: string
@@ -26,15 +24,14 @@ interface ToolResult {
 
 
 const ChatWindow = () => {
-  const isConfigNotInitialized = useAtomValue(isConfigNotInitializedAtom)
   const { chatId } = useParams()
   const location = useLocation()
+  const navigate = useNavigate()
   const [messages, setMessages] = useState<Message[]>([])
   const { isPanelOpen, togglePanel } = useUIStore();
   const currentId = useRef(0)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const currentChatId = useRef<string | null>(null)
-  const navigate = useNavigate()
   const isInitialMessageHandled = useRef(false)
   const showToast = useSetAtom(showToastAtom)
   const { t } = useTranslation()
@@ -436,7 +433,6 @@ const ChatWindow = () => {
 
   return (
     <div className="h-full w-full relative">
-      {!isConfigNotInitialized && <Header showModelSelect />}
       <div className={`flex h-screen w-full overflow-x-hidden ${isPanelOpen ? 'panel-open' : ''}`}>
         <div className="flex-grow h-full flex flex-col">
           <div className="chat-window">

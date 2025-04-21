@@ -19,10 +19,18 @@ const KeyPopup = ({
   onSuccess: (customModelId?: string) => void
 }) => {
   const { t } = useTranslation()
-  const [provider, setProvider] = useState<InterfaceProvider>(PROVIDERS[0])
-  const [fields, setFields] = useState<Record<string, FieldDefinition>>(defaultInterface[provider])
-
-  const [formData, setFormData] = useState<InterfaceModelConfig>({active: true} as InterfaceModelConfig)
+  const [provider, setProvider] = useState<InterfaceProvider>('ollama')
+  const [fields, setFields] = useState<Record<string, FieldDefinition>>(defaultInterface['ollama'])
+  const defaultOllamaURL = defaultInterface['ollama'].baseURL.default as string
+  // Initial full InterfaceModelConfig for Ollama
+  const initialFormData: InterfaceModelConfig = {
+    apiKey: '',
+    baseURL: defaultOllamaURL,
+    model: '',
+    modelProvider: 'ollama',
+    active: true
+  }
+  const [formData, setFormData] = useState<InterfaceModelConfig>(initialFormData)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [customModelId, setCustomModelId] = useState<string>("")
   const [verifyError, setVerifyError] = useState<string>("")
@@ -45,8 +53,16 @@ const KeyPopup = ({
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newProvider = e.target.value as InterfaceProvider
     setProvider(newProvider)
-    setFormData({active: true} as InterfaceModelConfig)
     setFields(defaultInterface[newProvider])
+    // Reset formData for selected provider
+    const resetData: InterfaceModelConfig = {
+      apiKey: '',
+      baseURL: newProvider === 'ollama' ? defaultOllamaURL : '',
+      model: '',
+      modelProvider: newProvider,
+      active: true
+    }
+    setFormData(resetData)
     setErrors({})
     setVerifyError("")
   }
@@ -240,8 +256,8 @@ const KeyPopup = ({
               </label>
               {(showOptional[provider] || key !== "baseURL" || field.required) && (
                 <input
-                  type={"text"}
-                  value={formData[key as keyof ModelConfig] as string || ""}
+                  type="text"
+                  value={(formData[key as keyof ModelConfig] as string) || field.default?.toString() || ""}
                   onChange={e => handleChange(key, e.target.value)}
                   placeholder={field.placeholder?.toString()}
                   className={errors[key] ? "error" : ""}

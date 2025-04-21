@@ -6,6 +6,7 @@ import { useSetAtom } from "jotai"
 import { loadConfigAtom } from "../../atoms/configState"
 import useDebounce from "../../hooks/useDebounce"
 import { showToastAtom } from "../../atoms/toastState"
+import { useNavigate } from "react-router-dom"
 import Input from "../../components/WrappedInput"
 import Tooltip from "../../components/Tooltip"
 
@@ -38,6 +39,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const saveConfig = useSetAtom(saveFirstConfigAtom)
   const writeEmptyConfig = useSetAtom(writeEmptyConfigAtom)
   const showToast = useSetAtom(showToastAtom)
+  const navigate = useNavigate()
 
   const [fetchListOptions, cancelFetch] = useDebounce(async (key: string, field: FieldDefinition, deps: Record<string, string>) => {
     try {
@@ -152,6 +154,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
       setIsSubmitting(true)
       await onSubmit(await saveConfig({ data: _formData, provider }))
       loadConfig()
+      navigate("/", { replace: true })
     } finally {
       setIsSubmitting(false)
     }
@@ -186,8 +189,10 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     return true
   }
 
-  const handleSkip = () => {
-    writeEmptyConfig()
+  const handleSkip = async () => {
+    await writeEmptyConfig()
+    loadConfig()
+    navigate("/", { replace: true })
   }
 
   const handleCopiedError = async (text: string) => {

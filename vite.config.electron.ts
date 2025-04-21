@@ -75,7 +75,13 @@ export default defineConfig(({ command }) => {
       },
     },
     optimizeDeps: {
-      exclude: ['services/__tests__']
+      exclude: ['services/__tests__'],
+      include: [
+        'algorand-mcp/packages/client/src/index',
+        '@perawallet/connect',
+        '@blockshake/defly-connect',
+        '@daffiwallet/connect',
+      ]
     },
     plugins: [
       react({ babel: { plugins: [jotaiDebugLabel, jotaiReactRefresh] } }),
@@ -117,10 +123,7 @@ export default defineConfig(({ command }) => {
             },
           },
         },
-        // Ployfill the Electron and Node.js API for Renderer process.
-        // If you want use Node.js in Renderer process, the `nodeIntegration` needs to be enabled in the Main process.
-        // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
-        renderer: {},
+        // Renderer bundling is handled by the standard Vite config; remove unsupported block here.
       }),
     ],
     server: process.env.VSCODE_DEBUG ? (() => {

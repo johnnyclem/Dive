@@ -135,7 +135,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
   // Apply the defined type to the array
   const footerButtons: FooterButton[] = [
-    { label: t("sidebar.knowledge"), path: "/knowledge-base", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 16c1.255 0 2.443-.29 3.5-.804V4.804zM14.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 0114.5 16c1.255 0 2.443-.29 3.5.804v-10A7.968 7.968 0 0014.5 4z"></path></svg> },
+    { label: t("sidebar.browser"), path: "/browser", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 16c1.255 0 2.443-.29 3.5-.804V4.804zM14.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 0114.5 16c1.255 0 2.443-.29 3.5.804v-10A7.968 7.968 0 0014.5 4z"></path></svg> },
     { label: t("sidebar.personas"), path: "/personas", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path></svg> },
     { label: t("sidebar.storage"), path: "/storage", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 2l7.997 3.884v9.232l-7.997 3.884-7.997-3.884V5.884zM11 13h4v-2h-4v2zm-6 0h4v-2H5v2zm0-4h4V7H5v2zm6 0h4V7h-4v2z"></path></svg> },
     { label: t("sidebar.tools"), path: "/tools", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V6.236a1 1 0 00-1.447-.894l-4 2A1 1 0 0011 8v9zM5 17a1 1 0 001.447.894l4-2A1 1 0 0011 15V6.236a1 1 0 00-1.447-.894l-4 2A1 1 0 005 8v9z"></path></svg> },

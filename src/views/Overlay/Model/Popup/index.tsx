@@ -1,4 +1,3 @@
-
 import { useTranslation } from "react-i18next"
 import { useAtom } from "jotai"
 import { showToastAtom } from "../../../../atoms/toastState"
@@ -42,7 +41,8 @@ const ModelPopup = ({
           currentIndex, saveConfig
         } = useModelsProvider()
 
-  const multiModelConfig = (multiModelConfigList?.[currentIndex] ?? {}) as MultiModelConfig
+  // Current multi-model configuration based on selected index
+  const multiModelConfig = multiModelConfigList?.[currentIndex]
   const currentVerifyList = multiModelConfig ? allVerifiedList[multiModelConfig?.apiKey || multiModelConfig?.baseURL] ?? {} : {}
 
   const searchListOptions = useMemo(() => {
@@ -73,31 +73,40 @@ const ModelPopup = ({
   }, [multiModelConfig])
 
   const reloadModelList = async (_defaultModel?: string) => {
+    // Do not attempt to fetch when config is not set
+    if (!multiModelConfig) {
+      setListOptions([])
+      return
+    }
+    // Retrieve fields definitions for the selected provider
+    const fields = defaultInterface[multiModelConfig.name]
+    if (!fields) {
+      setListOptions([])
+      return
+    }
+    // Clear and show loading
+    setListOptions([])
+    setIsFetching(true)
     try {
-      if(!multiModelConfig)
-        return
-      setListOptions([])
-      setIsFetching(true)
-      let options = await fetchListOptions(multiModelConfig, defaultInterface[multiModelConfig.name])
-      options = options.map(option => ({
-        ...option,
-        checked: _defaultModel ? option.name === _defaultModel : multiModelConfig.models.includes(option.name),
-        verifyStatus: option.verifyStatus ?? "unVerified"
-      })).sort((a, b) => {
-        if (a.checked === b.checked) {
-          return (a as any).originalIndex - (b as any).originalIndex
-        }
-        return a.checked ? -1 : 1
-      })
+      // Fetch list options for this provider
+      let options = await fetchListOptions(multiModelConfig, fields)
+      // Map options to include checked state and verify status
+      options = options.map(opt => ({
+        ...opt,
+        checked: _defaultModel ? opt.name === _defaultModel : multiModelConfig.models.includes(opt.name),
+        verifyStatus: opt.verifyStatus ?? "unVerified"
+      }))
+      // Optionally sort: checked first
+      options.sort((a, b) => a.checked === b.checked ? 0 : a.checked ? -1 : 1)
       setListOptions(options)
-      setCheckboxState(options.every(option => option.checked) ? "all" : options.some(option => option.checked) ? "-" : "")
-      setIsFetching(false)
-    } catch (error) {
-      showToast({
-        message: (error as Error).message,
-        type: "error"
-      })
+      // Update the group checkbox state
+      const allChecked = options.every(o => o.checked)
+      const someChecked = options.some(o => o.checked)
+      setCheckboxState(allChecked ? "all" : someChecked ? "-" : "")
+    } catch (err) {
+      showToast({ message: (err as Error).message, type: "error" })
       setListOptions([])
+    } finally {
       setIsFetching(false)
     }
   }

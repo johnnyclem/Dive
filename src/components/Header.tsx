@@ -3,7 +3,8 @@ import { useSetAtom } from "jotai"
 import { keymapModalVisibleAtom } from "../atoms/modalState"
 import ModelSelect from "./ModelSelect"
 import { useUIStore } from "../stores/uiStore"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
+
 type Props = {
   showHelpButton?: boolean
   showModelSelect?: boolean
@@ -16,6 +17,7 @@ const Header = ({
   showPanelToggleButton = true,
 }: Props) => {
   const setKeymapModalVisible = useSetAtom(keymapModalVisibleAtom)
+  const location = useLocation()
   const { togglePanel } = useUIStore()
   const { isPanelOpen } = useUIStore()
   const shouldShowToggleButton = showPanelToggleButton && !isPanelOpen;

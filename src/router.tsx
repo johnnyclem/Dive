@@ -1,5 +1,6 @@
 import { createHashRouter } from "react-router-dom"
 import Layout from "./views/Layout"
+import Browser from "./views/Browser"
 import Chat from "./views/Chat"
 import Welcome from "./views/Welcome"
 import Setup from "./views/Setup"
@@ -10,6 +11,7 @@ import StoragePage from "./pages/StoragePage"
 import SettingsPage from "./pages/SettingsPage"
 import ModelSettingsPage from "./pages/ModelSettingsPage"
 import SystemSettingsPage from "./pages/SystemSettingsPage"
+import Wallet from "./views/Wallet"
 
 export const router = createHashRouter([
   {
@@ -19,6 +21,14 @@ export const router = createHashRouter([
       {
         index: true,
         element: <Welcome />
+      },
+      {
+        path: "browser",
+        element: <Browser />
+      },
+      {
+        path: "wallet",
+        element: <Wallet />
       },
       {
         path: "chat",

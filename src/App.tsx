@@ -2,7 +2,7 @@ import { RouterProvider } from "react-router-dom"
 import { router } from "./router"
 import { useSetAtom } from 'jotai'
 import { loadConfigAtom } from './atoms/configState'
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { handleGlobalHotkey, loadHotkeyMapAtom } from "./atoms/hotkeyState"
 import { handleWindowResizeAtom } from "./atoms/sidebarState"
 import { systemThemeAtom } from "./atoms/themeState"
@@ -10,7 +10,6 @@ import Updater from "./updater"
 
 
 function App() {
-  const [loading, setLoading] = useState(true)
   const loadConfig = useSetAtom(loadConfigAtom)
   const loadHotkeyMap = useSetAtom(loadHotkeyMapAtom)
   const setSystemTheme = useSetAtom(systemThemeAtom)
@@ -18,10 +17,8 @@ function App() {
   // init app
   useEffect(() => {
     loadHotkeyMap()
-    loadConfig().finally(() => {
-      setLoading(false)
-      window.postMessage({ payload: "removeLoading" }, "*")
-    })
+    loadConfig().catch(console.warn)
+    window.postMessage({ payload: "removeLoading" }, "*")
 
     window.addEventListener("resize", handleWindowResize)
     window.addEventListener("keydown", handleGlobalHotkey)
@@ -44,9 +41,7 @@ function App() {
     }
   }, [])
 
-  if (loading) {
-    return <></>
-  }
+  // render UI immediately; config loads in background
 
   return (
     <>

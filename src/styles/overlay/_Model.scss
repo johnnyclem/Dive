@@ -554,7 +554,7 @@
             width: 100%;
             flex: 1;
             background: transparent;
-
+            color: var(--text-inverted-weak);
             &:focus {
               outline: none;
             }
@@ -587,7 +587,7 @@
           white-space: nowrap;
           cursor: pointer;
           transition: background $transition-fast ease-in-out;
-
+          color: var(--text-inverted-weak);
           &:hover {
             background: var(--bg-hover-cancel);
           }
@@ -618,6 +618,7 @@
       gap: 10px;
       justify-content: flex-start;
       height: 50px;
+      color: var(--text-inverted-weak);
     }
 
     .model-list {
@@ -663,7 +664,7 @@
 
         &.notSupportModel {
           .model-option-name {
-            color: var(--text-weak);
+            color: var(--text-inverted-weak);
           }
         }
 
@@ -677,6 +678,7 @@
         }
 
         .model-option-name {
+          color: var(--text-light);
           width: 100%;
 
           @include line-clamp(1);
@@ -933,7 +935,7 @@
           border-radius: 6px;
           border: 1px solid var(--border);
           transition: all 0.3s;
-          color: var(--text);
+          color: var(--text-inverted-weak);
           background: var(--bg-input);
 
           &:focus {

@@ -66,7 +66,8 @@
     "models": "Model Settings",
     "system": "System Settings",
     "collapse": "Collapse",
-    "expand": "Expand"
+    "expand": "Expand",
+    "browser": "Browser"
   },
   "personas": {
     "title": "Personas",

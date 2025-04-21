@@ -60,14 +60,19 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.electron.ipcRenderer.openaiModelList(deps.apiKey)
-        if (results.error) {
-          throw new Error(results.error)
+        if (window.electron?.ipcRenderer?.openaiModelList) {
+          const resp = await window.electron.ipcRenderer.openaiModelList(deps.apiKey)
+          if ((resp as any).error) throw new Error((resp as any).error)
+          const list = (resp as any).models ?? (resp as any).results ?? []
+          return list.map((m: any) => m.id || m.name)
         }
-        return results.results
+        const response = await fetch('/api/v1/models')
+        const json = await response.json() as { success: boolean; data: Array<{ id: string }>; message?: string }
+        if (!json.success) throw new Error(json.message || 'Failed to fetch models')
+        return json.data.map(m => m.id)
       },
       listDependencies: ["apiKey"]
-    },
+    }
   },
   openai_compatible: {
     apiKey: {
@@ -96,11 +101,16 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Default model",
       listCallback: async (deps) => {
-        const results = await window.electron.ipcRenderer.openaiCompatibleModelList(deps.apiKey, deps.baseURL)
-        if (results.error) {
-          throw new Error(results.error)
+        if (window.electron?.ipcRenderer?.openaiCompatibleModelList) {
+          const resp = await window.electron.ipcRenderer.openaiCompatibleModelList(deps.apiKey, deps.baseURL)
+          if ((resp as any).error) throw new Error((resp as any).error)
+          const list = (resp as any).models ?? (resp as any).results ?? []
+          return list.map((m: any) => m.id || m.name)
         }
-        return results.results
+        const response = await fetch('/api/v1/models')
+        const json = await response.json() as { success: boolean; data: Array<{ id: string }>; message?: string }
+        if (!json.success) throw new Error(json.message || 'Failed to fetch models')
+        return json.data.map(m => m.id)
       },
       listDependencies: ["apiKey", "baseURL"]
     }
@@ -123,14 +133,19 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.electron.ipcRenderer.ollamaModelList(deps.baseURL)
-        if (results.error) {
-          throw new Error(results.error)
+        if (window.electron?.ipcRenderer?.ollamaModelList) {
+          const resp = await window.electron.ipcRenderer.ollamaModelList(deps.baseURL)
+          if ((resp as any).error) throw new Error((resp as any).error)
+          const list = (resp as any).models ?? (resp as any).results ?? []
+          return list.map((m: any) => m.id || m.name)
         }
-        return results.results
+        const response = await fetch('/api/v1/models')
+        const json = await response.json() as { success: boolean; data: Array<{ id: string }>; message?: string }
+        if (!json.success) throw new Error(json.message || 'Failed to fetch models')
+        return json.data.map(m => m.id)
       },
       listDependencies: ["baseURL"]
-    },
+    }
   },
   anthropic: {
     apiKey: {
@@ -159,14 +174,19 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.electron.ipcRenderer.anthropicModelList(deps.apiKey, deps.baseURL)
-        if (results.error) {
-          throw new Error(results.error)
+        if (window.electron?.ipcRenderer?.anthropicModelList) {
+          const resp = await window.electron.ipcRenderer.anthropicModelList(deps.apiKey, deps.baseURL)
+          if ((resp as any).error) throw new Error((resp as any).error)
+          const list = (resp as any).models ?? (resp as any).results ?? []
+          return list.map((m: any) => m.id || m.name)
         }
-        return results.results
+        const response = await fetch('/api/v1/models')
+        const json = await response.json() as { success: boolean; data: Array<{ id: string }>; message?: string }
+        if (!json.success) throw new Error(json.message || 'Failed to fetch models')
+        return json.data.map(m => m.id)
       },
       listDependencies: ["apiKey", "baseURL"]
-    },
+    }
   },
   google_genai: {
     apiKey: {
@@ -186,14 +206,19 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.electron.ipcRenderer.googleGenaiModelList(deps.apiKey)
-        if (results.error) {
-          throw new Error(results.error)
+        if (window.electron?.ipcRenderer?.googleGenaiModelList) {
+          const resp = await window.electron.ipcRenderer.googleGenaiModelList(deps.apiKey)
+          if ((resp as any).error) throw new Error((resp as any).error)
+          const list = (resp as any).models ?? (resp as any).results ?? []
+          return list.map((m: any) => m.id || m.name)
         }
-        return results.results
+        const response = await fetch('/api/v1/models')
+        const json = await response.json() as { success: boolean; data: Array<{ id: string }>; message?: string }
+        if (!json.success) throw new Error(json.message || 'Failed to fetch models')
+        return json.data.map(m => m.id)
       },
       listDependencies: ["apiKey"]
-    },
+    }
   },
   mistralai: {
     apiKey: {
@@ -213,14 +238,19 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.electron.ipcRenderer.mistralaiModelList(deps.apiKey)
-        if (results.error) {
-          throw new Error(results.error)
+        if (window.electron?.ipcRenderer?.mistralaiModelList) {
+          const resp = await window.electron.ipcRenderer.mistralaiModelList(deps.apiKey)
+          if ((resp as any).error) throw new Error((resp as any).error)
+          const list = (resp as any).models ?? (resp as any).results ?? []
+          return list.map((m: any) => m.id || m.name)
         }
-        return results.results
+        const response = await fetch('/api/v1/models')
+        const json = await response.json() as { success: boolean; data: Array<{ id: string }>; message?: string }
+        if (!json.success) throw new Error(json.message || 'Failed to fetch models')
+        return json.data.map(m => m.id)
       },
       listDependencies: ["apiKey"]
-    },
+    }
   },
   bedrock: {
     accessKeyId: {
@@ -267,11 +297,16 @@ export const defaultInterface: Record<InterfaceProvider, InterfaceDefinition> = 
       default: "",
       placeholder: "Select a model",
       listCallback: async (deps) => {
-        const results = await window.electron.ipcRenderer.bedrockModelList(deps.accessKeyId, deps.secretAccessKey, deps.sessionToken, deps.region)
-        if (results.error) {
-          throw new Error(results.error)
+        if (window.electron?.ipcRenderer?.bedrockModelList) {
+          const resp = await window.electron.ipcRenderer.bedrockModelList(deps.accessKeyId, deps.secretAccessKey, deps.sessionToken, deps.region)
+          if ((resp as any).error) throw new Error((resp as any).error)
+          const list = (resp as any).models ?? (resp as any).results ?? []
+          return list.map((m: any) => m.id || m.name)
         }
-        return []
+        const response = await fetch('/api/v1/models')
+        const json = await response.json() as { success: boolean; data: Array<{ id: string }>; message?: string }
+        if (!json.success) throw new Error(json.message || 'Failed to fetch models')
+        return json.data.map(m => m.id)
       },
       listDependencies: ["accessKeyId", "secretAccessKey", "sessionToken", "region"]
     },

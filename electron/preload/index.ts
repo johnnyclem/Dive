@@ -42,7 +42,18 @@ contextBridge.exposeInMainWorld("electron", {
     },
 
     // llm
-    openaiModelList: (apiKey: string) => ipcRenderer.invoke("llm:openaiModelList", apiKey),
+    openaiModelList: async (apiKey: string) => {
+      try {
+        return await ipcRenderer.invoke("llm:openaiModelList", apiKey)
+      } catch {
+        // Fallback: fetch models directly from OpenAI
+        const response = await fetch("https://api.openai.com/v1/models", {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        })
+        const data = (await response.json()) as { data: Array<{ id: string }> }
+        return { models: data.data.map(m => ({ id: m.id, name: m.id })) }
+      }
+    },
     openaiCompatibleModelList: (apiKey: string, baseURL: string) => ipcRenderer.invoke("llm:openaiCompatibleModelList", apiKey, baseURL),
     anthropicModelList: (apiKey: string, baseURL: string) => ipcRenderer.invoke("llm:anthropicModelList", apiKey, baseURL),
     ollamaModelList: (baseURL: string) => ipcRenderer.invoke("llm:ollamaModelList", baseURL),

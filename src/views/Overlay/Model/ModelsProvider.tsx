@@ -1,4 +1,4 @@
-import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Dispatch, ReactNode, SetStateAction, createContext, useContext, useEffect, useState } from "react";
 import { configAtom, configDictAtom, loadConfigAtom, MultiModelConfig, writeRawConfigAtom, InterfaceModelConfig, prepareModelConfig } from "../../../atoms/configState";
 import { useAtomValue, useSetAtom } from "jotai";
 import { FieldDefinition, InterfaceProvider } from "../../../atoms/interfaceState";
@@ -42,21 +42,23 @@ export default function ModelsProvider({
   const [listOptions, setListOptions] = useState<ListOption[]>([])
   const [multiModelConfigList, setMultiModelConfigList] = useState<MultiModelConfig[]>([])
   const [parameter, setParameter] = useState<Record<string, number>>(JSON.parse(localStorage.getItem("ConfigParameter") || "{}"))
-  const getMultiModelConfigList = () => {
-    return new Promise((resolve, reject) => {
+
+  const getMultiModelConfigList = (): Promise<MultiModelConfig[]> => {
+    return new Promise(resolve => {
       setMultiModelConfigList(prev => {
         resolve(prev)
         return prev
       })
-    }) as Promise<MultiModelConfig[]>
+    })
   }
-  const getParameter = () => {
-    return new Promise((resolve, reject) => {
+
+  const getParameter = (): Promise<Record<string, number>> => {
+    return new Promise(resolve => {
       setParameter(prev => {
         resolve(prev)
         return prev
       })
-    }) as Promise<Record<string, number>>
+    })
   }
 
   useEffect(() => {
@@ -97,6 +99,10 @@ export default function ModelsProvider({
   }, [multiModelConfigList])
 
   const fetchListOptions = async (multiModelConfig: MultiModelConfig, fields: Record<string, FieldDefinition>) => {
+    // Guard against undefined fields to avoid runtime errors
+    if (!fields) {
+      return []
+    }
     const localListOptions = localStorage.getItem("modelVerify")
     const allVerifiedList = localListOptions ? JSON.parse(localListOptions) : {}
     const verifyList = allVerifiedList[multiModelConfig.apiKey || multiModelConfig.baseURL]
@@ -107,7 +113,7 @@ export default function ModelsProvider({
     if(customModelListText){
       const customModelList = JSON.parse(customModelListText)
       const _customModelList = customModelList[`${multiModelConfig.apiKey || multiModelConfig.baseURL || multiModelConfig.accessKeyId}`]
-      if(_customModelList){
+      if(Array.isArray(_customModelList)){
         _customModelList.forEach((option: string) => {
           newListOptions.push({
             name: option,
@@ -119,28 +125,27 @@ export default function ModelsProvider({
       }
     }
 
-
     try {
       let options: string[] = []
-      for (const [key, field] of Object.entries(fields)) {
+      for (const field of Object.values(fields)) {
         if (field.type === "list" && field.listCallback && field.listDependencies) {
           const deps = field.listDependencies.reduce((acc, dep) => ({
             ...acc,
-            [dep]: multiModelConfig[dep as keyof MultiModelConfig] || (multiModelConfig as any).credentials?.[dep] || ""
-          }), {})
-
-          options = await field.listCallback!(deps)
+            [dep]: String(multiModelConfig[dep as keyof MultiModelConfig] ?? "")
+          }), {} as Record<string, string>)
+          const result = await field.listCallback(deps)
+          options = Array.isArray(result) ? result.filter(item => typeof item === 'string') : []
         }
       }
 
-      options.forEach((option: string) => {
+      for (const option of options) {
         newListOptions.push({
           name: option,
           checked: multiModelConfig.models.includes(option),
           verifyStatus: getVerifyStatus(verifyList?.[option]) ?? "unVerified",
           isCustom: false
         })
-      })
+      }
     } catch (error) {
       // if listCallback failed and custom model list is empty, throw error
       if(!customModelListText) {
@@ -169,12 +174,12 @@ export default function ModelsProvider({
       }
     })
 
-    let _activeProvider: InterfaceProvider = newActiveProvider ?? config?.activeProvider as any ?? ""
+    let _activeProvider = newActiveProvider ?? (config?.activeProvider ?? "")
     const model = configList?.[_activeProvider]?.model
     const existModel = Object.keys(compressedData).find(key => compressedData[key].active && compressedData[key].model === model) as InterfaceProvider
     const activeModel = Object.keys(compressedData).filter(key => compressedData[key].active)
     _activeProvider = existModel ?? "none"
-    _activeProvider = activeModel?.length == 1 ? activeModel[0] as InterfaceProvider : _activeProvider
+    _activeProvider = activeModel?.length == 1 ? activeModel[0] : _activeProvider
 
     if(!_multiModelConfigList?.length){
       const _parameter = await getParameter()

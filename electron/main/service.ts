@@ -86,8 +86,12 @@ async function initService(): Promise<number> {
 }
 
 export async function initMCPClient() {
-  client = initClient()
-  port = initService()
+  try {
+    client = initClient()
+    port = initService()
+  } catch (error) {
+    console.error("Failed to initialize MCP client:", error)
+  }
 }
 
 export async function cleanup() {

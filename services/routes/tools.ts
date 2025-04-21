@@ -31,9 +31,10 @@ export function toolsRouter() {
 
   router.post("/restore", async (req, res) => {
     try {
-      // Read default servers configuration
-      const defaultConfigPath = path.join(__dirname, "./default-servers.json");
-      const defaultConfig = JSON.parse(await fs.readFile(defaultConfigPath, "utf-8"));
+      // Read default servers configuration (source JSON under services/routes)
+      const repoRoot = path.join(__dirname, '..', '..')
+      const defaultConfigPath = path.join(repoRoot, 'services', 'routes', 'default-servers.json')
+      const defaultConfig = JSON.parse(await fs.readFile(defaultConfigPath, 'utf-8'));
 
       // Update config file
       await fs.writeFile(MCPServerManager.getInstance().configPath, JSON.stringify(defaultConfig, null, 2));

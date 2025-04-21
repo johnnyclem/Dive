@@ -1,4 +1,6 @@
 import { ipcMain, BrowserWindow, Menu } from "electron"
+import type { AlgorandMcpClient, WalletType } from 'algorand-mcp/packages/client/src/index'
+import type { Transaction } from 'algosdk'
 import { ipcSystemHandler } from "./system"
 import { setupDocumentHandlers } from "./document"
 import { setupEmbeddingsHandlers } from "./embeddings"
@@ -15,13 +17,19 @@ export function ipcHandler(win: BrowserWindow) {
 
   const DEFAULT_TITLE = "Souls"
 
+  const safeHandle = (channel: string, listener: (...args: any[]) => any) => {
+    try { ipcMain.handle(channel as any, listener as any) } catch (err) {
+      console.warn(`IPC handler already registered for '${channel}'`)
+    }
+  }
+
   // IPC Handlers
-  ipcMain.handle("set-title", (_event, title: string) => {
+  safeHandle("set-title", (_event, title: string) => {
     win.setTitle(title || DEFAULT_TITLE)
   })
 
   // Generic context menu
-  ipcMain.handle("show-input-context-menu", (event) => {
+  safeHandle("show-input-context-menu", (event) => {
     const menu = Menu.buildFromTemplate([
       { role: "cut" },
       { role: "copy" },
@@ -32,7 +40,7 @@ export function ipcHandler(win: BrowserWindow) {
     menu.popup({ window: BrowserWindow.fromWebContents(event.sender)! })
   })
 
-  ipcMain.handle("show-selection-context-menu", (event) => {
+  safeHandle("show-selection-context-menu", (event) => {
     const menu = Menu.buildFromTemplate([
       {
         label: "Cut",
@@ -56,7 +64,7 @@ export function ipcHandler(win: BrowserWindow) {
   })
 
   // Handle popup windows (simple implementation)
-  ipcMain.handle('popup:open', (_event, options: { url: string, width?: number, height?: number, modal?: boolean }) => {
+  safeHandle('popup:open', (_event, options: { url: string, width?: number, height?: number, modal?: boolean }) => {
     const { url, width = 500, height = 600, modal = false } = options;
     
     // Close existing popup if it exists
@@ -97,7 +105,7 @@ export function ipcHandler(win: BrowserWindow) {
   });
   
   // Close popup window
-  ipcMain.handle('popup:close', () => {
+  safeHandle('popup:close', () => {
     if (popup && !popup.isDestroyed()) {
       popup.close();
       return true;
@@ -127,6 +135,50 @@ export function ipcHandler(win: BrowserWindow) {
   ipcLlmHandler()
   ipcMenuHandler()
   setupKnowledgeBaseHandlers()
+
+  // Wallet IPC handlers for embedded BrowserView
+  let walletClient: AlgorandMcpClient | null = null
+  async function getWalletClient() {
+    if (!walletClient) {
+      // Dynamically load the Algorand MCP browser SDK
+      const module = await import('algorand-mcp/packages/client/src/index')
+      const { AlgorandMcpClient } = module
+      // Default to TestNet for embedded browser
+      walletClient = new AlgorandMcpClient({ network: 'testnet' })
+    }
+    return walletClient
+  }
+
+  ipcMain.handle('wallet:connect', async (_event, walletType: WalletType): Promise<string[]> => {
+    const client = await getWalletClient()
+    return client.connect(walletType)
+  })
+
+  ipcMain.handle('wallet:getAccounts', async (): Promise<string[]> => {
+    const client = await getWalletClient()
+    return client.getAccounts()
+  })
+
+  ipcMain.handle('wallet:disconnect', async (): Promise<void> => {
+    const client = await getWalletClient()
+    return client.disconnect()
+  })
+
+  ipcMain.handle('wallet:signTxn', async (_event, txn: Transaction): Promise<Uint8Array> => {
+    const client = await getWalletClient()
+    return client.signTransaction(txn)
+  })
+
+  ipcMain.handle(
+    'wallet:signTxns',
+    async (
+      _event,
+      txns: Array<Array<{ txn: Transaction; message?: string }>>
+    ): Promise<Uint8Array[][]> => {
+      const client = await getWalletClient()
+      return client.signTransactions(txns)
+    }
+  )
 
   return () => {
     // Close popup

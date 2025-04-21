@@ -1,4 +1,6 @@
 import React from "react"
+import { useLocation } from "react-router-dom"
+import Header from "../components/Header"
 import { Outlet } from "react-router-dom"
 import HistorySidebar from "../components/HistorySidebar"
 import { useAtom, useAtomValue } from "jotai"
@@ -15,6 +17,7 @@ const Layout = () => {
   const [theme] = useAtom(themeAtom)
   const [systemTheme] = useAtom(systemThemeAtom)
   const { isPanelOpen } = useUIStore()
+  const location = useLocation()
 
   const sidebarWidth = 300;
 
@@ -23,12 +26,14 @@ const Layout = () => {
       data-theme={`${theme === "system" ? systemTheme : theme}`}>
       <div className="app-content flex flex-1 overflow-hidden">
         {!isConfigNotInitialized && <HistorySidebar />}
-        <div
-          className={`flex-1 flex flex-col relative transition-all duration-300 ease-in-out ${isPanelOpen ? 'ml-[${sidebarWidth}px]' : 'ml-0'
-            }`}
-        >
-          <div className="flex-1 overflow-y-auto">
-            <Outlet />
+        <div className="flex flex-col flex-1">
+          {(location.pathname === "/" || location.pathname.startsWith("/chat")) && <Header showModelSelect />}
+          <div
+            className={`flex-1 flex flex-col relative transition-all duration-300 ease-in-out ${isPanelOpen ? `ml-[${sidebarWidth}px]` : 'ml-0'}`}
+          >
+            <div className="flex-1 overflow-y-auto">
+              <Outlet />
+            </div>
           </div>
         </div>
         <CodeModal />

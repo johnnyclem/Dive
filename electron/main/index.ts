@@ -18,40 +18,11 @@ import { initTray } from "./tray"
 import { store } from "./store"
 import { initProtocol } from "./protocol"
 import * as KnowledgeStore from "./knowledge-store"
-import * as logging from "./ipc/logging"
 import contextMenu from "electron-context-menu"
 // Get the directory path
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// Define types for knowledge base storage
-interface KnowledgeBase {
-  id: string;
-  name: string;
-  description?: string;
-  content?: string;
-}
-
-interface KnowledgeCollection {
-  id: string;
-  name: string;
-  description?: string;
-  documents: Document[];
-}
-
-interface Document {
-  id: string;
-  name: string;
-  path: string;
-  content: string;
-  dateAdded: Date;
-}
-
-// In-memory storage for knowledge bases
-const knowledgeBases: KnowledgeBase[] = [];
-const knowledgeCollections: KnowledgeCollection[] = [];
-
-// Export collections for other modules to access
-export { knowledgeCollections }
+// Removed unused knowledge base storage definitions and exports
 
 // The built directory structure
 //
@@ -192,6 +163,16 @@ let win: BrowserWindow | null = null
 const preload = path.join(__dirname, "../preload/index.mjs")
 const indexHtml = path.join(RENDERER_DIST, "index.html")
 
+// Override ipcMain.handle to suppress duplicate-handler errors
+const _ipcHandle = ipcMain.handle.bind(ipcMain)
+ipcMain.handle = (channel: any, listener: any) => {
+  try {
+    return _ipcHandle(channel, listener)
+  } catch (err) {
+    console.warn(`IPC handler for '${channel}' already registered`)
+  }
+}
+
 async function registerEssentialIpcHandlers() {
   console.log('Registering essential IPC handlers directly');
 
@@ -237,29 +218,32 @@ async function onReady() {
   // Add sample knowledge base data for testing
   KnowledgeStore.addSampleData();
 
-  initMCPClient()
-  initProtocol()
+  // Open UI immediately
   createWindow()
-  // Register critical handlers early
+  // Register critical IPC handlers early
   registerEssentialIpcHandlers()
+  // Start MCP client and protocol loading in background
+  initMCPClient().catch(err => console.error('initMCPClient error', err))
+  initProtocol().catch(err => console.error('initProtocol error', err))
 
   contextMenu({
     window: win, // Pass the window object
     showInspectElement: true // Explicitly enable inspect element
   });
-
 }
 
 async function createWindow() {
   win = new BrowserWindow({
     title: "Souls",
-    icon: path.join(process.env.VITE_PUBLIC, "favicon.ico"),
+    icon: path.join(process.env.VITE_PUBLIC, "souls-icon-black-bg.jpg"),
     width: 1024,
     height: 768,
     minHeight: 768,
     minWidth: 1024,
     webPreferences: {
       preload,
+      // Enable embedded <webview> tags
+      webviewTag: true,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
       // nodeIntegration: true,
 
@@ -289,6 +273,8 @@ async function createWindow() {
     });
   });
 
+  // Register all IPC handlers before loading content
+  ipcHandler(win)
   if (VITE_DEV_SERVER_URL) { // #298
     win.loadURL(VITE_DEV_SERVER_URL)
     // Open devTool if the app is not packaged
@@ -330,9 +316,6 @@ async function createWindow() {
     initTray(win)
     AppState.setIsQuitting(false)
   }
-
-  // ipc handler
-  ipcHandler(win)
 
   const shouldAutoLaunch = store.get("autoLaunch")
   app.setLoginItemSettings({

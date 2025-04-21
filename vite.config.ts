@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => {
+export default defineConfig(() => {
   return {
     build: {
       target: 'esnext',
@@ -16,13 +16,21 @@ export default defineConfig(({ command }) => {
         '@services': path.join(__dirname, 'services')
       },
     },
+    optimizeDeps: {
+      include: [
+        'algorand-mcp/packages/client/src/index',
+        '@perawallet/connect',
+        '@blockshake/defly-connect',
+        '@daffiwallet/connect',
+      ],
+    },
     plugins: [
       react(),
       tailwindcss(),
     ],
     server: {
       proxy: {
-        '/api': 'http://localhost:8000',
+        '/api': 'http://localhost:4321',
       }
     }
   }

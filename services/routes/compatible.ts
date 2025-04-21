@@ -2,8 +2,8 @@ import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages
 import { randomUUID } from "crypto";
 import express from "express";
 import { initChatModel } from "langchain/chat_models/universal";
-import { MCPServerManager } from "../mcpServer/index.js";
 import { ModelManager } from "../models/index.js";
+import axios, { AxiosResponse } from "axios";
 import { abortControllerMap, handleProcessQuery } from "../processQuery.js";
 import { PromptManager } from "../prompt/index.js";
 import logger from "../utils/logger.js";
@@ -39,7 +39,6 @@ export function compatibleRouter() {
   const router = express.Router();
   const modelManager = ModelManager.getInstance();
   const promptManager = PromptManager.getInstance();
-  const mcpServerManager = MCPServerManager.getInstance();
 
   router.get("/", (req, res) => {
     res.json({
@@ -48,28 +47,56 @@ export function compatibleRouter() {
     });
   });
 
-  router.get("/models", async (req, res) => {
+  router.get("/models", async (_req, res) => {
     try {
-      const modelSettings = modelManager.currentModelSettings;
-      const models = modelSettings
-        ? [
-            {
-              id: modelSettings.model,
-              type: "model",
-              owned_by: modelSettings.modelProvider,
-            },
-          ]
-        : [];
-
-      res.json({
-        success: true,
-        data: models,
-      });
+      // Load configuration from file
+      const config = await ModelManager.getInstance().getModelConfig();
+      if (!config) throw new Error("Model configuration not found");
+      const provider = config.activeProvider;
+      const settings = (config as any).configs?.[provider];
+      if (!settings) throw new Error(`No settings for provider ${provider}`);
+      let list: string[] = [];
+      switch (provider) {
+        case 'openai':
+        case 'openai_compatible': {
+          const url = 'https://api.openai.com/v1/models';
+          const resp: AxiosResponse<{ data: Array<{ id: string }> }> = await axios.get(url, {
+            headers: { Authorization: `Bearer ${settings.apiKey}` }
+          });
+          list = resp.data.data.map(m => m.id);
+          break;
+        }
+        case 'anthropic': {
+          const url = `${settings.baseURL.replace(/\/+$/, '')}/v1/models`;
+          const resp: AxiosResponse<{ models: Array<{ id: string }> }> = await axios.get(url, {
+            headers: { 'x-api-key': settings.apiKey }
+          });
+          list = resp.data.models.map(m => m.id);
+          break;
+        }
+        case 'ollama': {
+          const url = `${settings.baseURL.replace(/\/+$/, '')}/models`;
+          const resp: AxiosResponse<any> = await axios.get(url);
+          const data = resp.data;
+          list = Array.isArray(data)
+            ? data.map((m: any) => (typeof m === 'string' ? m : m.id))
+            : (data.models || []).map((m: any) => m.id);
+          break;
+        }
+        case 'google_genai': {
+          const url = `https://generativelanguage.googleapis.com/v1/models?key=${settings.apiKey}`;
+          const resp: AxiosResponse<{ models: Array<{ name: string }> }> = await axios.get(url);
+          list = resp.data.models.map(m => m.name);
+          break;
+        }
+        default:
+          // unsupported providers: mistralai, bedrock
+          throw new Error(`Model listing not supported for provider ${provider}`);
+      }
+      res.json({ success: true, data: list });
     } catch (error: any) {
-      res.status(400).json({
-        success: false,
-        message: error.message,
-      });
+      logger.error(`Failed to list models: ${error.message}`);
+      res.status(400).json({ success: false, message: error.message });
     }
   });
 
@@ -142,7 +169,7 @@ export function compatibleRouter() {
       }
 
       const input = messages[messages.length - 1]?.content;
-      const availableTools = tool_choice === "auto" ? mcpServerManager.getAvailableTools() : [];
+      const availableTools = tool_choice === "auto" ? modelManager.getAvailableTools() : [];
 
       const modelName = modelSettings.model;
       const baseUrl = modelSettings.configuration?.baseURL || modelSettings.baseURL || "";
@@ -177,7 +204,7 @@ export function compatibleRouter() {
 
       try {
         const { result, tokenUsage } = await handleProcessQuery(
-          mcpServerManager.getToolToServerMap(),
+          modelManager.getToolToServerMap(),
           availableTools,
           model,
           input,
