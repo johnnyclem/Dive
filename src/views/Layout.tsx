@@ -9,7 +9,6 @@ import GlobalToast from "../components/GlobalToast"
 import { themeAtom, systemThemeAtom } from "../atoms/themeState"
 import Overlay from "./Overlay"
 import KeymapModal from "../components/Modal/KeymapModal"
-import CodeModal from "./Chat/CodeModal"
 import { useUIStore } from "../stores/uiStore"
 
 const Layout = () => {
@@ -36,7 +35,6 @@ const Layout = () => {
             </div>
           </div>
         </div>
-        <CodeModal />
       </div>
       <Overlay />
       <GlobalToast />

@@ -451,7 +451,7 @@ const ChatWindow = () => {
         </div>
 
         {chatId && (
-          <SidePanel chatId={chatId} isOpen={isPanelOpen} onClose={togglePanel} />
+          <SidePanel chatId={chatId} />
         )}
       </div>
     </div>
