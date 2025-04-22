@@ -175,7 +175,8 @@
     "@langchain/core": "^0.3.0"
   },
   "overrides": {
-    "@langchain/core": "^0.3.0"
+    "@langchain/core": "^0.3.0",
+    "algosdk": "^3.0.0"
   },
   "pnpm": {
     "overrides": {
