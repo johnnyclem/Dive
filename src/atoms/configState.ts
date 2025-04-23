@@ -111,7 +111,9 @@ export const enabledModelsIdsAtom = atom<{key: string, name: string, provider: s
   }
 )
 
-export const configDictAtom = atom<ModelConfigMap>((get) => get(configAtom).configs)
+export const configDictAtom = atom<ModelConfigMap>((get) => {
+  return get(configAtom).configs
+})
 
 export const isConfigNotInitializedAtom = atom(
   (get) => {
@@ -156,7 +158,9 @@ export const loadConfigAtom = atom(
     try {
       const response = await fetch("/api/config/model")
       const data = await response.json()
-      set(configAtom, data.config)
+      if (data && data.config) {
+        set(configAtom, data.config)
+      }
       return data.config
     } catch (error) {
       console.warn("Failed to load config:", error)
