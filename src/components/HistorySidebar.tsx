@@ -151,6 +151,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
           }`}
         ref={containerRef}
       >
+        {/* Logo */}
         <div className={`flex items-center justify-center h-16 px-4 flex-shrink-0 ${collapsed ? '' : 'mb-4'}`}>
           <img
             src={collapsed ? soulsIcon : soulsLogo}
@@ -158,39 +159,9 @@ const HistorySidebar = ({ onNewChat }: Props) => {
             className={`transition-opacity duration-300 ${collapsed ? 'h-8 w-8' : 'h-10 max-w-full'}`}
           />
         </div>
-        <div className="flex-grow overflow-y-auto overflow-x-hidden px-4 space-y-2">
-          {histories.map(chat => (
-            <div
-              key={chat.id}
-              className={`group flex items-center rounded-md cursor-pointer transition-colors duration-150 ${chat.id === currentChatId
-                ? 'bg-default-900/30'
-                : 'hover:bg-default-900/10'
-                } ${collapsed ? 'justify-center h-12' : 'justify-between p-3'}`}
-              onClick={() => loadChat(chat.id)}
-              title={collapsed ? (chat.title || t("chat.untitledChat")) : undefined}
-            >
-              {!collapsed && (
-                <div className="flex-1 min-w-0 mr-2">
-                  <div className="text-sm font-medium text-default-200 truncate">
-                    {chat.title || t("chat.untitledChat")}
-                  </div>
-                  <div className="text-xs text-default-100">
-                    {new Date(chat.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              )}
-              <button
-                className={`flex-shrink-0 text-default-200 hover:text-default-100 transition-opacity duration-150 ${collapsed ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                  } ${!collapsed ? 'p-1' : ''}`}
-                onClick={(e) => confirmDelete(e, chat.id)}
-                title={t("chat.deleteChat")}
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"></path></svg>
-              </button>
-            </div>
-          ))}
-        </div>
-        <div className={`flex-shrink-0 p-3 border-t border-default-100 mt-auto ${collapsed ? 'space-y-3' : 'space-y-2'}`}>
+
+        {/* Navigation & Update Buttons */}
+        <div className={`flex-shrink-0 p-3 ${collapsed ? 'space-y-3' : 'space-y-2'}`}>
           <button
             className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 ${collapsed ? 'justify-center h-10' : ''}`}
             onClick={handleNewChat}
@@ -213,7 +184,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
             ) : (
               <button
                 key={index}
-                className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium text-default-200 hover:bg-black/10 hover:text-white transition-colors duration-150 ${collapsed ? 'justify-center h-10' : ''}`}
+                className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-black/10 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-150 ${collapsed ? 'justify-center h-10' : ''}`}
                 onClick={item.handler}
                 title={collapsed ? item.label : undefined}
               >
@@ -225,8 +196,54 @@ const HistorySidebar = ({ onNewChat }: Props) => {
           <div className={`${collapsed ? 'flex justify-center' : ''} pt-1`}>
             <UpdateButton />
           </div>
+        </div>
+
+        {/* Chat History */}
+        <div className="flex-grow overflow-y-auto overflow-x-hidden px-4 space-y-2 mt-2">
+          {histories.map(chat => (
+            <div
+              key={chat.id}
+              className={`group flex items-center rounded-md cursor-pointer transition-colors duration-150 ${chat.id === currentChatId
+                ? 'bg-default-900/30'
+                : 'hover:bg-default-900/10'
+                } ${collapsed ? 'justify-center h-12' : 'justify-between p-3'}`}
+              onClick={() => loadChat(chat.id)}
+              title={collapsed ? (chat.title || t("chat.untitledChat")) : undefined}
+            >
+              {/* Content inside the chat item div */}
+              {collapsed ? (
+                // Collapsed view: Show chat icon
+                <svg className="w-5 h-5 text-default-200" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.74 8.74 0 01-4.086-.992V19l-1.996-1.143A7.958 7.958 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                // Expanded view: Show title, date, and delete button on hover
+                <>
+                  <div className="flex-1 min-w-0 mr-2">
+                    <div className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
+                      {chat.title || t("chat.untitledChat")}
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      {new Date(chat.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <button
+                    className={`flex-shrink-0 text-default-200 hover:text-default-100 hover:bg-default-100/20 rounded transition-all duration-150 opacity-0 group-hover:opacity-100 p-1 cursor-pointer`}
+                    onClick={(e) => confirmDelete(e, chat.id)}
+                    title={t("chat.deleteChat")}
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"></path></svg>
+                  </button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom Controls: Collapse */}
+        <div className={`flex-shrink-0 p-3 mt-auto ${collapsed ? 'space-y-3' : 'space-y-2'}`}>
           <button
-            className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium text-default-200 hover:bg-black/10 hover:text-default-100 transition-colors duration-150 mt-1 ${collapsed ? 'justify-center h-10' : ''}`}
+            className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-black/10 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-150 mt-1 ${collapsed ? 'justify-center h-10' : ''}`}
             onClick={toggleSidebar}
             title={collapsed ? t("sidebar.expand") : t("sidebar.collapse")}
           >
