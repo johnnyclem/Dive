@@ -11,6 +11,7 @@ import useHotkeyEvent from "../hooks/useHotkeyEvent"
 import Textarea from "../components/WrappedTextarea"
 import Tooltip from "../components/Tooltip"
 import { loadToolsAtom, toolsAtom } from "../atoms/toolState"
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 const formatFileSize = (bytes: number) => {
   if (bytes === 0)
@@ -194,6 +195,9 @@ const Welcome = () => {
   return (
     <div className="main-container">
       <div className="welcome-content">
+        <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+          <ConnectButton />
+        </div>
         <h1>{t("welcome.title")}</h1>
         <p className="subtitle">{t("welcome.subtitle")}</p>
 
@@ -269,7 +273,7 @@ const Welcome = () => {
                     title={t("chat.uploadFile")}
                   >
                     <svg width="24" height="24" viewBox="0 0 24 24">
-                      <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+                      <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z" />
                     </svg>
                   </button>
                   <div className="tools-container">
@@ -281,7 +285,7 @@ const Welcome = () => {
                       }}
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24">
-                        <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
+                        <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" />
                       </svg>
                       {`${tools.length} ${t("chat.tools")}`}
                     </button>
@@ -290,7 +294,7 @@ const Welcome = () => {
                     >
                       <button type="submit" className="send-btn" disabled={(!message.trim() && uploadedFiles.length === 0) || !hasActiveConfig}>
                         <svg width="24" height="24" viewBox="0 0 24 24">
-                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                         </svg>
                       </button>
                     </Tooltip>
@@ -313,7 +317,7 @@ const Welcome = () => {
                   <div className="file-info">
                     <div className="file-icon">
                       <svg width="24" height="24" viewBox="0 0 24 24">
-                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
+                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
                       </svg>
                     </div>
                     <div className="file-details">
@@ -328,7 +332,7 @@ const Welcome = () => {
                   onClick={() => removeFile(index)}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
                   </svg>
                 </button>
               </div>

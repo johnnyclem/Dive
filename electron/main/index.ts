@@ -119,24 +119,24 @@ ipcMain.handle('knowledge:add', async (_event, name: string, description?: strin
 ipcMain.handle('knowledge:set-active', async (_event, id: string | null) => {
   console.log(`Direct knowledge:set-active handler invoked: ${id}`);
   const result = KnowledgeStore.setActiveKnowledgeBase(id);
-  
+
   // Send a message to reconfigure tools based on active knowledge base change
   try {
     // Give the MCPServerManager a chance to reinitialize tools
     if (global.webContents) {
       global.webContents.send('knowledge:active-changed', { id });
     }
-    
+
     // We'll also trigger a tool reconfiguration by restarting the model
     // This ensures that the LLM gets the updated tool configurations
     if (app.isPackaged) {
       // Only in packaged app to avoid disrupting development
-      const serviceWindow = BrowserWindow.getAllWindows().find(win => 
+      const serviceWindow = BrowserWindow.getAllWindows().find(win =>
         win && win.webContents && win.webContents.getURL().includes('/services')
       );
-      
+
       if (serviceWindow) {
-        serviceWindow.webContents.send('model:reconfigure-tools', { 
+        serviceWindow.webContents.send('model:reconfigure-tools', {
           reason: 'knowledge_base_change',
           activeKnowledgeBaseId: id
         });
@@ -145,7 +145,7 @@ ipcMain.handle('knowledge:set-active', async (_event, id: string | null) => {
   } catch (error) {
     console.error(`Error notifying about knowledge base change: ${error}`);
   }
-  
+
   return result;
 });
 
@@ -165,15 +165,15 @@ ipcMain.handle('knowledge:get-documents', async (_event, knowledgeBaseId: string
 // Knowledge:search handler
 ipcMain.handle('knowledge:search', async (_event, query: string, k?: number) => {
   console.log(`Direct knowledge:search handler invoked: ${query}, k=${k}`);
-  
+
   // Get the active knowledge base ID
   const activeKnowledgeBaseId = KnowledgeStore.getActiveKnowledgeBase();
-  
+
   // If there's an active knowledge base, search it
   if (activeKnowledgeBaseId) {
     // Use the new search function
     const searchResults = KnowledgeStore.searchKnowledgeBase(query, activeKnowledgeBaseId, k || 5);
-    
+
     // Format the results for the frontend
     const formattedResults = searchResults.map(result => ({
       id: result.document.id,
@@ -183,10 +183,10 @@ ipcMain.handle('knowledge:search', async (_event, query: string, k?: number) => 
       relevance: result.score,
       snippet: result.document.content.substring(0, 200) + "..."
     }));
-    
+
     return formattedResults;
   }
-  
+
   // If no active knowledge base, return empty results
   return [];
 });
@@ -437,7 +437,7 @@ app.on("second-instance", () => {
 
 app.on("before-quit", async () => {
   AppState.setIsQuitting(true)
-  
+
   // Clean up co-browser
   await onCoBrowserQuit();
 })

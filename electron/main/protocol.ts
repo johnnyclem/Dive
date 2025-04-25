@@ -26,16 +26,21 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 export function initProtocol() {
-  protocol.handle("local-file", (req) => {
-    const url = req.url.replace("local-file:///", process.platform === "win32" ? "file:///" : "file://")
-    return net.fetch(url)
-  })
+  try {
+    protocol.handle("local-file", (req) => {
+      const url = req.url.replace("local-file:///", process.platform === "win32" ? "file:///" : "file://")
+      return net.fetch(url)
+    })
 
-  protocol.handle("img", (req) => {
-    // Remove 'img://'
-    const url = req.url.substring(6);
-    const assetPath = path.join(process.env.VITE_PUBLIC, "image", url)
-    return net.fetch(`file://${assetPath}`)
-  })
+    protocol.handle("img", (req) => {
+      // Remove 'img://'
+      const url = req.url.substring(6);
+      const assetPath = path.join(process.env.VITE_PUBLIC, "image", url)
+      return net.fetch(`file://${assetPath}`)
+    })
+  } catch (error) {
+    console.error('initProtocol error', error)
+    throw error
+  }
 
 }
