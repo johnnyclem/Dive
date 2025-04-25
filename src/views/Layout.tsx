@@ -25,7 +25,7 @@ const Layout = () => {
       data-theme={`${theme === "system" ? systemTheme : theme}`}>
       <div className="app-content flex flex-1 overflow-hidden">
         {!isConfigNotInitialized && <HistorySidebar />}
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col flex-1 relative" >
           {(location.pathname === "/" || location.pathname.startsWith("/chat")) && <Header showModelSelect />}
           <div
             className={`flex-1 flex flex-col relative transition-all duration-300 ease-in-out ${isPanelOpen ? `ml-[${sidebarWidth}px]` : 'ml-0'}`}

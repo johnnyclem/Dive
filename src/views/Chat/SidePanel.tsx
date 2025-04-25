@@ -37,9 +37,9 @@ const SidePanel: React.FC<Omit<SidePanelProps, 'isOpen' | 'onClose'>> = ({ chatI
         aria-label="Side Panel Options"
         selectedKey={selectedTab}
         onSelectionChange={(key) => setTab(key as Key)}
-        className="mt-8 flex flex-col h-full"
+        className="mt-8 flex flex-col"
         classNames={{
-          base: "h-full",
+          base: "pb-4",
           panel: "h-[calc(100%-40px)] p-0",
         }}
       >
