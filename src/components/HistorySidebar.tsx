@@ -147,6 +147,8 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
   // Apply the defined type to the array
   const navigationButtons: FooterButton[] = [
+    // home page
+    { label: t("sidebar.home"), path: "/", icon: <img src={soulsIcon} alt="Souls Logo" className="w-5 h-5" /> },
     // Browser icon (using globe-alt outline)
     { label: t("sidebar.browser"), path: "/browser", icon: <GlobeAltIcon className="w-5 h-5" /> },
     // Personas icon (using user-group outline)

@@ -195,9 +195,6 @@ const Welcome = () => {
   return (
     <div className="main-container">
       <div className="welcome-content">
-        <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
-          <ConnectButton />
-        </div>
         <h1>{t("welcome.title")}</h1>
         <p className="subtitle">{t("welcome.subtitle")}</p>
 
