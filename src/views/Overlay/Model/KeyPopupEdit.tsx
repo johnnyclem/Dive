@@ -11,9 +11,9 @@ import {
 } from "../../../atoms/interfaceState";
 import { showToastAtom } from "../../../atoms/toastState";
 import CheckBox from "../../../components/CheckBox";
-import PopupConfirm from "../../../components/PopupConfirm";
 import { formatData } from "../../../helper/config";
 import { useModelsProvider } from "./ModelsProvider";
+import Modal, { FooterAction } from "../../../components/common/Modal";
 
 const KeyPopupEdit = ({
   onClose,
@@ -263,61 +263,63 @@ const KeyPopupEdit = ({
     });
   };
 
+  // Define footer actions for the Modal
+  const footerActions: FooterAction[] = [
+    {
+      label: t("common.cancel"),
+      onClick: handleClose,
+      variant: "flat",
+    },
+    {
+      label: t("tools.save"),
+      onClick: onConfirm,
+      isLoading: isSubmitting || isVerifying.current,
+      isDisabled: isSubmitting || isVerifying.current,
+      color: "primary",
+      closeModalOnClick: false, // Let onSuccess handle closing
+    },
+  ];
+
   return (
-    <>
-      <PopupConfirm
-        noBorder={true}
-        zIndex={900}
-        footerType="center"
-        onConfirm={onConfirm}
-        confirmText={
-          isVerifying.current || isSubmitting ? (
-            <div className="loading-spinner"></div>
-          ) : (
-            t("tools.save")
-          )
-        }
-        disabled={isVerifying.current || isSubmitting}
-        onCancel={handleClose}
-        onClickOutside={handleClose}
-      >
-        <div className="models-key-popup edit">
-          <div className="models-key-form-group">
-            <div className="title">
-              {t("models.editProviderTitle", { provider: PROVIDER_LABELS[provider] })}
-            </div>
-          </div>
-          {Object.entries(fields).map(
-            ([key, field]) =>
-              key !== "model" && (
-                <div key={key} className="models-key-form-group">
-                  <label className="models-key-field-title">
-                    <>
-                      {key === "baseURL" && !field.required ? (
-                        <div className="models-key-field-optional">
-                          <CheckBox
-                            checked={showOptional[provider]}
-                            onChange={() =>
-                              setShowOptional((prev) => ({
-                                ...prev,
-                                [provider]: !prev[provider],
-                              }))
-                            }
-                          ></CheckBox>
-                          {`${field.label}${t("models.optional")}`}
-                        </div>
-                      ) : (
-                        field.label
-                      )}
-                      {field.required && <span className="required">*</span>}
-                    </>
-                    <div className="models-key-field-description">
-                      {field.description}
-                    </div>
-                  </label>
-                  {(showOptional[provider] ||
-                    key !== "baseURL" ||
-                    field.required) && (
+    <Modal
+      isOpen={true} // Modal is open when KeyPopupEdit is rendered
+      onClose={handleClose}
+      title={t("models.editProviderTitle", { provider: PROVIDER_LABELS[provider] })}
+      footerActions={footerActions}
+      size="xl" // Adjust size as needed
+    >
+      <div className="models-key-popup edit">
+        {Object.entries(fields).map(
+          ([key, field]) =>
+            key !== "model" && (
+              <div key={key} className="models-key-form-group">
+                <label className="models-key-field-title">
+                  <>
+                    {key === "baseURL" && !field.required ? (
+                      <div className="models-key-field-optional">
+                        <CheckBox
+                          checked={showOptional[provider]}
+                          onChange={() =>
+                            setShowOptional((prev) => ({
+                              ...prev,
+                              [provider]: !prev[provider],
+                            }))
+                          }
+                        ></CheckBox>
+                        {`${field.label}${t("models.optional")}`}
+                      </div>
+                    ) : (
+                      field.label
+                    )}
+                    {field.required && <span className="required">*</span>}
+                  </>
+                  <div className="models-key-field-description">
+                    {field.description}
+                  </div>
+                </label>
+                {(showOptional[provider] ||
+                  key !== "baseURL" ||
+                  field.required) && (
                     <>
                       <div className="api-key-input-wrapper">
                         <input
@@ -331,9 +333,8 @@ const KeyPopupEdit = ({
                           }
                           onChange={(e) => handleChange(key, e.target.value)}
                           placeholder={field.placeholder?.toString()}
-                          className={`api-key-input ${
-                            errors[key] ? "error" : ""
-                          }`}
+                          className={`api-key-input ${errors[key] ? "error" : ""
+                            }`}
                         />
                         {key === "apiKey" && (
                           <div className="api-key-actions">
@@ -401,30 +402,29 @@ const KeyPopupEdit = ({
                       </div>
                     </>
                   )}
-                  {errors[key] && (
-                    <div className="error-message">{errors[key]}</div>
-                  )}
-                </div>
-              )
+                {errors[key] && (
+                  <div className="error-message">{errors[key]}</div>
+                )}
+              </div>
+            )
+        )}
+        <div className="models-key-form-group">
+          <label className="models-key-field-title">
+            <>{`Custom Model ID${t("models.optional")}`}</>
+          </label>
+          <input
+            type={"text"}
+            value={(customModelID as string) || ""}
+            onChange={(e) => setCustomModelID(e.target.value)}
+            placeholder={"YOUR_MODEL_ID"}
+            className={errors["customModelID"] ? "error" : ""}
+          />
+          {errors["customModelID"] && (
+            <div className="error-message">{errors["customModelID"]}</div>
           )}
-          <div className="models-key-form-group">
-            <label className="models-key-field-title">
-              <>{`Custom Model ID${t("models.optional")}`}</>
-            </label>
-            <input
-              type={"text"}
-              value={(customModelID as string) || ""}
-              onChange={(e) => setCustomModelID(e.target.value)}
-              placeholder={"YOUR_MODEL_ID"}
-              className={errors["customModelID"] ? "error" : ""}
-            />
-            {errors["customModelID"] && (
-              <div className="error-message">{errors["customModelID"]}</div>
-            )}
-          </div>
         </div>
-      </PopupConfirm>
-    </>
+      </div>
+    </Modal>
   );
 };
 export default React.memo(KeyPopupEdit);

@@ -12,6 +12,7 @@ import { InterfaceModelConfig, MultiModelConfig } from "../../../../atoms/config
 import Tooltip from "../../../../components/Tooltip"
 import Dropdown from "../../../../components/DropDown"
 import CustomIdPopup from "./CustomId"
+import Modal, { FooterAction } from "../../../../components/common/Modal"
 
 const ModelPopup = ({
   defaultModel,
@@ -37,9 +38,9 @@ const ModelPopup = ({
   const { verify, abort } = useModelVerify()
 
   const { fetchListOptions, listOptions, setListOptions,
-          multiModelConfigList, setMultiModelConfigList,
-          currentIndex, saveConfig
-        } = useModelsProvider()
+    multiModelConfigList, setMultiModelConfigList,
+    currentIndex, saveConfig
+  } = useModelsProvider()
 
   // Current multi-model configuration based on selected index
   const multiModelConfig = multiModelConfigList?.[currentIndex]
@@ -47,20 +48,20 @@ const ModelPopup = ({
 
   const searchListOptions = useMemo(() => {
     let result = listOptions
-    if(searchText.length > 0) {
+    if (searchText.length > 0) {
       result = result?.filter(option => option.name.includes(searchText))
     }
     let state = "-"
-    if(listOptions?.filter(option => option.checked).length === 0)
+    if (listOptions?.filter(option => option.checked).length === 0)
       state = ""
-    else if(result?.length > 0 && result?.every(option => option.checked))
+    else if (result?.length > 0 && result?.every(option => option.checked))
       state = "all"
     setCheckboxState(state as "" | "all" | "-")
     return result
   }, [listOptions, searchText])
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       await reloadModelList(defaultModel)
     })()
 
@@ -121,7 +122,7 @@ const ModelPopup = ({
     setCheckboxState(State)
 
     const _newModelList = listOptions?.map((model: ListOption) => {
-      if(searchText.length > 0 && !model.name.includes(searchText))
+      if (searchText.length > 0 && !model.name.includes(searchText))
         return { ...model, "checked": false }
       return { ...model, "checked": !!State }
     })
@@ -165,7 +166,7 @@ const ModelPopup = ({
 
   const saveModel = async () => {
     const _multiModelConfigList = JSON.parse(JSON.stringify(multiModelConfigList))
-    if(!multiModelConfigList){
+    if (!multiModelConfigList) {
       handleSubmit({ success: true })
       return
     }
@@ -182,7 +183,7 @@ const ModelPopup = ({
       const customModelList = localStorage.getItem("customModelList")
       const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
       const newCustomModelList = listOptions.filter(option => option.isCustom).map(option => option.name)
-      if(newCustomModelList.length > 0){
+      if (newCustomModelList.length > 0) {
         localStorage.setItem("customModelList", JSON.stringify({
           ...allCustomModelList,
           [key as string]: newCustomModelList
@@ -217,7 +218,7 @@ const ModelPopup = ({
 
   const onConfirm = async () => {
     // If there are unverified models, show the verification confirmation popup
-    if(listOptions?.filter(option => option.checked).some(option => option.verifyStatus == "unVerified")){
+    if (listOptions?.filter(option => option.checked).some(option => option.verifyStatus == "unVerified")) {
       setShowConfirmVerify(true)
     } else {
       await saveModel()
@@ -249,7 +250,7 @@ const ModelPopup = ({
     setVerifyingCnt(needVerifyList ? Object.keys(needVerifyList).length : _listOptions.filter((option: ListOption) => option.checked).length)
 
     const onComplete = async () => {
-      if(ifSave){
+      if (ifSave) {
         await saveModel()
       }
       isVerifying.current = false
@@ -258,7 +259,7 @@ const ModelPopup = ({
     const onUpdate = (detail: ModelVerifyDetail[]) => {
       listOptions.forEach((option: ListOption) => {
         const _detail = detail.find(item => item.name == option.name)
-        if(_detail){
+        if (_detail) {
           option.verifyStatus = _detail.status
         }
       })
@@ -296,7 +297,7 @@ const ModelPopup = ({
     allVerifiedList[multiModelConfig?.apiKey || multiModelConfig?.baseURL] = currentVerifyList
     localStorage.setItem("modelVerify", JSON.stringify(allVerifiedList))
     setShowConfirmVerify(false)
-    if(ifSave){
+    if (ifSave) {
       await saveModel()
     }
   }
@@ -307,7 +308,7 @@ const ModelPopup = ({
   }
 
   const verifyStatusNode = (option: ListOption) => {
-    switch(option.verifyStatus) {
+    switch (option.verifyStatus) {
       case "unSupportModel":
         return (
           <div className="verify-status">
@@ -356,7 +357,7 @@ const ModelPopup = ({
     const menu = []
 
     // verify model
-    if(status !== "success"){
+    if (status !== "success") {
       const _option: Record<string, InterfaceModelConfig> = {}
       _option[option.name] = {
         apiKey: multiModelConfig?.apiKey,
@@ -368,12 +369,12 @@ const ModelPopup = ({
         label:
           <div className="model-option-verify-menu-item">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <path d="M7 2.5L1.06389 4.79879C1.02538 4.8137 1 4.85075 1 4.89204V11.9315C1 11.9728 1.02538 12.0098 1.06389 12.0247L7 14.3235" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M7.5 10.5V7.5L12.8521 4.58066C12.9188 4.54432 13 4.59255 13 4.66845V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M1 5L7.5 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M7 2.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="15.5" cy="15.5" r="5.5" stroke="currentColor" strokeWidth="2"/>
-              <path d="M13 15.1448L14.7014 17L18 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M7 2.5L1.06389 4.79879C1.02538 4.8137 1 4.85075 1 4.89204V11.9315C1 11.9728 1.02538 12.0098 1.06389 12.0247L7 14.3235" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M7.5 10.5V7.5L12.8521 4.58066C12.9188 4.54432 13 4.59255 13 4.66845V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M1 5L7.5 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M7 2.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="15.5" cy="15.5" r="5.5" stroke="currentColor" strokeWidth="2" />
+              <path d="M13 15.1448L14.7014 17L18 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             {t("models.verifyMenu1")}
           </div>,
@@ -384,17 +385,17 @@ const ModelPopup = ({
     }
 
     // ignore verify model
-    if(status !== "ignore" && status !== "success"){
+    if (status !== "ignore" && status !== "success") {
       menu.push({
         label:
           <div className="model-option-verify-menu-item">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <circle cx="15.5" cy="15.5" r="5.5" stroke="currentColor" strokeWidth="2"/>
-              <path d="M17.5 15.5H13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M7 2.5L1.06389 4.79879C1.02538 4.8137 1 4.85075 1 4.89204V11.9315C1 11.9728 1.02538 12.0098 1.06389 12.0247L7 14.3235" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M7.5 10.5V7.5L12.8521 4.58066C12.9188 4.54432 13 4.59255 13 4.66845V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M1 5L7.5 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M7 2.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="15.5" cy="15.5" r="5.5" stroke="currentColor" strokeWidth="2" />
+              <path d="M17.5 15.5H13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M7 2.5L1.06389 4.79879C1.02538 4.8137 1 4.85075 1 4.89204V11.9315C1 11.9728 1.02538 12.0098 1.06389 12.0247L7 14.3235" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M7.5 10.5V7.5L12.8521 4.58066C12.9188 4.54432 13 4.59255 13 4.66845V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M1 5L7.5 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M7 2.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
             {t("models.verifyMenu2")}
           </div>,
@@ -410,16 +411,16 @@ const ModelPopup = ({
     }
 
     // delete custom model id
-    if(option.isCustom){
+    if (option.isCustom) {
       menu.push({
         label:
           <div className="model-option-verify-menu-item">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <path d="M3 5H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M17 7V18.2373C16.9764 18.7259 16.7527 19.1855 16.3778 19.5156C16.0029 19.8457 15.5075 20.0192 15 19.9983H7C6.49249 20.0192 5.99707 19.8457 5.62221 19.5156C5.24735 19.1855 5.02361 18.7259 5 18.2373V7" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-              <path d="M8 10.04L14 16.04" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-              <path d="M14 10.04L8 16.04" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-              <path d="M13.5 2H8.5C8.22386 2 8 2.22386 8 2.5V4.5C8 4.77614 8.22386 5 8.5 5H13.5C13.7761 5 14 4.77614 14 4.5V2.5C14 2.22386 13.7761 2 13.5 2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+              <path d="M3 5H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M17 7V18.2373C16.9764 18.7259 16.7527 19.1855 16.3778 19.5156C16.0029 19.8457 15.5075 20.0192 15 19.9983H7C6.49249 20.0192 5.99707 19.8457 5.62221 19.5156C5.24735 19.1855 5.02361 18.7259 5 18.2373V7" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+              <path d="M8 10.04L14 16.04" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M14 10.04L8 16.04" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M13.5 2H8.5C8.22386 2 8 2.22386 8 2.5V4.5C8 4.77614 8.22386 5 8.5 5H13.5C13.7761 5 14 4.77614 14 4.5V2.5C14 2.22386 13.7761 2 13.5 2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
             </svg>
             {t("models.verifyMenu3")}
           </div>,
@@ -431,81 +432,63 @@ const ModelPopup = ({
   }
 
   const handleClose = () => {
-    if(isVerifying.current){
+    if (isVerifying.current) {
       abort()
     }
     onClose()
   }
 
+  // Define footer actions for the main Modal
+  const footerActions: FooterAction[] = [
+    {
+      label: t("common.cancel"),
+      onClick: handleClose,
+      variant: "flat",
+    },
+    {
+      label: t("tools.save"),
+      onClick: onConfirm,
+      isLoading: isVerifying.current || isSubmitting,
+      isDisabled: isFetching || isVerifying.current || isSubmitting,
+      color: "primary",
+      closeModalOnClick: false, // Logic handled by onConfirm/saveModel
+    },
+  ]
+
   return (
-    <PopupConfirm
-      zIndex={900}
-      className="model-popup"
-      disabled={isFetching || isVerifying.current || isSubmitting}
-      confirmText={(isVerifying.current || isSubmitting) ? (
-        <div className="loading-spinner"></div>
-      ) : t("tools.save")}
-      onConfirm={onConfirm}
-      onCancel={handleClose}
-      onClickOutside={handleClose}
-      footerHint={
-        isVerifying.current && (
-          <div className="models-progress-wrapper">
-            <div className="models-progress-text">
-              {t("models.progressVerifying")}
-              <div className="models-progress-text-right">
-                <div className="abort-button" onClick={abort}>
-                  <svg width="20" height="20" viewBox="0 0 24 24">
-                    <path d="M8 6h2v12H8zm6 0h2v12h-2z" fill="currentColor"/>
+    <Modal
+      isOpen={true} // Modal is open when ModelPopup is rendered
+      onClose={handleClose}
+      title={t("models.popupTitle")} // Using title found in old content
+      footerActions={footerActions}
+      size="2xl" // Larger size likely needed for this content
+      isDismissable={false} // Prevent closing on backdrop click
+      isKeyboardDismissDisabled={true} // Prevent closing with Esc key
+      children={
+        <div className="flex flex-col flex-1 overflow-hidden min-h-0"> {/* Added flex, flex-col, flex-1, overflow-hidden, min-h-0 */}
+          <div className="flex justify-between items-center mb-4"> {/* Replaced model-list-header, added flex, justify-between, items-center, mb-4 */}
+            <div className="flex items-center gap-2"> {/* Replaced model-list-tools, added flex, items-center, gap-2 */}
+              <div className="relative flex items-center"> {/* Replaced model-list-search-wrapper, added relative */}
+                <WrappedInput
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder={t("models.searchPlaceholder")}
+                  className="model-list-search"
+                />
+                {searchText.length > 0 &&
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 18 18"
+                    width="22"
+                    height="22"
+                    className="model-list-search-clear"
+                    onClick={() => setSearchText("")}
+                  >
+                    <path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="m13.91 4.09-9.82 9.82M13.91 13.91 4.09 4.09"></path>
                   </svg>
-                </div>
-                <span>{`${verifiedCnt} / ${verifyingCnt}`}</span>
+                }
               </div>
-            </div>
-            <div className="models-progress-container">
-              <div
-                className="models-progress"
-                style={{
-                  width: `${(verifiedCnt / verifyingCnt) * 100}%`
-                }}
-              >
-              </div>
-            </div>
-          </div>
-        )
-      }
-    >
-      <div className="model-popup-content">
-        <div className="model-list-header">
-          <div className="model-list-title">
-            <CheckBox
-              checked={!!checkboxState}
-              indeterminate={checkboxState == "-"}
-              onChange={handleGroupClick}
-            />
-            {t("models.popupTitle")}
-          </div>
-          <div className="model-list-tools">
-            <div className="model-list-search-wrapper">
-              <WrappedInput
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder={t("models.searchPlaceholder")}
-                className="model-list-search"
-              />
-              {searchText.length > 0 &&
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 18 18"
-                  width="22"
-                  height="22"
-                  className="model-list-search-clear"
-                  onClick={() => setSearchText("")}
-                >
-                  <path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="m13.91 4.09-9.82 9.82M13.91 13.91 4.09 4.09"></path>
-                </svg>
-              }
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 22 22" width="22" height="22">
                 <path stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="2" d="m15 15 5 5"></path>
                 <path stroke="currentColor" strokeMiterlimit="10" strokeWidth="2" d="M9.5 17a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15Z">
@@ -523,10 +506,9 @@ const ModelPopup = ({
               setListOptions={setListOptions}
             />
           </div>
-        </div>
-        <div className="model-list">
-          {isFetching ? (
-              <div className="loading-spinner-wrapper">
+          <div className="flex-1 overflow-y-auto"> {/* Replaced model-list, added flex-1, overflow-y-auto */}
+            {isFetching ? (
+              <div className="flex items-center justify-center h-full"> {/* Added flex centering for spinner */}
                 <div className="loading-spinner"></div>
               </div>
             ) : (
@@ -538,87 +520,112 @@ const ModelPopup = ({
                   {searchListOptions?.map((option: ListOption) => (
                     <label
                       key={option.name}
+                      className="flex items-center gap-[15px] px-5 py-2 rounded-xl cursor-pointer transition-colors duration-150 ease-in-out hover:bg-bg-op-dark-ultraweak"
                       onClick={(e) => {
                         e.stopPropagation()
-                        if(isVerifying.current){
+                        if (isVerifying.current) {
                           e.preventDefault()
                         }
                       }}
                     >
-                      <div className={`model-option ${option.verifyStatus}`}>
-                        <CheckBox
-                          checked={option.checked}
-                          onChange={() => handleModelChange(option.name, "checked", !option.checked)}
-                        />
-                        <div className="model-option-name">
-                          {option.name}
-                        </div>
-                        <div className="model-option-hint">
-                          {verifyStatusNode(option)}
-                          {verifyMenu(option)?.length > 0 && option.verifyStatus !== "verifying" &&
-                            <div className="model-option-verify-menu-wrapper">
-                              {!isVerifying.current &&
-                                <Dropdown
-                                  options={verifyMenu(option)}
-                                >
-                                  <div className="model-option-verify-menu">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 22 22" width="18" height="18">
-                                      <path fill="currentColor" d="M19 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM11 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM3 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path>
-                                    </svg>
-                                  </div>
-                                </Dropdown>
-                              }
-                            </div>
-                          }
-                        </div>
+                      <CheckBox
+                        checked={option.checked}
+                        onChange={() => handleModelChange(option.name, "checked", !option.checked)}
+                      />
+                      <div className="flex-1 line-clamp-1">
+                        {option.name}
+                      </div>
+                      <div className="flex items-center gap-[10px]">
+                        {verifyStatusNode(option)}
+                        {verifyMenu(option)?.length > 0 && option.verifyStatus !== "verifying" &&
+                          <div className="model-option-verify-menu-wrapper">
+                            {!isVerifying.current &&
+                              <Dropdown
+                                options={verifyMenu(option)}
+                              >
+                                <div className="flex items-center justify-center p-1 rounded-full cursor-pointer hover:bg-bg-op-dark-weak transition-colors duration-150 ease-in-out">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 22 22" width="18" height="18">
+                                    <path fill="currentColor" d="M19 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM11 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM3 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path>
+                                  </svg>
+                                </div>
+                              </Dropdown>
+                            }
+                          </div>
+                        }
                       </div>
                     </label>
                   ))}
                 </>
-            )
-          }
-          {showConfirmVerify &&
-            <PopupConfirm
-              zIndex={900}
-              className="model-list-verify-popup"
-              onConfirm={() => onVerifyConfirm()}
-              confirmText={t("models.verify")}
-              onCancel={() => onVerifyIgnore()}
-              cancelText={t("models.verifyIgnore")}
-              cancelTooltip={t("models.verifyIgnoreAlt")}
-              footerHint={
-                <Tooltip
-                  content={t("models.verifyNextTimeAlt")}
-                >
-                  <div
-                    className="verify-next-time-button"
-                    onClick={onVerifyNextTime}
+            )}
+            {showConfirmVerify &&
+              <PopupConfirm
+                zIndex={900}
+                className="model-list-verify-popup"
+                onConfirm={() => onVerifyConfirm()}
+                confirmText={t("models.verify")}
+                onCancel={() => onVerifyIgnore()}
+                cancelText={t("models.verifyIgnore")}
+                cancelTooltip={t("models.verifyIgnoreAlt")}
+                footerHint={
+                  <Tooltip
+                    content={t("models.verifyNextTimeAlt")}
                   >
-                    {t("models.verifyNextTime")}
-                  </div>
-                </Tooltip>
-              }
-            >
-              <h4 className="model-list-verify-title">
-                {t("models.verifyTitle", { count: listOptions?.filter(option => option.checked && option.verifyStatus == "unVerified").length })}
-              </h4>
-              <div className="model-list-verify-desc">
-                <div className="model-list-unverify-list">
-                  <span>{t("models.verifyDesc")}</span>
-                  <div className="model-list-unverify-ul-wrapper">
-                    <ul>
-                      {listOptions?.filter(option => option.checked && option.verifyStatus == "unVerified").map(option => (
-                        <li key={option.name}>{option.name}</li>
-                      ))}
-                    </ul>
+                    <div
+                      className="verify-next-time-button"
+                      onClick={onVerifyNextTime}
+                    >
+                      {t("models.verifyNextTime")}
+                    </div>
+                  </Tooltip>
+                }
+              >
+                <h4 className="model-list-verify-title">
+                  {t("models.verifyTitle", { count: listOptions?.filter(option => option.checked && option.verifyStatus == "unVerified").length })}
+                </h4>
+                <div className="model-list-verify-desc">
+                  <div className="model-list-unverify-list">
+                    <span>{t("models.verifyDesc")}</span>
+                    <div className="model-list-unverify-ul-wrapper">
+                      <ul>
+                        {listOptions?.filter(option => option.checked && option.verifyStatus == "unVerified").map(option => (
+                          <li key={option.name}>{option.name}</li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 </div>
+              </PopupConfirm>
+            }
+          </div>
+
+          {/* Verification Progress Hint - Already outside the scrolling list */}
+          {isVerifying.current && (
+            <div className="models-progress-wrapper mt-4"> {/* Added margin-top */}
+              <div className="models-progress-text">
+                {t("models.progressVerifying")}
+                <div className="models-progress-text-right">
+                  <div className="abort-button" onClick={abort}>
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                      <path d="M8 6h2v12H8zm6 0h2v12h-2z" fill="currentColor" />
+                    </svg>
+                  </div>
+                  <span>{`${verifiedCnt} / ${verifyingCnt}`}</span>
+                </div>
               </div>
-            </PopupConfirm>
-          }
+              <div className="models-progress-container">
+                <div
+                  className="models-progress"
+                  style={{
+                    width: `${(verifiedCnt / verifyingCnt) * 100}%`
+                  }}
+                >
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-    </PopupConfirm>
+      }
+    />
   )
 }
 

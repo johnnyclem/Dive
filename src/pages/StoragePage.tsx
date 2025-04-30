@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Modal from '../components/common/Modal';
 
 const StoragePage = () => {
   const { t } = useTranslation();
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
   // TODO: Implement Storage management UI (e.g., vector stores, document management)
 
   return (
@@ -16,6 +17,14 @@ const StoragePage = () => {
       {/* Placeholder content */}
       <div className="p-4 bg-card rounded-lg border border-border shadow-sm">
         <p>{t("storage.placeholder")}</p>
+        <button onClick={() => setIsModalOpen(true)}>Open Modal</button>
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title="Test"
+        >
+          <p>Test</p>
+        </Modal>
         {/* List vector stores or data sources here */}
       </div>
     </div>

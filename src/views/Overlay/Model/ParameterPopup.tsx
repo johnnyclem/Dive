@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAtom } from "jotai"
-import PopupConfirm from "../../../components/PopupConfirm"
 import InfoTooltip from "../../../components/InfoTooltip"
-import WrappedInput from "../../../components/WrappedInput"
 import WrappedTextarea from "../../../components/WrappedTextarea"
 import { useModelsProvider } from "./ModelsProvider"
 import { showToastAtom } from "../../../atoms/toastState"
+import Modal, { FooterAction } from "../../../components/common/Modal"
+import { Input, Textarea } from "@heroui/react"
 
 const ParameterPopup = ({
   onClose,
@@ -24,7 +24,7 @@ const ParameterPopup = ({
   const changed = instructions !== initialInstructions || parameter.topP !== initialParams.topP || parameter.temperature !== initialParams.temperature
 
   useEffect(() => {
-    if(!multiModelConfigList) return
+    if (!multiModelConfigList) return
     fetchInstructions()
     setInitialParams({ ...parameter })
   }, [])
@@ -51,10 +51,10 @@ const ParameterPopup = ({
 
   const validateNumber = (value: number, min: number, max: number) => {
     const _value = String(value)
-    if(!_value.includes(".")){
-      if(_value[_value.length - 1] === "0"){
+    if (!_value.includes(".")) {
+      if (_value[_value.length - 1] === "0") {
         return 0
-      }else if(_value[_value.length - 1] === "1"){
+      } else if (_value[_value.length - 1] === "1") {
         return 1
       }
     }
@@ -63,7 +63,7 @@ const ParameterPopup = ({
 
   const onConfirm = async () => {
     setParameter(initialParams)
-    if(!multiModelConfigList?.length){
+    if (!multiModelConfigList?.length) {
       localStorage.setItem("ConfigParameter", JSON.stringify(initialParams))
     }
     const _multiModelConfigList = JSON.parse(JSON.stringify(multiModelConfigList))
@@ -97,100 +97,115 @@ const ParameterPopup = ({
     }
   }
 
+  // Define footer actions for the Modal
+  const footerActions: FooterAction[] = [
+    {
+      label: t("common.cancel"),
+      onClick: onClose,
+      variant: "flat",
+    },
+    {
+      label: t("tools.save"),
+      onClick: onConfirm,
+      isLoading: isSubmitting,
+      isDisabled: !changed || isSubmitting,
+      color: "primary",
+      closeModalOnClick: false, // onClose is called within onConfirm on success
+    },
+  ]
+
   return (
-    <PopupConfirm
-      zIndex={900}
-      className="models-parameter-popup-confirm"
-      onConfirm={onConfirm}
-      confirmText={
-        isSubmitting ? (
-          <div className="loading-spinner"></div>
-        ) : t("tools.save")
-      }
-      onCancel={onClose}
-      onClickOutside={onClose}
-      disabled={!changed || isSubmitting}
+    <Modal
+      isOpen={true} // Modal is open when ParameterPopup is rendered
+      onClose={onClose}
+      title={t("models.parameters")}
+      footerActions={footerActions}
+      size="lg" // Adjust size as needed, e.g., "lg"
     >
-      <div className="models-parameter-popup">
-        <div className="models-parameter">
-          <label>{t("models.parameters")}</label>
-          <div className="parameters-container">
-            <div className="parameters-grid">
-                <InfoTooltip
-                  maxWidth={270}
-                  side="bottom"
-                  content={t("setup.topPDescription")}
-                >
-                <div className="parameter-label">
-                  <div>TOP-P</div>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 23 22" width="18" height="18">
-                    <g clipPath="url(#ic_information_svg__a)">
-                      <circle cx="11.5" cy="11" r="10.25" stroke="currentColor" strokeWidth="1.5"></circle>
-                      <path fill="currentColor" d="M9.928 13.596h3.181c-.126-2.062 2.516-2.63 2.516-5.173 0-2.01-1.6-3.677-4.223-3.608-2.229.051-4.08 1.288-4.026 3.9h2.714c0-.824.593-1.168 1.222-1.185.593 0 1.258.326 1.222.962-.144 1.942-2.911 2.389-2.606 5.104Zm1.582 3.591c.988 0 1.779-.618 1.779-1.563 0-.963-.791-1.581-1.78-1.581-.97 0-1.76.618-1.76 1.58 0 .946.79 1.565 1.76 1.565Z"></path>
-                    </g>
-                    <defs>
-                      <clipPath id="ic_information_svg__a">
-                        <path fill="currentColor" d="M.5 0h22v22H.5z"></path>
-                      </clipPath>
-                    </defs>
-                  </svg>
-                </div>
-              </InfoTooltip>
-              <WrappedInput
-                type="number"
-                value={initialParams.topP ?? 0}
-                min={0}
-                max={1}
-                step={0.1}
-                onChange={e => handleParameterChange("topP", validateNumber(parseFloat(e.target.value), 0, 1))}
-              />
-            </div>
-            <div className="parameters-grid">
-              <InfoTooltip
-                maxWidth={270}
-                side="bottom"
-                content={t("setup.temperatureDescription")}
-              >
-                <div className="parameter-label">
-                  <div>Temperature</div>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 23 22" width="18" height="18">
-                    <g clipPath="url(#ic_information_svg__a)">
-                      <circle cx="11.5" cy="11" r="10.25" stroke="currentColor" strokeWidth="1.5"></circle>
-                      <path fill="currentColor" d="M9.928 13.596h3.181c-.126-2.062 2.516-2.63 2.516-5.173 0-2.01-1.6-3.677-4.223-3.608-2.229.051-4.08 1.288-4.026 3.9h2.714c0-.824.593-1.168 1.222-1.185.593 0 1.258.326 1.222.962-.144 1.942-2.911 2.389-2.606 5.104Zm1.582 3.591c.988 0 1.779-.618 1.779-1.563 0-.963-.791-1.581-1.78-1.581-.97 0-1.76.618-1.76 1.58 0 .946.79 1.565 1.76 1.565Z"></path>
-                    </g>
-                    <defs>
-                      <clipPath id="ic_information_svg__a">
-                        <path fill="currentColor" d="M.5 0h22v22H.5z"></path>
-                      </clipPath>
-                    </defs>
-                  </svg>
-                </div>
-              </InfoTooltip>
-              <WrappedInput
-                type="number"
-                value={initialParams.temperature ?? 0}
-                min={0}
-                max={1}
-                step={0.1}
-                onChange={e => handleParameterChange("temperature", validateNumber(parseFloat(e.target.value), 0, 1))}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="models-parameter instructions">
-          <label>{t("modelConfig.customInstructions")}</label>
-          <div className="instructions-content">
-            <WrappedTextarea
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-              rows={3}
-              placeholder={t("modelConfig.customInstructionsPlaceholder")}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-text-secondary mb-2">{t("models.parameters")}</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-[auto_1fr] items-center gap-2.5">
+            <InfoTooltip
+              maxWidth={270}
+              side="bottom"
+              content={t("setup.topPDescription")}
+            >
+              <div className="flex items-center gap-2.5 cursor-help">
+                <div className="text-sm font-medium text-text-secondary">TOP-P</div>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 23 22" width="16" height="16" className="text-text-tertiary">
+                  <g clipPath="url(#ic_information_svg__a)">
+                    <circle cx="11.5" cy="11" r="10.25" stroke="currentColor" strokeWidth="1.5"></circle>
+                    <path fill="currentColor" d="M9.928 13.596h3.181c-.126-2.062 2.516-2.63 2.516-5.173 0-2.01-1.6-3.677-4.223-3.608-2.229.051-4.08 1.288-4.026 3.9h2.714c0-.824.593-1.168 1.222-1.185.593 0 1.258.326 1.222.962-.144 1.942-2.911 2.389-2.606 5.104Zm1.582 3.591c.988 0 1.779-.618 1.779-1.563 0-.963-.791-1.581-1.78-1.581-.97 0-1.76.618-1.76 1.58 0 .946.79 1.565 1.76 1.565Z"></path>
+                  </g>
+                  <defs>
+                    <clipPath id="ic_information_svg__a">
+                      <path fill="currentColor" d="M.5 0h22v22H.5z"></path>
+                    </clipPath>
+                  </defs>
+                </svg>
+              </div>
+            </InfoTooltip>
+            <Input
+              aria-label="Top-P"
+              type="number"
+              value={String(initialParams.topP ?? 0)}
+              min={0}
+              max={1}
+              step={0.1}
+              onValueChange={value => handleParameterChange("topP", validateNumber(parseFloat(value), 0, 1))}
+              variant="bordered"
+              size="md"
             />
-            <div className="instructions-description">{t("modelConfig.customInstructionsDescription")}</div>
+          </div>
+          <div className="grid grid-cols-[auto_1fr] items-center gap-2.5">
+            <InfoTooltip
+              maxWidth={270}
+              side="bottom"
+              content={t("setup.temperatureDescription")}
+            >
+              <div className="flex items-center gap-2.5 cursor-help">
+                <div className="text-sm font-medium text-text-secondary">Temperature</div>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 23 22" width="16" height="16" className="text-text-tertiary">
+                  <g clipPath="url(#ic_information_svg__a)">
+                    <circle cx="11.5" cy="11" r="10.25" stroke="currentColor" strokeWidth="1.5"></circle>
+                    <path fill="currentColor" d="M9.928 13.596h3.181c-.126-2.062 2.516-2.63 2.516-5.173 0-2.01-1.6-3.677-4.223-3.608-2.229.051-4.08 1.288-4.026 3.9h2.714c0-.824.593-1.168 1.222-1.185.593 0 1.258.326 1.222.962-.144 1.942-2.911 2.389-2.606 5.104Zm1.582 3.591c.988 0 1.779-.618 1.779-1.563 0-.963-.791-1.581-1.78-1.581-.97 0-1.76.618-1.76 1.58 0 .946.79 1.565 1.76 1.565Z"></path>
+                  </g>
+                  <defs>
+                    <clipPath id="ic_information_svg__a">
+                      <path fill="currentColor" d="M.5 0h22v22H.5z"></path>
+                    </clipPath>
+                  </defs>
+                </svg>
+              </div>
+            </InfoTooltip>
+            <Input
+              aria-label="Temperature"
+              type="number"
+              value={String(initialParams.temperature ?? 0)}
+              min={0}
+              max={1}
+              step={0.1}
+              onValueChange={value => handleParameterChange("temperature", validateNumber(parseFloat(value), 0, 1))}
+              variant="bordered"
+              size="md"
+            />
           </div>
         </div>
       </div>
-    </PopupConfirm>
+      <div className="">
+        <Textarea
+          label={t("modelConfig.customInstructions")}
+          value={instructions}
+          onValueChange={setInstructions}
+          minRows={3}
+          placeholder={t("modelConfig.customInstructionsPlaceholder")}
+          description={t("modelConfig.customInstructionsDescription")}
+          variant="bordered"
+          labelPlacement="outside"
+        />
+      </div>
+    </Modal>
   )
 }
 

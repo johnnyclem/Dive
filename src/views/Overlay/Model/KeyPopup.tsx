@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next"
 import { InterfaceModelConfig, ModelConfig } from "../../../atoms/configState"
 import { defaultInterface, FieldDefinition, InterfaceProvider, PROVIDER_LABELS, PROVIDERS } from "../../../atoms/interfaceState"
-import PopupConfirm from "../../../components/PopupConfirm"
 import { useEffect, useRef, useState } from "react"
 import { showToastAtom } from "../../../atoms/toastState"
 import { useAtom } from "jotai"
@@ -10,6 +9,8 @@ import { useModelsProvider } from "./ModelsProvider"
 import { formatData } from "../../../helper/config"
 import CheckBox from "../../../components/CheckBox"
 import Tooltip from "../../../components/Tooltip"
+import Modal, { FooterAction } from "../../../components/common/Modal"
+import { Select, SelectItem, Input } from "@heroui/react"
 
 const KeyPopup = ({
   onClose,
@@ -28,7 +29,13 @@ const KeyPopup = ({
     baseURL: defaultOllamaURL,
     model: '',
     modelProvider: 'ollama',
-    active: true
+    active: true,
+    topP: 0,
+    temperature: 0,
+    configuration: {
+      topP: 0,
+      temperature: 0,
+    },
   }
   const [formData, setFormData] = useState<InterfaceModelConfig>(initialFormData)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -60,7 +67,13 @@ const KeyPopup = ({
       baseURL: newProvider === 'ollama' ? defaultOllamaURL : '',
       model: '',
       modelProvider: newProvider,
-      active: true
+      active: true,
+      topP: 0,
+      temperature: 0,
+      configuration: {
+        topP: 0,
+        temperature: 0,
+      },
     }
     setFormData(resetData)
     setErrors({})
@@ -79,7 +92,7 @@ const KeyPopup = ({
       }
     })
 
-    if(fields["customModelId"]?.required && !customModelId) {
+    if (fields["customModelId"]?.required && !customModelId) {
       newErrors["customModelId"] = t("setup.required")
     }
 
@@ -114,7 +127,7 @@ const KeyPopup = ({
     }
 
     let existingIndex = -1
-    if(multiModelConfigList && multiModelConfigList.length > 0){
+    if (multiModelConfigList && multiModelConfigList.length > 0) {
       if (__formData.baseURL) {
         if (__formData.apiKey) {
           existingIndex = multiModelConfigList.findIndex(config =>
@@ -133,7 +146,7 @@ const KeyPopup = ({
       }
     }
 
-    if(existingIndex !== -1){
+    if (existingIndex !== -1) {
       setCurrentIndex(existingIndex)
       onSuccess()
       return
@@ -154,12 +167,12 @@ const KeyPopup = ({
       isVerifying.current = true
 
       //if custom model id is required, still need to check if the key is valid
-      if(!customModelId || fields["customModelId"]?.required) {
+      if (!customModelId || fields["customModelId"]?.required) {
         const listOptions = await fetchListOptions(multiModelConfig, fields)
 
         //if custom model id is required, it doesn't need to check if listOptions is empty
         //because fetchListOptions in pre step will throw error if the key is invalid
-        if (!listOptions?.length && !fields["customModelId"]?.required){
+        if (!listOptions?.length && !fields["customModelId"]?.required) {
           const newErrors: Record<string, string> = {}
           newErrors["apiKey"] = t("models.apiKeyError")
           setErrors(newErrors)
@@ -167,7 +180,7 @@ const KeyPopup = ({
         }
       }
 
-      if(customModelId) {
+      if (customModelId) {
         // save custom model list to local storage
         const customModelList = localStorage.getItem("customModelList")
         const allCustomModelList = customModelList ? JSON.parse(customModelList) : {}
@@ -191,7 +204,7 @@ const KeyPopup = ({
   }
 
   const handleClose = () => {
-    if(isVerifying.current){
+    if (isVerifying.current) {
       showToast({
         message: t("models.verifyingAbort"),
         type: "error"
@@ -208,98 +221,102 @@ const KeyPopup = ({
     })
   }
 
+  // Define footer actions for the new Modal
+  const footerActions: FooterAction[] = [
+    {
+      label: t("common.cancel"),
+      onClick: handleClose,
+      variant: "flat", // Example variant
+    },
+    {
+      label: t("tools.save"),
+      onClick: onConfirm,
+      isLoading: isSubmitting || isVerifying.current,
+      isDisabled: isSubmitting || isVerifying.current,
+      color: "primary",
+      closeModalOnClick: false, // Let onSuccess handle closing via parent
+    },
+  ]
+
   return (
-    <PopupConfirm
-      noBorder={true}
-      zIndex={900}
-      footerType="center"
-      onConfirm={onConfirm}
-      confirmText={(isVerifying.current || isSubmitting) ? (
-        <div className="loading-spinner"></div>
-      ) : t("tools.save")}
-      disabled={isVerifying.current || isSubmitting}
-      onCancel={handleClose}
-      onClickOutside={handleClose}
+    <Modal
+      isOpen={true} // Modal is open if KeyPopup is rendered
+      onClose={handleClose}
+      title={t("models.newProvider")}
+      footerActions={footerActions}
+      size="xl" // Adjust size as needed, e.g., "xl" or "2xl"
     >
-      <div className="models-key-popup">
-        <div className="models-key-form-group">
-          <div className="models-key-field-title">
-            API Provider
-          </div>
-          <select
-            value={provider}
-            onChange={handleProviderChange}
-            className="provider-select"
-          >
-            {PROVIDERS.map(p => (
-              <option key={p} value={p}>{PROVIDER_LABELS[p]}</option>
-            ))}
-          </select>
-        </div>
+      <div className="flex flex-col gap-4">
+        <Select
+          label="API Provider"
+          selectedKeys={[provider]}
+          onChange={handleProviderChange}
+          aria-label="Select API Provider"
+          variant="bordered"
+        >
+          {PROVIDERS.map((p) => (
+            <SelectItem key={p}>
+              {PROVIDER_LABELS[p]}
+            </SelectItem>
+          ))}
+        </Select>
+
         {Object.entries(fields).map(([key, field]) => (
           key !== "model" && key !== "customModelId" && (
-            <div key={key} className="models-key-form-group">
-              <label className="models-key-field-title">
-                <>
-                  {(key === "baseURL" && !field.required) ?
-                    <div className="models-key-field-optional">
-                      <CheckBox
-                        checked={showOptional[provider]}
-                        onChange={() => setShowOptional(prev => ({ ...prev, [provider]: !prev[provider] }))}
-                      ></CheckBox>
-                      {`${field.label}${t("models.optional")}`}
-                    </div>
-                  : field.label}
-                  {field.required && <span className="required">*</span>}
-                </>
-                <div className="models-key-field-description">{field.description}</div>
-              </label>
+            <div key={key}>
+              {key === "baseURL" && !field.required ? (
+                <div className="flex items-center gap-2 mb-1">
+                  <CheckBox
+                    checked={showOptional[provider]}
+                    onChange={(e) => setShowOptional(prev => ({ ...prev, [provider]: e.target.checked }))}
+                  />
+                  <span className="text-sm">{`${field.label}${t("models.optional")}`}</span>
+                </div>
+              ) : null}
+
               {(showOptional[provider] || key !== "baseURL" || field.required) && (
-                <input
+                <Input
+                  label={(key !== "baseURL" || field.required) ? field.label : undefined}
+                  aria-label={field.label}
                   type="text"
                   value={(formData[key as keyof ModelConfig] as string) || field.default?.toString() || ""}
-                  onChange={e => handleChange(key, e.target.value)}
+                  onValueChange={value => handleChange(key, value)}
                   placeholder={field.placeholder?.toString()}
-                  className={errors[key] ? "error" : ""}
+                  description={(key !== "baseURL" || field.required) ? field.description : undefined}
+                  isRequired={field.required}
+                  isInvalid={!!errors[key]}
+                  errorMessage={errors[key]}
+                  variant="bordered"
+                  labelPlacement={(key !== "baseURL" || field.required) ? "outside" : "inside"}
                 />
               )}
-              {errors[key] && <div className="error-message">{errors[key]}</div>}
             </div>
           )
         ))}
-        <div className="models-key-form-group">
-          <label className="models-key-field-title">
-            <>
-              {`Custom Model ID`}
-              {fields["customModelId"]?.required ?
-                <span className="required">*</span>
-              : t("models.optional")}
-            </>
-          </label>
-          <input
-            type={"text"}
-            value={customModelId as string || ""}
-            onChange={e => setCustomModelId(e.target.value)}
-            placeholder={"YOUR_MODEL_ID"}
-            className={errors["customModelId"] ? "error" : ""}
-          />
-          {errors["customModelId"] && <div className="error-message">{errors["customModelId"]}</div>}
-        </div>
+
+        <Input
+          label="Custom Model ID"
+          value={customModelId}
+          onValueChange={setCustomModelId}
+          placeholder="YOUR_MODEL_ID"
+          description={fields["customModelId"]?.required ? undefined : t("models.optional")}
+          isRequired={fields["customModelId"]?.required}
+          isInvalid={!!errors["customModelId"]}
+          errorMessage={errors["customModelId"]}
+          variant="bordered"
+          labelPlacement="outside"
+        />
+
         {verifyError && (
           <Tooltip content={t("models.copyContent")}>
-            <div onClick={() => handleCopiedError(verifyError)} className="error-message">
+            <div onClick={() => handleCopiedError(verifyError)} className="text-sm text-danger cursor-pointer flex items-center gap-1">
               {verifyError}
-              <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 22 22" fill="transparent">
-                <path d="M13 20H2V6H10.2498L13 8.80032V20Z" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
-                <path d="M13 9H10V6L13 9Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M9 3.5V2H17.2498L20 4.80032V16H16" fill="transparent" stroke="currentColor" strokeWidth="2" strokeMiterlimit="10" strokeLinejoin="round"/>
-                <path d="M20 5H17V2L20 5Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             </div>
           </Tooltip>
         )}
       </div>
-    </PopupConfirm>
+    </Modal>
   )
 }
 

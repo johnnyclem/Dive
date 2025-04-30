@@ -1,6 +1,18 @@
 import React, { useState, useCallback, useEffect, useRef } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
+import {
+  GlobeAltIcon,
+  UserGroupIcon,
+  ArchiveBoxIcon,
+  WrenchScrewdriverIcon,
+  Cog6ToothIcon,
+  CpuChipIcon,
+  TrashIcon,
+  ChatBubbleLeftIcon,
+  ChevronDoubleLeftIcon,
+  PlusIcon
+} from "@heroicons/react/24/outline"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
 import Header from "./Header"
 import { useTranslation } from "react-i18next"
@@ -134,14 +146,19 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   }
 
   // Apply the defined type to the array
-  const footerButtons: FooterButton[] = [
-    { label: t("sidebar.browser"), path: "/browser", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 16c1.255 0 2.443-.29 3.5-.804V4.804zM14.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 0114.5 16c1.255 0 2.443-.29 3.5.804v-10A7.968 7.968 0 0014.5 4z"></path></svg> },
-    { label: t("sidebar.personas"), path: "/personas", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path></svg> },
-    { label: t("sidebar.knowledge"), path: "/knowledge-base", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 2l7.997 3.884v9.232l-7.997 3.884-7.997-3.884V5.884zM11 13h4v-2h-4v2zm-6 0h4v-2H5v2zm0-4h4V7H5v2zm6 0h4V7h-4v2z"></path></svg> },
-    // { label: t("sidebar.storage"), path: "/storage", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 2l7.997 3.884v9.232l-7.997 3.884-7.997-3.884V5.884zM11 13h4v-2h-4v2zm-6 0h4v-2H5v2zm0-4h4V7H5v2zm6 0h4V7h-4v2z"></path></svg> },
-    { label: t("sidebar.tools"), path: "/tools", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V6.236a1 1 0 00-1.447-.894l-4 2A1 1 0 0011 8v9zM5 17a1 1 0 001.447.894l4-2A1 1 0 0011 15V6.236a1 1 0 00-1.447-.894l-4 2A1 1 0 005 8v9z"></path></svg> },
-    { label: t("sidebar.system"), path: "/settings/system", icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> },
-    // { label: t("sidebar.models"), path: "/settings/model", icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" /></svg> },
+  const navigationButtons: FooterButton[] = [
+    // Browser icon (using globe-alt outline)
+    { label: t("sidebar.browser"), path: "/browser", icon: <GlobeAltIcon className="w-5 h-5" /> },
+    // Personas icon (using user-group outline)
+    { label: t("sidebar.personas"), path: "/personas", icon: <UserGroupIcon className="w-5 h-5" /> },
+    // Storage icon (using archive-box outline)
+    { label: t("sidebar.storage"), path: "/storage", icon: <ArchiveBoxIcon className="w-5 h-5" /> },
+    // Tools icon (using wrench-screwdriver outline)
+    { label: t("sidebar.tools"), path: "/tools", icon: <WrenchScrewdriverIcon className="w-5 h-5" /> },
+    // System Settings icon (using cog-6-tooth outline)
+    { label: t("sidebar.system"), path: "/settings/system", icon: <Cog6ToothIcon className="w-5 h-5" /> },
+    // Model Settings icon (using cpu-chip outline)
+    { label: t("sidebar.models"), path: "/settings/model", icon: <CpuChipIcon className="w-5 h-5" /> },
   ]
 
   return (
@@ -152,33 +169,35 @@ const HistorySidebar = ({ onNewChat }: Props) => {
         ref={containerRef}
       >
         {/* Logo */}
-        <div className={`flex items-center justify-center h-16 px-4 flex-shrink-0 ${collapsed ? '' : 'mb-4'}`}>
+        <div className={`flex items-center h-16 px-4 pt-4 flex-shrink-0 ${collapsed ? '' : 'mb-4'}`}>
           <img
             src={collapsed ? soulsIcon : soulsLogo}
             alt="Souls Logo"
-            className={`transition-opacity duration-300 ${collapsed ? 'h-8 w-8' : 'h-10 max-w-full'}`}
+            className={`transition-opacity duration-300 ${collapsed ? 'h-8 w-8' : 'h-16 max-w-full'}`}
           />
         </div>
 
         {/* Navigation & Update Buttons */}
         <div className={`flex-shrink-0 p-3 ${collapsed ? 'space-y-3' : 'space-y-2'}`}>
-          <button
-            className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 ${collapsed ? 'justify-center h-10' : ''}`}
-            onClick={handleNewChat}
-            title={collapsed ? t("chat.newChat") : undefined}
-          >
-            <svg className={`w-5 h-5 ${!collapsed ? 'mr-2' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-            {!collapsed && <span>{t("chat.newChat")}</span>}
-          </button>
-          {footerButtons.map((item, index) => (
-            item.path ? (
+          {navigationButtons.map((item, index) => {
+            const isActive = location.pathname === item.path; // Check if the path matches
+
+            return item.path ? (
               <Link
                 key={index}
                 to={item.path}
-                className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium text-default-200 hover:bg-black/10 hover:text-white transition-colors duration-150 ${collapsed ? 'justify-center h-10' : ''}`}
+                className={`group flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${collapsed ? 'justify-center h-10' : ''
+                  } ${
+                  // Apply active styles conditionally
+                  isActive
+                    ? 'text-white' // Example active styles
+                    : 'hover:bg-black/10 hover:text-gray-900 dark:hover:text-gray-100' // Regular hover styles
+                  }`}
                 title={collapsed ? item.label : undefined}
               >
-                <span className={`flex-shrink-0 ${!collapsed ? 'mr-2' : ''}`}>{item.icon}</span>
+                <span className={`flex-shrink-0
+                  ${!collapsed ? 'mr-2' : ''}
+                  ${isActive ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`}>{item.icon}</span>
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             ) : (
@@ -192,11 +211,26 @@ const HistorySidebar = ({ onNewChat }: Props) => {
                 {!collapsed && <span>{item.label}</span>}
               </button>
             )
-          ))}
+          })}
           <div className={`${collapsed ? 'flex justify-center' : ''} pt-1`}>
             <UpdateButton />
           </div>
         </div>
+
+        {/* Chat History Header (Visible only when expanded) */}
+        {!collapsed && (
+          <div className="px-4 py-2 border-b border-default-100">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t("sidebar.chats")}</span>
+          </div>
+        )}
+        <button
+          className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 ${collapsed ? 'justify-center h-10' : ''}`}
+          onClick={handleNewChat}
+          title={collapsed ? t("chat.newChat") : undefined}
+        >
+          <PlusIcon className={`w-5 h-5 ${!collapsed ? 'mr-2' : ''}`} />
+          {!collapsed && <span>{t("chat.newChat")}</span>}
+        </button>
 
         {/* Chat History */}
         <div className="flex-grow overflow-y-auto overflow-x-hidden px-4 space-y-2 mt-2">
@@ -213,9 +247,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
               {/* Content inside the chat item div */}
               {collapsed ? (
                 // Collapsed view: Show chat icon
-                <svg className="w-5 h-5 text-default-200" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.74 8.74 0 01-4.086-.992V19l-1.996-1.143A7.958 7.958 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-                </svg>
+                <ChatBubbleLeftIcon className="w-5 h-5 text-default-200" />
               ) : (
                 // Expanded view: Show title, date, and delete button on hover
                 <>
@@ -232,7 +264,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
                     onClick={(e) => confirmDelete(e, chat.id)}
                     title={t("chat.deleteChat")}
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"></path></svg>
+                    <TrashIcon className="w-4 h-4" />
                   </button>
                 </>
               )}
@@ -247,9 +279,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
             onClick={toggleSidebar}
             title={collapsed ? t("sidebar.expand") : t("sidebar.collapse")}
           >
-            <svg className="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            </svg>
+            <ChevronDoubleLeftIcon className="w-5 h-5 transition-transform duration-300" style={{ transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
             {!collapsed && <span className="ml-2">{collapsed ? t("sidebar.expand") : t("sidebar.collapse")}</span>}
           </button>
         </div>

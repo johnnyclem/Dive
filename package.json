@@ -58,6 +58,7 @@
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/lint": "^6.8.4",
     "@daffiwallet/connect": "^1.0.3",
+    "@heroicons/react": "^2.2.0",
     "@heroui/react": "^2.8.0-beta.1",
     "@langchain/anthropic": "^0.3.12",
     "@langchain/aws": "^0.1.7",
