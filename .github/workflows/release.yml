@@ -1,6 +1,9 @@
 name: Release Build
 
 on:
+  pull_request_target:
+    branches:
+      - main
   push:
     tags:
       - "v*"
@@ -12,19 +15,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            platform: windows
-            arch: x64
           - os: macos-latest
             platform: darwin
             arch: x64
           - os: macos-latest
             platform: darwin
             arch: arm64
-          - os: ubuntu-latest
-            platform: linux
-            arch: x64
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      group: MacRunners
 
     steps:
       - name: Checkout
@@ -35,7 +33,7 @@ jobs:
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          # KEYCHAIN_PASSWORD: 
         run: |
           # create variables
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
@@ -71,22 +69,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download Prebuilt binary
-        if: matrix.platform == 'windows'
-        run: npm run download:windows-bin
+      # - name: Download Prebuilt binary
+      #   if: matrix.platform == 'windows'
+      #   run: npm run download:windows-bin
 
       - name: Create release directory
         run: mkdir -p output
 
-      - name: Build Windows
-        if: matrix.platform == 'windows'
-        shell: bash
-        run: |
-          npm run package:windows-installers
-          ls -al release/${{ env.VERSION }}
-          echo "Moving exe file to output directory"
-          mv release/${{ env.VERSION }}/*.exe output/
-          mv release/${{ env.VERSION }}/latest.yml output/
+      # - name: Build Windows
+      #   if: matrix.platform == 'windows'
+      #   shell: bash
+      #   run: |
+      #     npm run package:windows-installers
+      #     ls -al release/${{ env.VERSION }}
+      #     echo "Moving exe file to output directory"
+      #     mv release/${{ env.VERSION }}/*.exe output/
+      #     mv release/${{ env.VERSION }}/latest.yml output/
 
       - name: Build macOS
         if: matrix.platform == 'darwin'
@@ -104,18 +102,18 @@ jobs:
           echo "Moving dmg file to output directory"
           mv release/${{ env.VERSION }}/*.dmg output/
 
-      - name: Build Linux
-        if: matrix.platform == 'linux'
-        run: |
-          npm run package:linux
-          ls -al release/${{ env.VERSION }}
-          echo "Moving AppImage and tar.gz files to output directory"
-          mv release/${{ env.VERSION }}/*.{AppImage,tar.gz} output/
-          mv release/${{ env.VERSION }}/latest-linux.yml output/
+      # - name: Build Linux
+      #   if: matrix.platform == 'linux'
+      #   run: |
+      #     npm run package:linux
+      #     ls -al release/${{ env.VERSION }}
+      #     echo "Moving AppImage and tar.gz files to output directory"
+      #     mv release/${{ env.VERSION }}/*.{AppImage,tar.gz} output/
+      #     mv release/${{ env.VERSION }}/latest-linux.yml output/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: output/*
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.WORKFLOW_PAT }}

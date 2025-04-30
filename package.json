@@ -1,7 +1,7 @@
 {
   "name": "souls",
   "private": true,
-  "version": "0.7.7",
+  "version": "0.7.7a",
   "type": "module",
   "main": "dist-electron/main/index.js",
   "debug": {

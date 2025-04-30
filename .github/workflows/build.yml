@@ -22,6 +22,10 @@ jobs:
     runs-on:
       group: MacRunners
 
+    strategy:
+      matrix:
+        os: [macos-latest]
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
