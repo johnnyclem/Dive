@@ -19,11 +19,12 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      group: MacRunners
 
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest]
 
     steps:
       - name: Checkout Code
