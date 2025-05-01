@@ -1,17 +1,38 @@
 name: Release Build
 
 on:
-  pull_request_target:
-    branches:
-      - main
   push:
-    branches:
-      - main
+    branches: [main]
     tags:
       - "v*"
 
 jobs:
+  version:
+    runs-on: 
+      group: KubeRunners
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Get version from package.json
+        id: get_version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "$VERSION" > ./version_tag.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: version-tag
+          path: ./version_tag.txt
+
+
   release:
+    needs: [version]
     permissions:
       contents: write
     strategy:
@@ -23,8 +44,8 @@ jobs:
           - os: macos-latest
             platform: darwin
             arch: arm64
-    runs-on:
-      group: MacRunners
+    runs-on: ${{ matrix.os }}
+
 
     steps:
       - name: Checkout
@@ -60,13 +81,18 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Get version from package.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: version-tag
+      - name: Get version from artifact
         id: get_version
         shell: bash
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "Version from package.json: $VERSION"
+          echo "VERSION=$(cat ./version_tag.txt)" >> $GITHUB_ENV
+      - name: Confirm Version From artifact
+        shell: bash
+        run: |
+          echo "Version from package.json: ${{ env.VERSION }}"
 
       - name: Install dependencies
         run: npm ci
@@ -115,9 +141,69 @@ jobs:
       #     mv release/${{ env.VERSION }}/*.{AppImage,tar.gz} output/
       #     mv release/${{ env.VERSION }}/latest-linux.yml output/
 
-      - name: Create Release
+      # TODO skip if production and add another production tag release
+      - name: Create Dev Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: dev-${{ env.VERSION }}
+          name: |
+            Souls Developer Release ${{ env.VERSION }}
           files: output/*
+          body: |
+            Build details:
+            
+            ${{ github.event.head_commit.message }}
+          prerelease: true
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.WORKFLOW_PAT }}
+
+  notify:
+    needs: [release]
+    runs-on: 
+      group: KubeRunners
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: version-tag
+      - name: Confirm git commit SHA output
+        run: |
+          echo "VERSION=$(cat ./version_tag.txt)" >> $GITHUB_ENV
+          echo "Version from package.json: ${{ env.VERSION }}"
+
+      # TODO only do if dev build. Add anohter for production release
+      - name: Post a message in a channel
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SOULS_NOTIFIER_SLACK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "*Successful Souls Release Build*: ${{ job.status }}\n dev-${{ env.VERSION }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Successful Souls Release Build*: ${{ job.status }}\n dev-${{ env.VERSION }} \n\nRelease Assets: \nhttps://github.com/Ai-Layer-Labs/souls-electron-redux/releases/tag/dev-${{ env.VERSION }}"
+    
+  notify_failure:
+    if: ${{ failure() }}
+    runs-on: 
+      group: KubeRunners
+    steps:
+      # TODO only do if dev build. Add anohter for production release
+      - name: Notify failure of release
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SOULS_NOTIFIER_SLACK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "*Failed Souls Release Build*: ${{ job.status }}\n
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Failed Souls Release Build*: ${{ job.status }}\n Please review errors in Action errors."
+    

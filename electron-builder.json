@@ -26,17 +26,21 @@
     "drizzle/**/*",
     "prebuilt/**/*"
   ],
-  "afterPack": "./scripts/signNativeModules.js",
-  "afterSign": "./scripts/notarizer.js",
   "mac": {
     "target": [
       {
         "target": "dmg",
-        "arch": ["arm64", "x64"]
+        "arch": [
+          "arm64",
+          "x64"
+        ]
       },
       {
         "target": "zip",
-        "arch": ["arm64", "x64"]
+        "arch": [
+          "arm64",
+          "x64"
+        ]
       }
     ],
     "hardenedRuntime": true,
@@ -60,7 +64,9 @@
       {
         "from": "bin/node/darwin-${arch}/",
         "to": "bin/node/",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "bin/uv/darwin-${arch}/",
@@ -73,7 +79,9 @@
       {
         "from": "bin/python/darwin-${arch}/",
         "to": "python/",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ]
   },
@@ -108,13 +116,19 @@
       {
         "from": "bin/python/win-x64/",
         "to": "python/",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ]
   },
   "linux": {
-    "target": ["AppImage"],
-    "asarUnpack": ["**/*.node"],
+    "target": [
+      "AppImage"
+    ],
+    "asarUnpack": [
+      "**/*.node"
+    ],
     "executableName": "souls"
   },
   "nsis": {
@@ -127,22 +141,30 @@
     {
       "from": "prebuilt",
       "to": "prebuilt",
-      "filter": ["**/*"]
+      "filter": [
+        "**/*"
+      ]
     },
     {
       "from": "drizzle",
       "to": "drizzle",
-      "filter": ["**/*"]
+      "filter": [
+        "**/*"
+      ]
     },
     {
       "from": "public/locales",
       "to": "locales",
-      "filter": ["**/*"]
+      "filter": [
+        "**/*"
+      ]
     },
     {
       "from": "public/image",
       "to": "image",
-      "filter": ["**/*"]
+      "filter": [
+        "**/*"
+      ]
     }
   ],
   "dmg": {
