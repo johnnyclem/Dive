@@ -10,11 +10,13 @@ import {
   ModalProps as HeroModalProps,
 } from "@heroui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { SoulsButton } from "./Button";
 
 export interface FooterAction extends ButtonProps {
   label: string;
   onClick: () => void;
   closeModalOnClick?: boolean; // If true, calls onClose after onClick
+  border?: string;
 }
 
 interface ModalProps extends Omit<HeroModalProps, 'children' | 'onClose'> {
@@ -63,7 +65,7 @@ const Modal: React.FC<ModalProps> = ({
       hideCloseButton={true} // We manage our own close button inside ModalHeader
       {...restHeroModalProps}
       classNames={{
-        base: "border border-default-100 dark:border-default-200 bg-default-50 dark:bg-default-100", // Custom base styles
+        base: "border border-default-50 dark:border-default-50 bg-default-50 dark:bg-black", // Custom base styles
         // Add other custom classNames if needed (wrapper, backdrop, header, body, footer)
       }}
     >
@@ -89,16 +91,17 @@ const Modal: React.FC<ModalProps> = ({
             </ModalBody>
             {footerActions && footerActions.length > 0 && (
               <ModalFooter>
-                {footerActions.map((action, index) => (
-                  <Button
+                {footerActions.map(({ label, onClick, closeModalOnClick, color, variant, isLoading, isDisabled, border, ...otherActionProps }, index) => (
+                  <SoulsButton
                     key={index}
-                    color={action.color || (index === footerActions.length - 1 ? "primary" : "default")} // Default last button to primary
-                    variant={action.variant}
-                    onPress={() => handleActionClick(action)}
-                    {...action} // Pass other ButtonProps like isLoading, isDisabled etc.
+                    color={color || (index === footerActions.length - 1 ? "primary" : "default")} // Default last button to primary
+                    variant={variant}
+                    isLoading={isLoading}
+                    isDisabled={isDisabled}
+                    onPress={() => handleActionClick({ label, onClick, closeModalOnClick, color, variant, isLoading, isDisabled, ...otherActionProps })}
                   >
-                    {action.label}
-                  </Button>
+                    {label}
+                  </SoulsButton>
                 ))}
               </ModalFooter>
             )}

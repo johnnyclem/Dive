@@ -67,7 +67,8 @@
     "system": "System",
     "collapse": "Collapse",
     "expand": "Expand",
-    "browser": "Browser"
+    "browser": "Browser",
+    "chats": "Chats"
   },
   "personas": {
     "title": "Personas",

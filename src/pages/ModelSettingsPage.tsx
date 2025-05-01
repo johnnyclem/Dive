@@ -1,7 +1,7 @@
 import { useAtomValue, useSetAtom } from "jotai"
 import React, { useState } from "react"
 import { useTranslation } from "react-i18next"
-import Switch from "../components/Switch"
+// import Switch from "../components/Switch"
 import PopupConfirm from "../components/PopupConfirm"
 import { MultiModelConfig } from "../atoms/configState"
 import KeyPopup from "../views/Overlay/Model/KeyPopup"
@@ -16,7 +16,7 @@ import Tooltip from "../components/Tooltip"
 import KeyPopupEdit from "../views/Overlay/Model/KeyPopupEdit"
 import { systemThemeAtom, userThemeAtom } from "../atoms/themeState"
 import ModelsProvider from "../views/Overlay/Model/ModelsProvider"
-import { Button } from "@heroui/react"
+import { Button, Switch } from "@heroui/react"
 
 const ModelSettingsPageContent = () => {
   const { t } = useTranslation()
@@ -302,8 +302,8 @@ const ModelSettingsPageContent = () => {
                   </div>
                   <div className="flex items-center justify-center min-w-full">
                     <Switch
-                      size="medium"
-                      checked={multiModelConfig.active !== false}
+                      size="md"
+                      isSelected={multiModelConfig.active !== false}
                       onChange={() => {
                         handleMultiModelConfigChange(index, "active" as keyof MultiModelConfig, !multiModelConfig.active)
                       }}

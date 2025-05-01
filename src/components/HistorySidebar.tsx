@@ -11,23 +11,22 @@ import {
   TrashIcon,
   ChatBubbleLeftIcon,
   ChevronDoubleLeftIcon,
-  PlusIcon
+  PlusIcon,
+  FolderIcon
 } from "@heroicons/react/24/outline"
 import { historiesAtom, loadHistoriesAtom } from "../atoms/historyState"
-import Header from "./Header"
 import { useTranslation } from "react-i18next"
 import { showToastAtom } from "../atoms/toastState"
-import Tooltip from "./Tooltip"
-import { closeAllOverlaysAtom, openOverlayAtom, OverlayType } from "../atoms/layerState"
-import { useSidebarLayer } from "../hooks/useLayer"
+import { openOverlayAtom } from "../atoms/layerState"
 import useHotkeyEvent from "../hooks/useHotkeyEvent"
 import { currentChatIdAtom } from "../atoms/chatState"
 import PopupConfirm from "./PopupConfirm"
 import { newVersionAtom } from "../atoms/globalState"
 import UpdateButton from "./UpdateButton"
+import { useSidebarStore } from "../stores/sidebarStore"
 import soulsLogo from "../assets/Souls_Logo_Gradient.png"
 import soulsIcon from "../assets/souls-icon.svg"
-import { useSidebarStore } from "../stores/sidebarStore"
+import glassIcon from "../assets/glass-icon.svg"
 
 // Define a union type for the button properties
 type FooterButton =
@@ -171,11 +170,11 @@ const HistorySidebar = ({ onNewChat }: Props) => {
         ref={containerRef}
       >
         {/* Logo */}
-        <div className={`flex items-center h-16 px-4 pt-4 flex-shrink-0 ${collapsed ? '' : 'mb-4'}`}>
+        <div className={`flex items-center h-16 pt-6 flex-shrink-0 ${collapsed ? 'px-3' : 'mb-4 pl-6'}`}>
           <img
-            src={collapsed ? soulsIcon : soulsLogo}
+            src={collapsed ? glassIcon : soulsLogo}
             alt="Souls Logo"
-            className={`transition-opacity duration-300 ${collapsed ? 'h-8 w-8' : 'h-16 max-w-full'}`}
+            className={`transition-opacity duration-300 ${collapsed ? '' : 'h-16 max-w-full'}`}
           />
         </div>
 
@@ -221,18 +220,16 @@ const HistorySidebar = ({ onNewChat }: Props) => {
 
         {/* Chat History Header (Visible only when expanded) */}
         {!collapsed && (
-          <div className="px-4 py-2 border-b border-default-100">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t("sidebar.chats")}</span>
+          <div className="mx-4 py-2 flex justify-between border-b border-default-100">
+            <span className="inline-block text-xs font-semibold text-gray-500 uppercase tracking-wider">{t("sidebar.chats")}</span>
+            <button
+              className="text-xs text-gray-500 hover:text-gray-700"
+              onClick={() => navigate("/")}
+            >
+              <FolderIcon className="w-4 h-4" />
+            </button>
           </div>
         )}
-        <button
-          className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700 ${collapsed ? 'justify-center h-10' : ''}`}
-          onClick={handleNewChat}
-          title={collapsed ? t("chat.newChat") : undefined}
-        >
-          <PlusIcon className={`w-5 h-5 ${!collapsed ? 'mr-2' : ''}`} />
-          {!collapsed && <span>{t("chat.newChat")}</span>}
-        </button>
 
         {/* Chat History */}
         <div className="flex-grow overflow-y-auto overflow-x-hidden px-4 space-y-2 mt-2">
