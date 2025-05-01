@@ -1,9 +1,9 @@
 {
   "name": "souls",
   "private": true,
-  "version": "0.7.7a",
+  "version": "0.8.2",
   "type": "module",
-  "main": "dist-electron/main/index.js",
+  "main": "dist-electron/main/index.mjs",
   "debug": {
     "env": {
       "VITE_DEV_SERVER_URL": "http://127.0.0.1:7777/"
@@ -16,12 +16,13 @@
   "scripts": {
     "dev": "vite --config vite.config.ts",
     "dev:electron": "vite --config vite.config.electron.ts",
+    "dev:all": "run-p start:services dev",
     "lint": "eslint .",
     "preview": "vite preview",
     "build": "vite build",
     "build:electron": "vite build --config vite.config.electron.ts",
     "build:services": "vite build --config vite.config.service.ts",
-    "start:services": "vite-node services/main.ts",
+    "start:services": "node -v && vite-node services/main.ts",
     "postinstall": "patch-package && electron-builder install-app-deps",
     "docker:build-win": "scripts/docker/build-win.sh",
     "download:windows-bin": "vite-node scripts/download-node.ts win-x64 && vite-node scripts/download-python.ts win-x64 && vite-node scripts/download-uv.ts win-x64",
@@ -40,11 +41,11 @@
     "package:windows": "run-s package:windows-*",
     "package:windows-installers": "npm run build:electron && electron-builder --win nsis --x64 --publish=never",
     "package:darwin-dmg": "run-s package:darwin-dmg:*",
-    "package:darwin-dmg:arm64": "scripts/install-deps.sh arm64 darwin && npm run build:electron && electron-builder --mac dmg --arm64 --publish=never",
-    "package:darwin-dmg:x64": "scripts/install-deps.sh x64 darwin && npm run build:electron && electron-builder --mac dmg --x64 --publish=never",
-    "package:darwin-zip": "run-s package:darwin-zip-*",
-    "package:darwin-zip:arm64": "scripts/install-deps.sh arm64 darwin && npm run build:electron && electron-builder --mac zip --arm64 --publish=never",
-    "package:darwin-zip:x64": "scripts/install-deps.sh x64 darwin && npm run build:electron && electron-builder --mac zip --x64 --publish=never",
+    "package:darwin-dmg:arm64": "npm run build:electron && electron-builder --config electron-builder.config.mjs --mac dmg --arm64 --publish=never",
+    "package:darwin-dmg:x64": "npm run build:electron && electron-builder --config electron-builder.config.mjs --mac dmg --x64 --publish=never",
+    "package:darwin-zip": "run-s package:darwin-zip:*",
+    "package:darwin-zip:arm64": "npm run build:electron && electron-builder --config electron-builder.config.mjs --mac zip --arm64 --publish=never",
+    "package:darwin-zip:x64": "npm run build:electron && electron-builder --config electron-builder.config.mjs --mac zip --x64 --publish=never",
     "package:linux": "run-s package:linux-*",
     "package:linux-tar": "npm run build:electron && electron-builder --linux tar.gz --x64 --publish=never",
     "package:linux-appImage": "npm run build:electron && electron-builder --linux appimage --x64 --publish=never"
@@ -83,7 +84,7 @@
     "axios": "^1.7.9",
     "better-sqlite3": "^11.8.0",
     "cross-spawn": "^7.0.6",
-    "drizzle-kit": "^0.30.1",
+    "drizzle-kit": "^0.31.0",
     "drizzle-orm": "^0.38.3",
     "electron-context-menu": "^4.0.5",
     "electron-log": "^5.2.4",
@@ -111,12 +112,13 @@
     "mitt": "^3.0.1",
     "multer": "^1.4.5-lts.1",
     "ollama": "^0.5.12",
+    "puppeteer": "^24.7.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^15.4.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.28.1",
-    "react-syntax-highlighter": "^15.6.1",
+    "react-syntax-highlighter": "^5.8.0",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
@@ -169,7 +171,7 @@
     "vite-node": "^3.0.1",
     "vite-plugin-electron": "^0.29.0",
     "vite-plugin-electron-renderer": "^0.14.6",
-    "vitest": "^2.1.9"
+    "vitest": "^3.1.2"
   },
   "resolutions": {
     "@langchain/core": "^0.3.0"

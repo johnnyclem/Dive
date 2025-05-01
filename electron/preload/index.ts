@@ -167,6 +167,18 @@ contextBridge.exposeInMainWorld("electron", {
   },
 })
 
+// Override global fetch to redirect '/api/' calls to the local backend service
+const originalFetch = window.fetch.bind(window)
+window.fetch = async (input: RequestInfo, init?: RequestInit) => {
+  let url = typeof input === 'string' ? input : input.url
+  if (typeof url === 'string' && url.startsWith('/api/')) {
+    // get dynamic port from main process
+    const port = await window.electron.ipcRenderer.invoke('env:port')
+    url = `http://localhost:${port}${url}`
+  }
+  return originalFetch(url, init)
+}
+
 // --------- Preload scripts loading ---------
 function domReady(condition: DocumentReadyState[] = ["complete", "interactive"]) {
   return new Promise(resolve => {
@@ -216,7 +228,9 @@ function createLoadingAnimation() {
   animation-fill-mode: both;
   width: 50px;
   height: 50px;
-  background: #fff;
+  background-image: url("icon.png");
+  background-size: cover;
+  background-position: center;
   animation: square-spin 3s 0s cubic-bezier(0.09, 0.57, 0.49, 0.9) infinite;
 }
 .app-loading-wrap {

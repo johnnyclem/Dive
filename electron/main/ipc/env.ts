@@ -42,13 +42,10 @@ export function ipcEnvHandler() {
 
   // Get port
   ipcMain.handle('env:port', async () => {
-    try {
-      // Return the port from the service
-      return await port;
-    } catch (error) {
-      logging.error(`Failed to get port: ${error}`);
-      return 3000; // Fallback port
-    }
+    // Always return the dynamic service port
+    const active_port = await port;
+    console.log("port", active_port);
+    return active_port;
   });
 }
 

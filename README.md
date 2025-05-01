@@ -30,6 +30,32 @@ Souls is an open-source MCP Host Desktop Application that seamlessly integrates 
 - 🌍 **Spanish Translation**: Added Spanish language support
 - 🤖 **Extended Model Support**: Added Google Gemini and Mistral AI models integration
 
+## Knowledge Base RAG Prioritization
+
+This feature prioritizes local knowledge base content over web search results when a knowledge base is active.
+
+### Features
+
+1. **Dedicated Knowledge Search Tool**: When a knowledge base is active, a `knowledge_search` tool is automatically added as the highest priority tool to encourage the AI to check the knowledge base first.
+
+2. **Web Search Enhancement**: The web search tool is wrapped to check the active knowledge base before falling back to a web search, ensuring knowledge base content is prioritized.
+
+3. **Dynamic Tool Configuration**: Tools are automatically reconfigured when a knowledge base is activated or deactivated.
+
+4. **System Prompting**: An extra system message is added to instruct the AI to use the knowledge base for relevant topics.
+
+5. **Semantic Search**: Knowledge base search uses a basic semantic relevance scoring system to find the most pertinent content.
+
+### How it Works
+
+When you activate a knowledge base:
+
+1. The system registers a high-priority `knowledge_search` tool
+2. The system wraps the `web_search` tool to check knowledge base content first
+3. The AI receives instructions to prefer the knowledge base for relevant topics
+4. Search queries first check the knowledge base content before falling back to web search
+
+This ensures that your curated local content is prioritized over generic web content when answering queries.
 
 ## Download and Install ⬇️
 

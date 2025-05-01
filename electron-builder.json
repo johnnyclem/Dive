@@ -26,6 +26,7 @@
     "drizzle/**/*",
     "prebuilt/**/*"
   ],
+  "afterPack": "./scripts/signNativeModules.js",
   "afterSign": "./scripts/notarizer.js",
   "mac": {
     "target": [
@@ -55,9 +56,6 @@
       "com.apple.security.temporary-exception.files.absolute-path.read-write": true,
       "com.apple.security.temporary-exception.files.home-relative-path.read-write": true
     },
-    "signIgnore": [
-      "node_modules/sharp"
-    ],
     "extraResources": [
       {
         "from": "bin/node/darwin-${arch}/",

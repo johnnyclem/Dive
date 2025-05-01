@@ -2,6 +2,7 @@ import { app } from "electron"
 import path from "node:path"
 import fse from "fs-extra"
 import dotenv from "dotenv"
+import defaultModelsRaw from "../main/default-models.json"
 
 // Load environment variables first, before any other initialization
 dotenv.config()
@@ -13,6 +14,17 @@ import { compareFilesAndReplace, isPortInUse, npmInstall } from "./util.js"
 import { SystemCommandManager } from "../../services/syscmd/index.js"
 import { MCPServerManager } from "../../services/mcpServer/index.js"
 import { scriptsDir, configDir, appDir, DEF_MCP_SERVER_CONFIG } from "./constant.js"
+
+// Type for bundled default models config
+interface DefaultModels {
+  configs: Record<string, unknown>
+  activeProvider: string
+  enable_tools?: boolean
+  enableTools?: boolean
+}
+
+// Cast raw JSON to typed interface
+const defaultModels: DefaultModels = defaultModelsRaw as DefaultModels
 
 export let client: Promise<MCPClient> | null = null
 async function initClient(): Promise<MCPClient> {
@@ -32,6 +44,17 @@ async function initClient(): Promise<MCPClient> {
   const customRulesPath = path.join(configDir, ".customrules")
   if (!fse.existsSync(customRulesPath)) {
     fse.writeFileSync(customRulesPath, "")
+  }
+
+  // create model config file if not exists from bundled defaults
+  const modelConfigPath = path.join(configDir, "model.json")
+  if (!fse.existsSync(modelConfigPath)) {
+    const defaultConfig = {
+      activeProvider: defaultModels.activeProvider,
+      enableTools: defaultModels.enable_tools ?? defaultModels.enableTools ?? true,
+      configs: defaultModels.configs
+    }
+    fse.writeFileSync(modelConfigPath, JSON.stringify(defaultConfig, null, 2), "utf-8")
   }
 
   initDb(configDir)
@@ -56,18 +79,23 @@ async function initClient(): Promise<MCPClient> {
 function initDb(configDir: string) {
   initDatabase(DatabaseMode.DIRECT, { dbPath: path.join(configDir, "data.db") })
   const db = getDB()
-  migrate(db, { migrationsFolder: app.isPackaged ? path.join(process.resourcesPath, "drizzle") : "./drizzle" })
+  // Determine migrations folder: external Resources folder in production, project root in development
+  const migrationsFolder = app.isPackaged
+    ? path.join(process.resourcesPath, "drizzle")
+    : path.join(process.cwd(), "drizzle")
+  migrate(db, { migrationsFolder })
   return db
 }
 
 async function getFreePort(): Promise<number> {
-  const defaultPort = 4173
+  // Prefer 4321 which is the Vite proxy target for API calls
+  const defaultPort = 4321
   const isDefaultPortInUse = await isPortInUse(defaultPort)
   if (!isDefaultPortInUse) {
     return defaultPort
   }
 
-  const secondPort = 6190
+  const secondPort = 6190 // fallback if 4321 is already taken (unlikely)
   const isSecondPortInUse = await isPortInUse(secondPort)
   if (!isSecondPortInUse) {
     return secondPort

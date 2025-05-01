@@ -1,5 +1,39 @@
 // Knowledge base storage module for Electron main process
 
+import { app } from 'electron';
+import * as fs from 'fs';
+import * as path from 'path';
+
+const dataFilePath = path.join(app.getPath('userData'), 'knowledge-store.json');
+
+// Load persisted store on startup
+;(function loadStore() {
+  try {
+    if (fs.existsSync(dataFilePath)) {
+      const fileData = fs.readFileSync(dataFilePath, 'utf-8');
+      const store: {
+        knowledgeBases: KnowledgeBase[];
+        knowledgeCollections: KnowledgeCollection[];
+        activeKnowledgeBaseId: string | null;
+      } = JSON.parse(fileData);
+      knowledgeBases.splice(0, knowledgeBases.length, ...store.knowledgeBases);
+      knowledgeCollections.splice(0, knowledgeCollections.length, ...store.knowledgeCollections);
+      activeKnowledgeBaseId = store.activeKnowledgeBaseId;
+    }
+  } catch (e) {
+    console.error('Failed to load knowledge store:', e);
+  }
+})();
+
+function saveStore() {
+  try {
+    const store = { knowledgeBases, knowledgeCollections, activeKnowledgeBaseId };
+    fs.writeFileSync(dataFilePath, JSON.stringify(store, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('Failed to save knowledge store:', e);
+  }
+}
+
 // Define types
 export interface Document {
   id: string;
@@ -26,6 +60,26 @@ export interface KnowledgeBase {
 // In-memory storage
 const knowledgeBases: KnowledgeBase[] = [];
 const knowledgeCollections: KnowledgeCollection[] = [];
+let activeKnowledgeBaseId: string | null = null;
+
+// Active knowledge base management
+export function setActiveKnowledgeBase(id: string | null): boolean {
+  console.log(`Setting active knowledge base: ${id}`);
+  // Check if the ID exists if not null
+  if (id !== null && !getCollection(id)) {
+    console.log(`Knowledge base ${id} not found, cannot activate`);
+    return false;
+  }
+  
+  activeKnowledgeBaseId = id;
+  saveStore();
+  console.log(`Active knowledge base is now: ${activeKnowledgeBaseId}`);
+  return true;
+}
+
+export function getActiveKnowledgeBase(): string | null {
+  return activeKnowledgeBaseId;
+}
 
 // Collection methods
 export function getAllCollections(): KnowledgeCollection[] {
@@ -48,6 +102,7 @@ export function createCollection(name: string, description?: string): KnowledgeC
     documents: [] 
   };
   knowledgeCollections.push(newCollection);
+  saveStore();
   console.log(`Created collection with ID: ${id}`);
   return newCollection;
 }
@@ -69,6 +124,7 @@ export function addDocumentToCollection(collectionId: string | number, document:
   
   if (collection) {
     collection.documents.push(document);
+    saveStore();
     console.log(`Added document ${document.id} to collection ${collectionId}`);
     return true;
   } 
@@ -81,6 +137,7 @@ export function addDocumentToCollection(collectionId: string | number, document:
   };
   
   knowledgeCollections.push(newCollection);
+  saveStore();
   console.log(`Created new collection ${collectionId} and added document ${document.id}`);
   return true;
 }
@@ -94,6 +151,7 @@ export function removeDocumentFromCollection(documentId: string): boolean {
     const index = collection.documents.findIndex(doc => doc.id === documentId);
     if (index >= 0) {
       collection.documents.splice(index, 1);
+      saveStore();
       removed = true;
       console.log(`Removed document ${documentId} from collection ${collection.id}`);
       break;
@@ -101,6 +159,81 @@ export function removeDocumentFromCollection(documentId: string): boolean {
   }
   
   return removed;
+}
+
+// Enhanced search function for knowledge base
+export function searchKnowledgeBase(query: string, collectionId?: string | null, k: number = 5): Array<{document: Document, score: number}> {
+  if (!query) {
+    console.log('Empty query provided to searchKnowledgeBase, returning no results');
+    return [];
+  }
+  console.log(`Searching knowledge base for: ${query}`);
+  const normalizedQuery = query.toLowerCase();
+  const results: Array<{document: Document, score: number}> = [];
+  
+  // If collection ID is provided, search only that collection
+  if (collectionId) {
+    const collection = getCollection(collectionId);
+    if (!collection) {
+      console.log(`Collection ${collectionId} not found for search`);
+      return [];
+    }
+    
+    // Score each document and add to results
+    collection.documents.forEach(doc => {
+      const score = computeRelevanceScore(doc, normalizedQuery);
+      if (score > 0) {
+        results.push({ document: doc, score });
+      }
+    });
+  } 
+  // Otherwise search all collections
+  else {
+    knowledgeCollections.forEach(collection => {
+      collection.documents.forEach(doc => {
+        const score = computeRelevanceScore(doc, normalizedQuery);
+        if (score > 0) {
+          results.push({ document: doc, score });
+        }
+      });
+    });
+  }
+  
+  // Sort by relevance score (highest first)
+  results.sort((a, b) => b.score - a.score);
+  
+  // Return top k results
+  return results.slice(0, k);
+}
+
+// Simple term frequency-based relevance scoring
+function computeRelevanceScore(document: Document, query: string): number {
+  const content = document.content.toLowerCase();
+  const name = document.name.toLowerCase();
+  
+  // Split into terms
+  const queryTerms = query.split(/\s+/).filter(term => term.length > 1);
+  
+  let score = 0;
+  
+  // Add to score for each query term found in content
+  queryTerms.forEach(term => {
+    // Count occurrences in content
+    const contentMatches = (content.match(new RegExp(term, 'g')) || []).length;
+    score += contentMatches * 1;
+    
+    // Boost score for terms found in document name
+    if (name.includes(term)) {
+      score += 5;
+    }
+    
+    // Exact phrase match bonus in content
+    if (content.includes(query)) {
+      score += 10;
+    }
+  });
+  
+  return score;
 }
 
 // Knowledge base methods
@@ -119,6 +252,7 @@ export function createKnowledgeBase(name: string, content: string, description?:
     content 
   };
   knowledgeBases.push(newKB);
+  saveStore();
   console.log(`Created knowledge base with ID: ${id}`);
   return newKB;
 }
@@ -128,6 +262,7 @@ export function removeKnowledgeBase(id: string): boolean {
   const index = knowledgeBases.findIndex(kb => kb.id === id);
   if (index !== -1) {
     knowledgeBases.splice(index, 1);
+    saveStore();
     console.log(`Removed knowledge base ${id}`);
     return true;
   }
@@ -156,9 +291,42 @@ export function addSampleData() {
       dateAdded: new Date()
     };
     
+    // Add a document about Think OS
+    const thinkOSDoc: Document = {
+      id: 'doc-thinkos',
+      name: 'Think OS Book',
+      path: '/path/to/thinkos.txt',
+      content: `Think OS: A Brief Introduction to Operating Systems by Allen B. Downey.
+        
+Think OS is an introduction to Operating Systems for programmers.
+
+In many computer science programs, Operating Systems is an advanced topic. By the time students 
+take it, they usually know how to program in C, and they have probably taken a class in Computer Architecture.
+Usually the goal of the class is to expose students to the design and implementation of operating systems,
+with the implied assumption that some of them will do research in this area, or write part of an OS.
+
+This book is intended for a different audience, and it has different goals. I developed it for a class 
+at Olin College called Software Systems. Most students taking this class learned to program in Python, 
+so one of the goals is to help them learn C. For that part of the class, I use Griffiths and Griffiths, 
+Head First C, from O'Reilly Media. This book is meant to complement that one.
+
+Few of my students will ever write an operating system, but many of them will write low-level applications in C, 
+and some of them will work on embedded systems. My class includes material from operating systems, networks, 
+databases, and embedded systems, but it emphasizes the topics programmers need to know.
+
+This book does not assume that you have studied Computer Architecture. As we go along, I will explain 
+what we need. If this book is successful, it should give you a better understanding of what is happening 
+when programs run, and what you can do to make them run better and faster.`,
+      dateAdded: new Date()
+    };
+    
     addDocumentToCollection(sampleCollection.id, doc1);
     addDocumentToCollection(sampleCollection.id, doc2);
+    addDocumentToCollection(sampleCollection.id, thinkOSDoc);
     
-    console.log('Added sample data');
+    // Set this collection as active for testing
+    setActiveKnowledgeBase(sampleCollection.id);
+    
+    console.log('Added sample data including Think OS document');
   }
 } 

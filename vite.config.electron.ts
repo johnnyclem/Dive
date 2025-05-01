@@ -104,6 +104,10 @@ export default defineConfig(({ command }) => {
               outDir: 'dist-electron/main',
               rollupOptions: {
                 external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
+                output: {
+                  format: 'esm',
+                  entryFileNames: '[name].mjs'
+                },
               },
             },
           },
@@ -119,6 +123,10 @@ export default defineConfig(({ command }) => {
               outDir: 'dist-electron/preload',
               rollupOptions: {
                 external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
+                output: {
+                  format: 'esm',
+                  entryFileNames: '[name].mjs'
+                },
               },
             },
           },

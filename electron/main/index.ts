@@ -19,6 +19,8 @@ import { store } from "./store"
 import { initProtocol } from "./protocol"
 import * as KnowledgeStore from "./knowledge-store"
 import contextMenu from "electron-context-menu"
+import { initBrowserManager } from './browserManager.js'
+import { setupCoBrowserIPC, onAppQuit as onCoBrowserQuit } from './cobrowser'
 // Get the directory path
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -68,16 +70,10 @@ ipcMain.handle('env:getResourcesPath', (_event, p: string) => {
 });
 
 ipcMain.handle('env:port', async () => {
-  try {
-    // Get the port for API connections
-    const servicePort = await port;
-    console.log(`Service available on port: ${servicePort}`);
-    return servicePort;
-  } catch (error) {
-    console.error(`Failed to get port: ${error}`);
-    // Fallback port
-    return 3000;
-  }
+  // Always return the dynamic service port
+  const servicePort = await port;
+  console.log(`Service available on port: ${servicePort}`);
+  return servicePort == 0 ? 5173 : servicePort;
 });
 
 ipcMain.handle("env:getHotkeyMap", async () => {
@@ -102,26 +98,96 @@ ipcMain.handle('env:getPlatform', () => {
 // Critical fix for knowledge:list that's being called before setupKnowledgeBaseHandlers
 ipcMain.handle('knowledge:list', async () => {
   console.log("Direct knowledge:list handler invoked");
-  return KnowledgeStore.getAllKnowledgeBases();
+  return KnowledgeStore.getAllCollections().map(collection => ({
+    id: collection.id,
+    name: collection.name,
+    description: collection.description,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }));
 });
 
 // Knowledge:add handler
-ipcMain.handle('knowledge:add', async (_event, content: string, name: string, description?: string) => {
+ipcMain.handle('knowledge:add', async (_event, name: string, description?: string) => {
   console.log(`Direct knowledge:add handler invoked: ${name}`);
-  const newKB = KnowledgeStore.createKnowledgeBase(name, content, description);
-  return { id: newKB.id };
+  // Create a collection instead of a knowledge base
+  const newCollection = KnowledgeStore.createCollection(name, description);
+  return { id: newCollection.id };
+});
+
+// Knowledge:set-active handler
+ipcMain.handle('knowledge:set-active', async (_event, id: string | null) => {
+  console.log(`Direct knowledge:set-active handler invoked: ${id}`);
+  const result = KnowledgeStore.setActiveKnowledgeBase(id);
+  
+  // Send a message to reconfigure tools based on active knowledge base change
+  try {
+    // Give the MCPServerManager a chance to reinitialize tools
+    if (global.webContents) {
+      global.webContents.send('knowledge:active-changed', { id });
+    }
+    
+    // We'll also trigger a tool reconfiguration by restarting the model
+    // This ensures that the LLM gets the updated tool configurations
+    if (app.isPackaged) {
+      // Only in packaged app to avoid disrupting development
+      const serviceWindow = BrowserWindow.getAllWindows().find(win => 
+        win && win.webContents && win.webContents.getURL().includes('/services')
+      );
+      
+      if (serviceWindow) {
+        serviceWindow.webContents.send('model:reconfigure-tools', { 
+          reason: 'knowledge_base_change',
+          activeKnowledgeBaseId: id
+        });
+      }
+    }
+  } catch (error) {
+    console.error(`Error notifying about knowledge base change: ${error}`);
+  }
+  
+  return result;
+});
+
+// Knowledge:get-active handler
+ipcMain.handle('knowledge:get-active', async () => {
+  console.log(`Direct knowledge:get-active handler invoked`);
+  return KnowledgeStore.getActiveKnowledgeBase();
 });
 
 // Knowledge:get-documents handler
 ipcMain.handle('knowledge:get-documents', async (_event, knowledgeBaseId: string) => {
   console.log(`Direct knowledge:get-documents handler invoked: ${knowledgeBaseId}`);
-  // For legacy knowledge:get-documents, use a placeholder
-  return [];
+  // Get documents from the collection
+  return KnowledgeStore.getDocumentsForCollection(knowledgeBaseId);
 });
 
 // Knowledge:search handler
 ipcMain.handle('knowledge:search', async (_event, query: string, k?: number) => {
   console.log(`Direct knowledge:search handler invoked: ${query}, k=${k}`);
+  
+  // Get the active knowledge base ID
+  const activeKnowledgeBaseId = KnowledgeStore.getActiveKnowledgeBase();
+  
+  // If there's an active knowledge base, search it
+  if (activeKnowledgeBaseId) {
+    // Use the new search function
+    const searchResults = KnowledgeStore.searchKnowledgeBase(query, activeKnowledgeBaseId, k || 5);
+    
+    // Format the results for the frontend
+    const formattedResults = searchResults.map(result => ({
+      id: result.document.id,
+      content: result.document.content,
+      name: result.document.name,
+      source: `Knowledge Base: ${result.document.name}`,
+      relevance: result.score,
+      snippet: result.document.content.substring(0, 200) + "..."
+    }));
+    
+    return formattedResults;
+  }
+  
+  // If no active knowledge base, return empty results
   return [];
 });
 
@@ -218,13 +284,34 @@ async function onReady() {
   // Add sample knowledge base data for testing
   KnowledgeStore.addSampleData();
 
-  // Open UI immediately
-  createWindow()
+  // Start MCP client and protocol loading **before** opening the renderer window
+  // so that the internal web server is up and we have a valid port ready when
+  // the UI issues its first `/api/*` requests.  This prevents the renderer from
+  // falling back to an incorrect default port (3000) and throwing
+  // `net::ERR_CONNECTION_REFUSED` in packaged builds.
+  try {
+    await initMCPClient();
+    initProtocol();
+    // Wait for the internal web server to start and resolve its port
+    const servicePort = await port;
+    console.log(`Internal web server listening on port: ${servicePort}`);
+  } catch (err) {
+    console.error('Failed to initialise background services or port', err);
+  }
+
   // Register critical IPC handlers early
-  registerEssentialIpcHandlers()
-  // Start MCP client and protocol loading in background
-  initMCPClient().catch(err => console.error('initMCPClient error', err))
-  initProtocol().catch(err => console.error('initProtocol error', err))
+  registerEssentialIpcHandlers();
+
+  // Setup co-browser IPC handlers
+  setupCoBrowserIPC();
+
+  // Open UI after services and port are ready
+  createWindow()
+
+  // initialise BrowserView manager once window exists
+  if (win) {
+    initBrowserManager(win)
+  }
 
   contextMenu({
     window: win, // Pass the window object
@@ -233,14 +320,16 @@ async function onReady() {
 }
 
 async function createWindow() {
+  // Disable sandbox for the renderer so dev HMR scripts can execute
   win = new BrowserWindow({
     title: "Souls",
     icon: path.join(process.env.VITE_PUBLIC, "souls-icon-black-bg.jpg"),
-    width: 1024,
-    height: 768,
-    minHeight: 768,
-    minWidth: 1024,
+    width: 1680,
+    height: 1051,
+    minHeight: 900,
+    minWidth: 1440,
     webPreferences: {
+      sandbox: false,
       preload,
       // Enable embedded <webview> tags
       webviewTag: true,
@@ -275,9 +364,10 @@ async function createWindow() {
 
   // Register all IPC handlers before loading content
   ipcHandler(win)
-  if (VITE_DEV_SERVER_URL) { // #298
+  // In development, use the Vite dev server; in production (packaged), load the local file
+  if (!app.isPackaged && VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
-    // Open devTool if the app is not packaged
+    // Open devTools when running locally
     win.webContents.openDevTools()
   } else {
     win.setMenu(null)
@@ -345,8 +435,11 @@ app.on("second-instance", () => {
   }
 })
 
-app.on("before-quit", () => {
+app.on("before-quit", async () => {
   AppState.setIsQuitting(true)
+  
+  // Clean up co-browser
+  await onCoBrowserQuit();
 })
 
 app.on("activate", () => {

@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite'
 import path from 'path'
+import { builtinModules } from 'module'
 
 export default defineConfig({
   build: {
+    target: 'node16',
     lib: {
       entry: {
         services: path.resolve(__dirname, 'services/index.ts'),
@@ -13,7 +15,7 @@ export default defineConfig({
     outDir: 'dist-services',
     emptyOutDir: true,
     rollupOptions: {
-      external: ['express', 'better-sqlite3'],
+      external: [...builtinModules, 'express', 'better-sqlite3'],
       output: {
         format: 'es',
         exports: 'named',

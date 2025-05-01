@@ -1,0 +1,544 @@
+{
+  "activeProvider": "google_genai-2-1",
+  "enableTools": true,
+  "configs": {
+    "ollama-0-0": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "borch/emotional_llama_speed_chat:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-1": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "llama2-uncensored:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-2": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "qwen2.5:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-3": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "deepseek-r1:1.5b",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-4": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "llama3.2:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-5": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "smollm2:135m",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-6": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "smollm2:360m",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-7": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "hf.co/MaziyarPanahi/Llama-3-Groq-8B-Tool-Use-GGUF:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-8": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "mistral-small:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-9": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "mistral-nemo:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-10": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "smollm2:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-11": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "gemma3:12b",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-12": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "hf.co/nguyenthanhthuan/Llama_3.2_1B_Intruct_Tool_Calling:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-13": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "hf.co/mradermacher/ToolGen-Llama-3-8B-Tool-Retriever-GGUF:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-14": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "gemma3:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-15": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "krishnamouli/voicebot:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-16": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "ZimaBlueAI/MiniCPM-o-2_6:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-17": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "noahpunintended/picard:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-18": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "dimavz/whisper-tiny:latest",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-19": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "qwen2.5:0.5b",
+      "modelProvider": "ollama"
+    },
+    "ollama-0-20": {
+      "name": "ollama",
+      "checked": false,
+      "configuration": {
+        "baseURL": "http://localhost:11434",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "http://localhost:11434",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "deepseek-r1:latest",
+      "modelProvider": "ollama"
+    },
+    "anthropic-1-0": {
+      "name": "anthropic",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": null,
+      "modelProvider": "anthropic"
+    },
+    "google_genai-2-0": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/gemini-2.5-pro-exp-03-25",
+      "modelProvider": "google-genai"
+    },
+    "google_genai-2-1": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/gemini-2.0-flash",
+      "modelProvider": "google-genai"
+    },
+    "google_genai-2-2": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/gemini-2.0-flash-exp-image-generation",
+      "modelProvider": "google-genai"
+    },
+    "google_genai-2-3": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/gemini-2.0-flash-lite",
+      "modelProvider": "google-genai"
+    },
+    "google_genai-2-4": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/gemma-3-1b-it",
+      "modelProvider": "google-genai"
+    },
+    "google_genai-2-5": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/gemma-3-4b-it",
+      "modelProvider": "google-genai"
+    },
+    "google_genai-2-6": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/gemma-3-12b-it",
+      "modelProvider": "google-genai"
+    },
+    "google_genai-2-7": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/gemma-3-27b-it",
+      "modelProvider": "google-genai"
+    },
+    "google_genai-2-8": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/aqa",
+      "modelProvider": "google-genai"
+    },
+    "google_genai-2-9": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/imagen-3.0-generate-002",
+      "modelProvider": "google-genai"
+    },
+    "google_genai-2-10": {
+      "name": "google_genai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "models/veo-2.0-generate-001",
+      "modelProvider": "google-genai"
+    },
+    "openai-3-0": {
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "name": "openai",
+      "checked": false,
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "gpt-4.1-nano-2025-04-14",
+      "modelProvider": "openai"
+    },
+    "openai-4-0": {
+      "name": "openai",
+      "checked": false,
+      "configuration": {
+        "baseURL": "",
+        "topP": 0.5,
+        "temperature": 0.4
+      },
+      "apiKey": "",
+      "baseURL": "",
+      "active": true,
+      "topP": 0.5,
+      "temperature": 0.4,
+      "model": "https://openrouter.ai/api/v1",
+      "modelProvider": "openai"
+    }
+  }
+}
