@@ -1,0 +1,87 @@
+.knowledge-base-container {
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.knowledge-base-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.knowledge-base-content {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  overflow: hidden;
+}
+
+.knowledge-base-list {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+}
+
+.knowledge-base-documents {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid wheat;
+  border-radius: 4px;
+  padding: 0;
+}
+
+/* Fix for text color in dark mode */
+.knowledge-base-container,
+.knowledge-base-container h2,
+.knowledge-base-container h3,
+.ant-list-item-meta-title,
+.ant-list-item-meta-description {
+  color: var(--text-weak, inherit);
+}
+
+.knowledge-base-container h3 {
+  padding-left: 0.75em;
+}
+
+/* Selected and active knowledge base styling */
+.knowledge-base-list .ant-list-item.selected {
+  background-color: var(--bg-input-inverted, inherit);
+}
+
+.knowledge-base-list .ant-list-item.active {
+  background-color: var(--bg-input-inverted, inherit);
+  border-left: 3px solid #52c41a;
+}
+
+.knowledge-base-list .ant-list-item.selected.active {
+  background-color: var(--bg-input-inverted, inherit);
+  border-left: 3px solid #52c41a;
+}
+
+.knowledge-base-list .ant-list-item {
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.knowledge-base-list .ant-list-item:hover {
+  background-color: var(--color-background-inverted, inherit);
+}
+
+.knowledge-base-documents .ant-list-item {
+  padding: 12px;
+  border-radius: 4px;
+  margin: 0px;
+} 
+
+.ant-list {
+  background-color: white;
+  width: 100%;
+  margin-left: 0%;
+  margin-right: 0%;
+}

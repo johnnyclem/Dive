@@ -1,0 +1,42 @@
+.knowledge-base-selector {
+  margin-right: 8px;
+}
+
+.knowledge-base-selector .ant-select {
+  background-color: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.knowledge-base-selector .ant-select-selector {
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.knowledge-base-selector .ant-select-selection-item {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.knowledge-base-selector .ant-select-arrow {
+  color: var(--text-secondary);
+}
+
+.knowledge-base-selector-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.knowledge-base-selector-button:hover {
+  background-color: var(--bg-hover);
+}
+
+.knowledge-base-selector-button .anticon {
+  font-size: 14px;
+} 
