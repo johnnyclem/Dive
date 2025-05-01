@@ -34,13 +34,13 @@ const SidePanel: React.FC<Omit<SidePanelProps, 'isOpen' | 'onClose'>> = ({ chatI
         aria-label="Side Panel Options"
         selectedKey={selectedTab}
         onSelectionChange={(key) => setTab(key as Key)}
-        className="mt-8 flex flex-col h-full"
+        className="my-8 flex flex-col"
         classNames={{
-          base: "h-full",
+          base: "",
           panel: "h-[calc(100%-40px)] p-0",
         }}
       >
-        <Tab key="canvas" title="Canvas" className="h-full">
+        <Tab key="canvas" title="Canvas" className="">
           <NewCanvas chatId={chatId} />
         </Tab>
         <Tab key="code" title="Code">
