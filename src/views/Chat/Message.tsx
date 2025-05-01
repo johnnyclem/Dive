@@ -7,7 +7,7 @@ import remarkMath from "remark-math"
 import rehypeKatex from "rehype-katex"
 import rehypeRaw from "rehype-raw"
 import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter";
-import { tomorrow, oneLight } from 'react-syntax-highlighter/dist/styles'
+import { tomorrow, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { codeStreamingAtom } from '../../atoms/codeStreaming'
 import ToolPanel from './ToolPanel'

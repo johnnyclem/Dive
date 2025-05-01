@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback, useState } from "react"
 import { PrismAsyncLight as SyntaxHighlighter } from "react-syntax-highlighter"
-import { tomorrow, darcula } from 'react-syntax-highlighter/dist/styles'
+import { tomorrow, darcula } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { themeAtom } from '../../atoms/themeState'
 import { useAtom } from 'jotai'
 import { codeStreamingAtom } from '../../atoms/codeStreaming'
@@ -49,7 +49,7 @@ const CodeModal = () => {
   }
 
   if (!streamingCode || !streamingCode.code)
-    return null
+    return <></>
 
   return (
     <div className="code-modal-content h-full flex flex-col">

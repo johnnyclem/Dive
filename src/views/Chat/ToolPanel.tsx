@@ -1,7 +1,6 @@
 import React, { useMemo } from "react"
 import SyntaxHighlighter from "react-syntax-highlighter"
-import tomorrow from "react-syntax-highlighter/dist/styles/tomorrow"
-import darcula from "react-syntax-highlighter/dist/styles/darcula"
+import { tomorrow, darcula } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { useAtomValue } from "jotai"
 import { themeAtom } from "../../atoms/themeState"
 import { safeBase64Decode } from "../../util"
@@ -92,15 +91,15 @@ const Code: React.FC<{ content: string }> = ({ content }) => {
 
 const ToolPanel: React.FC<ToolPanelProps> = ({ content, name }) => {
   const { t } = useTranslation();
-  
+
   // Always call hooks at the top level, regardless of early returns
   const processedContent = useMemo(() => {
     if (!content || typeof content !== 'string' || !content.startsWith(callStr)) {
       return { valid: false, calls: '', results: [] };
     }
-    
+
     const { calls, results } = getToolResult(content);
-    
+
     let formattedCalls = '';
     try {
       formattedCalls = formatJSON(safeBase64Decode(calls));
@@ -108,7 +107,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ content, name }) => {
       console.error("Error formatting calls:", error);
       formattedCalls = calls;
     }
-    
+
     let formattedResults: string[] = [];
     try {
       formattedResults = results.map(result => {
@@ -122,14 +121,14 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ content, name }) => {
     } catch (error) {
       console.error("Error with results array:", error);
     }
-    
-    return { 
+
+    return {
       valid: true,
       calls: formattedCalls,
       results: formattedResults
     };
   }, [content]);
-  
+
   // Early return if content is not valid
   if (!processedContent.valid) {
     return null;
