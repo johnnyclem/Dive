@@ -91,10 +91,11 @@ jobs:
       - name: Build macOS
         if: matrix.platform == 'darwin'
         env:
+          CSC_LINK: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.P12_PASSWORD }}
           APPLEID: ${{ secrets.APPLEID }}
           APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
           APPLETEAMID: ${{ secrets.APPLETEAMID }}
-          CSC_NAME: ${{ secrets.CSC_NAME }}
         run: |
           if [ "${{ matrix.arch }}" = "arm64" ]; then
             npm run package:darwin-dmg:arm64
