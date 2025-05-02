@@ -1,6 +1,7 @@
 import { ToolDefinition } from "@langchain/core/language_models/base";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { iServerConfig, iTool } from "../utils/types.js";
+import { ITool, ITransport } from "./transport/index.js";
 
 export interface IMCPServerManager {
   // Initialization
@@ -16,12 +17,25 @@ export interface IMCPServerManager {
   syncServersWithConfig(): Promise<{ serverName: string; error: unknown }[]>;
 
   // Tool management
-  getAvailableTools(): ToolDefinition[];
+  getAvailableTools(): Promise<ToolDefinition[]>;
   getToolToServerMap(): Map<string, Client>;
   getToolInfos(): iTool[];
 
   // Disconnect and clean up resources
   disconnectAllServers(): Promise<void>;
+
+  addServer(
+    name: string,
+    command: string,
+    args: string[],
+    generateTools: boolean,
+    id?: string
+  ): Promise<string>;
+  addSSEServer(name: string, url: string, generateTools: boolean, id?: string): Promise<string>;
+  getServer(id: string): ITool | null;
+  removeServer(id: string): Promise<boolean>;
+  connectServer(id: string): Promise<ITool>;
+  disconnectServer(id: string): Promise<boolean>;
 }
 
 export interface ServerConfig {
@@ -32,4 +46,12 @@ export interface ServerConfig {
   args?: string[];
   env?: Record<string, string>;
   url?: string;
+}
+
+export interface ServerOptions {
+  command?: string;
+  args?: string[];
+  url?: string;
+  transport?: string;
+  enabled?: boolean;
 }

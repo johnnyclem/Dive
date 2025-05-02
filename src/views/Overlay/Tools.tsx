@@ -11,7 +11,7 @@ import { systemThemeAtom, themeAtom } from "../../atoms/themeState"
 import { closeOverlayAtom } from "../../atoms/layerState"
 import Switch from "../../components/Switch"
 import { Behavior, useLayer } from "../../hooks/useLayer"
-import { loadToolsAtom, restoreDefaultToolsAtom, Tool, toolsAtom } from "../../atoms/toolState"
+import { loadToolsAtom, restoreDefaultToolsAtom, Tool, toolsAtom, updateSubToolConfigAtom } from "../../atoms/toolState"
 import Tooltip from "../../components/Tooltip"
 
 interface ConfigModalProps {
@@ -209,6 +209,7 @@ const Tools = () => {
   const toolsCacheRef = useRef<ToolsCache>({})
   const loadTools = useSetAtom(loadToolsAtom)
   const restoreDefaultTools = useSetAtom(restoreDefaultToolsAtom)
+  const updateSubToolConfig = useSetAtom(updateSubToolConfigAtom)
 
   useEffect(() => {
     const cachedTools = localStorage.getItem("toolsCache")
@@ -388,7 +389,26 @@ const Tools = () => {
 
   const toggleToolSection = (index: number) => {
     const toolElement = document.getElementById(`tool-${index}`)
-    toolElement?.classList.toggle("expanded")
+    if (toolElement) {
+      // Toggle the expanded class
+      const wasExpanded = toolElement.classList.contains("expanded");
+      toolElement.classList.toggle("expanded")
+      
+      // Make sub-tools visible when expanded
+      const subToolsContainer = toolElement.querySelector(".sub-tools") as HTMLElement
+      if (subToolsContainer) {
+        if (!wasExpanded) {
+          // Force display to be grid for better layout of sub-tools
+          subToolsContainer.style.display = "grid";
+          
+          // Ensure sub-tool toggles are visible
+          const toggles = subToolsContainer.querySelectorAll(".sub-tool-toggle");
+          toggles.forEach(toggle => {
+            (toggle as HTMLElement).style.display = "flex";
+          });
+        }
+      }
+    }
   }
 
   const handleReloadMCPServers = async () => {
@@ -455,6 +475,7 @@ const Tools = () => {
             enabled: false
           })),
           disabled: mcpConfig.mcpServers[name]?.disabled ?? false,
+          isBuiltIn: false,
         }
       }
 
@@ -485,6 +506,39 @@ const Tools = () => {
     } catch (error) {
       showToast({
         message: error instanceof Error ? error.message : t("tools.restoreFailed"),
+        type: "error"
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const toggleSubTool = async (toolName: string, subTool: { name: string, enabled: boolean }) => {
+    try {
+      setIsLoading(true)
+      const data = await updateSubToolConfig({
+        toolName,
+        subToolName: subTool.name,
+        enabled: !subTool.enabled
+      })
+      
+      if (data.success) {
+        showToast({
+          message: t("tools.subToolToggleSuccess", { 
+            action: !subTool.enabled ? "enabled" : "disabled",
+            name: subTool.name 
+          }),
+          type: "success"
+        })
+      } else {
+        showToast({
+          message: data.message || t("tools.subToolToggleFailed"),
+          type: "error"
+        })
+      }
+    } catch (error) {
+      showToast({
+        message: error instanceof Error ? error.message : t("tools.subToolToggleFailed"),
         type: "error"
       })
     } finally {
@@ -616,7 +670,7 @@ const Tools = () => {
                 {tool.tools && (
                   <div className="sub-tools">
                     {tool.tools.map((subTool, subIndex) => (
-                      <div key={subIndex} className="sub-tool">
+                      <div key={subIndex} className={`sub-tool ${subTool.enabled ? '' : 'disabled'}`}>
                         <div className="sub-tool-content">
                           <div className="sub-tool-name">{subTool.name}</div>
                           {subTool.description && (
@@ -625,6 +679,23 @@ const Tools = () => {
                             </div>
                           )}
                         </div>
+                        {tool.enabled && (
+                          <div 
+                            className="sub-tool-toggle"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSubTool(tool.name, subTool);
+                            }}
+                          >
+                            <Tooltip content={subTool.enabled ? t("tools.disableSubTool") : t("tools.enableSubTool")}>
+                              <Switch
+                                checked={subTool.enabled}
+                                size="small"
+                                onChange={(e) => e.stopPropagation()}
+                              />
+                            </Tooltip>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

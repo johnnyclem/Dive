@@ -121,7 +121,7 @@ export class MCPClient {
     try {
       const serverManager = MCPServerManager.getInstance();
       const toolClientMap = serverManager.getToolToServerMap();
-      const availableTools = serverManager.getAvailableTools();
+      const availableTools = await serverManager.getAvailableTools();
 
       const { result, tokenUsage } = await handleProcessQuery(
         toolClientMap,
