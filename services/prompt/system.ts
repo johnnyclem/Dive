@@ -1,5 +1,7 @@
 /* eslint-disable no-useless-escape */
 
+import { ToolDefinition } from "@langchain/core/language_models/base";
+
 export const systemPrompt = (customRules: string) => {
   return `
 <Souls_System_Thinking_Protocol>
@@ -135,9 +137,9 @@ export const systemPrompt = (customRules: string) => {
 };
 
 // Tool definitions for the agent's To-Do List feature
-export const taskManagementTools = [
+export const taskManagementTools: ToolDefinition[] = [
   {
-    type: "function",
+    type: "function" as const,
     function: {
       name: "add_task",
       description: "Adds a new task to the agent's persistent to-do list. Use this to remember multi-step goals or things to do later.",
@@ -151,7 +153,7 @@ export const taskManagementTools = [
     }
   },
   {
-    type: "function",
+    type: "function" as const,
     function: {
       name: "list_tasks",
       description: "Lists the tasks currently marked as 'pending' or 'in_progress' on the agent's to-do list.",
@@ -159,7 +161,7 @@ export const taskManagementTools = [
     }
   },
   {
-    type: "function",
+    type: "function" as const,
     function: {
       name: "complete_task",
       description: "Marks the specified task on the agent's to-do list as completed. This should ONLY be called when the task's objective has been fully achieved.",

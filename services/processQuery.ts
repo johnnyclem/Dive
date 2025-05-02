@@ -20,6 +20,7 @@ import { ENSUtility } from './utils/ensUtility.js';
 import { CanvasToolHandler } from './utils/canvasToolHandler.js';
 import * as KnowledgeStore from "../electron/main/knowledge-store.js";
 import { TaskManager } from "./agent/taskManager.js";
+import { taskManagementTools } from "./prompt/system.js";
 
 // Map to store abort controllers
 export const abortControllerMap = new Map<string, AbortController>();
@@ -213,7 +214,11 @@ export async function handleProcessQuery(
     const isAskingAboutTools = typeof input === 'string' &&
       input.toLowerCase().match(/(what|which|list|show|tell me about).*(tools|functions|capabilities|can you use)/i);
 
-    const tools = currentModelSettings?.modelProvider === "google-genai" ? openAIConvertToGeminiTools(availableTools) : availableTools;
+    // Include built-in agent task management tools
+    const combinedTools = [...availableTools, ...taskManagementTools];
+    const tools = currentModelSettings?.modelProvider === "google-genai"
+      ? openAIConvertToGeminiTools(combinedTools)
+      : combinedTools;
 
     // --- Add logging for tools list ---
     logger.debug(`[${chatId}] Tools to be bound (before schema correction): ${JSON.stringify(tools, null, 2)}`);
