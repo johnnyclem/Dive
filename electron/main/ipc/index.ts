@@ -9,6 +9,8 @@ import { ipcUtilHandler } from "./util"
 import { ipcLlmHandler } from "./llm"
 import { ipcMenuHandler } from "./menu"
 import { setupKnowledgeBaseHandlers } from "./knowledge"
+import { setupTaskHandlers } from "./tasks"
+import type { IpcMainInvokeEvent } from "electron"
 
 export function ipcHandler(win: BrowserWindow) {
   console.log('Setting up all IPC handlers');
@@ -17,8 +19,8 @@ export function ipcHandler(win: BrowserWindow) {
 
   const DEFAULT_TITLE = "Souls"
 
-  const safeHandle = (channel: string, listener: (...args: any[]) => any) => {
-    try { ipcMain.handle(channel as any, listener as any) } catch (err) {
+  const safeHandle = (channel: string, listener: (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown) => {
+    try { ipcMain.handle(channel, listener) } catch {
       console.warn(`IPC handler already registered for '${channel}'`)
     }
   }
@@ -135,6 +137,7 @@ export function ipcHandler(win: BrowserWindow) {
   ipcLlmHandler()
   ipcMenuHandler()
   setupKnowledgeBaseHandlers()
+  setupTaskHandlers()
 
   // Wallet IPC handlers for embedded BrowserView
   let walletClient: AlgorandMcpClient | null = null

@@ -6,6 +6,7 @@ import { modelVerifyRouter } from "./modelVerify.js";
 import { toolsRouter } from "./tools.js";
 import { knowledgeRouter } from "./knowledge.js";
 import { memoryRouter } from "./memory.js";
+import { tasksRouter } from "./tasks.js";
 
 const OFFLINE_MODE = true
 
@@ -44,6 +45,7 @@ export function createRouter() {
   router.use("/api/v1", compatibleRouter());
   router.use("/api/knowledge", knowledgeRouter());
   router.use("/api/memory", memoryRouter());
+  router.use("/api/tasks", tasksRouter());
   router.use("/api/chat", chatRouter());
 
   return router;

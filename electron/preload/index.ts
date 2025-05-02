@@ -134,6 +134,18 @@ contextBridge.exposeInMainWorld("electron", {
       ipcRenderer.invoke("embeddings:save-model-file", fileName, filePath),
   },
 
+  // Agent Task management API
+  tasks: {
+    // List tasks; optional status 'pending' | 'in_progress' | 'all'
+    list: (status?: string) => ipcRenderer.invoke("tasks:list", status),
+    // Add a new task with description
+    add: (description: string) => ipcRenderer.invoke("tasks:add", description),
+    // Complete a task with optional result summary
+    complete: (id: string, resultSummary?: string) => ipcRenderer.invoke("tasks:complete", id, resultSummary),
+    // Fail a task with a reason
+    fail: (id: string, reason: string) => ipcRenderer.invoke("tasks:fail", id, reason),
+  },
+
   /**
    * Utility functions
    *
