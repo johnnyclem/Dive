@@ -1,4 +1,4 @@
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { getDB, DatabaseMode, getDatabaseMode } from "../database/index.js";
 import { agentTasks, AgentTask, NewAgentTask } from "../database/schema.js";
@@ -6,7 +6,7 @@ import logger from "../utils/logger.js";
 import { triggerNextTaskProcessing } from "./agentLogic.js";
 
 export class TaskManager {
-  private static instance: TaskManager;
+  public static instance: TaskManager | undefined;
   private db;
   private currentTaskId: string | null = null;
   private isProcessingTask: boolean = false;
@@ -49,7 +49,7 @@ export class TaskManager {
 
   private async getNextSequence(): Promise<number> {
     const lastTask = await this.db.query.agentTasks.findFirst({
-      orderBy: [asc(agentTasks.sequence)],
+      orderBy: [desc(agentTasks.sequence)],
       columns: { sequence: true }
     });
     return (lastTask?.sequence ?? 0) + 1;
