@@ -1,0 +1,32 @@
+{
+  "disabledSubTools": [
+    {
+      "toolName": "mcpollinations",
+      "subToolName": "generateImage"
+    },
+    {
+      "toolName": "mcpollinations",
+      "subToolName": "listImageModels"
+    },
+    {
+      "toolName": "mcpollinations",
+      "subToolName": "listTextModels"
+    },
+    {
+      "toolName": "mcpollinations",
+      "subToolName": "respondText"
+    },
+    {
+      "toolName": "apple-mcp",
+      "subToolName": "webSearch"
+    },
+    {
+      "toolName": "coincap",
+      "subToolName": "bitcoin_price"
+    },
+    {
+      "toolName": "coincap",
+      "subToolName": "list_assets"
+    }
+  ]
+}
