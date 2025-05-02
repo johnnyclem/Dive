@@ -19,6 +19,7 @@ import { adaptToolResponse, convertCamelCaseToKebabCase } from "./utils/toolResp
 import { ENSUtility } from './utils/ensUtility.js';
 import { CanvasToolHandler } from './utils/canvasToolHandler.js';
 import * as KnowledgeStore from "../electron/main/knowledge-store.js";
+import { TaskManager } from "./agent/taskManager.js";
 
 // Map to store abort controllers
 export const abortControllerMap = new Map<string, AbortController>();
@@ -513,6 +514,36 @@ export async function handleProcessQuery(
                 logger.error(`Error in ENS tool ${toolName}:`, error);
                 throw error;
               }
+            }
+
+            // Custom agent tasks handling
+            if (toolName === 'add_task') {
+              const description = toolArgs.description;
+              if (!description) throw new Error('Task description is required');
+              const task = await TaskManager.getInstance().addTask(description);
+              const result = { success: true, taskId: task.id };
+              onStream?.(
+                JSON.stringify({ type: 'tool_result', content: { name: toolName, result } })
+              );
+              return { tool_call_id: toolCall.id, role: 'tool', content: JSON.stringify(result) };
+            } else if (toolName === 'list_tasks') {
+              const tasks = await TaskManager.getInstance().getActiveTasks();
+              const summarized = tasks.map(t => ({ id: t.id, description: t.description, status: t.status }));
+              const result = { tasks: summarized };
+              onStream?.(
+                JSON.stringify({ type: 'tool_result', content: { name: toolName, result } })
+              );
+              return { tool_call_id: toolCall.id, role: 'tool', content: JSON.stringify(result) };
+            } else if (toolName === 'complete_task') {
+              const taskId = toolArgs.task_id;
+              const summary = toolArgs.result_summary;
+              if (!taskId || !summary) throw new Error('Task ID and result summary are required');
+              await TaskManager.getInstance().handleTaskCompletion(taskId, summary);
+              const result = { success: true, message: `Task ${taskId} marked complete.` };
+              onStream?.(
+                JSON.stringify({ type: 'tool_result', content: { name: toolName, result } })
+              );
+              return { tool_call_id: toolCall.id, role: 'tool', content: JSON.stringify(result) };
             }
 
             try {

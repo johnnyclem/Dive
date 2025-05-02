@@ -1,3 +1,5 @@
+/* eslint-disable no-useless-escape */
+
 export const systemPrompt = (customRules: string) => {
   return `
 <Souls_System_Thinking_Protocol>
@@ -19,6 +21,14 @@ export const systemPrompt = (customRules: string) => {
   </User_Defined_Rules>
 
   <Core_Guidelines>
+    <Task_Management>
+      - You have a persistent To-Do List to manage complex or multi-step tasks.
+      - Use the 'add_task' tool to add items to your list when a request involves multiple distinct steps or needs to be deferred.
+      - Use the 'list_tasks' tool to check your current pending and in-progress tasks.
+      - When you are actively working on a task from your list, focus on completing it.
+      - **CRITICAL:** When you have fully completed the objective of a task you were working on (identified by its task_id), you MUST call the 'complete_task' tool with the task_id and a summary of the result. This signals the system to proceed to the next task if one exists.
+      - If a user gives you a new, unrelated instruction while you are working on a task, use 'add_task' to add the *new* instruction to your list, then inform the user you've added it and will continue with your current task first.
+    </Task_Management>
     <Data_Access>
       - MANDATORY: Employ the MCP to establish connections with designated data sources, including but not limited to databases, APIs, and file systems.
       - COMPLIANCE REQUIRED: Rigorously observe all security and privacy protocols during data access.
@@ -107,15 +117,15 @@ export const systemPrompt = (customRules: string) => {
         <Math_Formatting>
           * All mathematical formulas must use KaTeX syntax:
           * For inline formulas:
-            - Use single dollar signs: \( [formula] \)
-            - Example: \( E = mc^2 \)
+            - Use single dollar signs: \\([formula]\\)
+            - Example: \\(E = mc^2\\)
           * For block formulas:
-            - Use double dollar signs with displaystyle: \( \displaystyle [formula] \)
-            - Example: \( \displaystyle \int_{a}^{b} f(x) dx = F(b) - F(a) \)
+            - Use double dollar signs with displaystyle: \\(\\displaystyle [formula]\\)
+            - Example: \\(\\displaystyle \\int_{a}^{b} f(x) dx = F(b) - F(a)\\)
           * Important notes:
             - Ensure proper KaTeX syntax in all formulas
             - Maintain consistent and professional mathematical typesetting
-            - Use \displaystyle in block formulas for better readability
+            - Use \\displaystyle in block formulas for better readability
         </Math_Formatting>
       </Special_Cases>
     </Response_Format>
@@ -123,3 +133,46 @@ export const systemPrompt = (customRules: string) => {
 </Souls_System_Thinking_Protocol>
 `;
 };
+
+// Tool definitions for the agent's To-Do List feature
+export const taskManagementTools = [
+  {
+    type: "function",
+    function: {
+      name: "add_task",
+      description: "Adds a new task to the agent's persistent to-do list. Use this to remember multi-step goals or things to do later.",
+      parameters: {
+        type: "object",
+        properties: {
+          description: { type: "string", description: "A clear, detailed description of the task to be performed." }
+        },
+        required: ["description"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_tasks",
+      description: "Lists the tasks currently marked as 'pending' or 'in_progress' on the agent's to-do list.",
+      parameters: { type: "object", properties: {} }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "complete_task",
+      description: "Marks the specified task on the agent's to-do list as completed. This should ONLY be called when the task's objective has been fully achieved.",
+      parameters: {
+        type: "object",
+        properties: {
+          task_id: { type: "string", description: "The unique ID of the task that has been completed." },
+          result_summary: { type: "string", description: "A brief summary of the outcome or result of the completed task." }
+        },
+        required: ["task_id", "result_summary"]
+      }
+    }
+  }
+];
+
+/* eslint-enable no-useless-escape */
