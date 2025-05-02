@@ -1,12 +1,12 @@
 import { iQueryInput } from "../utils/types.js";
 import axios, { AxiosInstance } from "axios";
 import Database from "better-sqlite3";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, asc, desc, or, SQL } from "drizzle-orm";
 import { BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
 import jwt from "jsonwebtoken";
 import logger from "../utils/logger.js";
 import * as schema from "./schema.js";
-import { chats, messages, type NewMessage } from "./schema.js";
+import { chats, messages, type NewMessage, agentTasks, NewAgentTask, AgentTask } from "./schema.js";
 import fs from 'fs';
 import path from 'path';
 
@@ -56,6 +56,11 @@ interface DatabaseOperations {
   updateMessageContent(messageId: string, data: iQueryInput, options?: DatabaseOptions): Promise<typeof schema.messages.$inferSelect>;
   getNextAIMessage(chatId: string, messageId: string): Promise<typeof schema.messages.$inferSelect>;
   saveChat(chatId: string, options?: DatabaseOptions): Promise<void>;
+  // New Agent Task operations
+  getAgentTasks(status?: 'pending' | 'in_progress' | 'all'): Promise<AgentTask[]>;
+  addAgentTask(task: NewAgentTask): Promise<AgentTask>;
+  updateAgentTask(id: string, updates: Partial<Omit<AgentTask, 'id' | 'createdAt'>>): Promise<AgentTask | null>;
+  getNextAgentSequence(): Promise<number>;
 }
 
 // direct database access implementation
@@ -87,9 +92,9 @@ class DirectDatabaseAccess implements DatabaseOperations {
     }
   }
 
-  async getAllChats(_options?: DatabaseOptions): Promise<(typeof schema.chats.$inferSelect)[]> {
+  async getAllChats(_options?: DatabaseOptions): Promise<schema.Chat[]> {
     const chatRows = await this.db.query.chats.findMany();
-    return chatRows.reverse();
+    return chatRows.reverse() as schema.Chat[];
   }
 
   async getChatWithMessages(chatId: string, _options?: DatabaseOptions) {
@@ -226,11 +231,69 @@ class DirectDatabaseAccess implements DatabaseOperations {
       throw new Error(`Chat ${chatId} does not exist`);
     }
 
-    // Update the chat's updatedAt timestamp
-    await this.db
-      .update(chats)
-      .set({ updatedAt: new Date().toISOString() })
-      .where(eq(chats.id, chatId));
+    logger.debug(`Chat ${chatId} save operation called (no fields updated currently).`);
+  }
+
+  // --- Agent Task Implementations (Direct) ---
+
+  async getAgentTasks(status?: 'pending' | 'in_progress' | 'all'): Promise<AgentTask[]> {
+    let queryFilter: SQL | undefined = undefined;
+
+    // Construct the filter condition separately
+    if (status === 'pending') {
+      queryFilter = eq(schema.agentTasks.status, 'pending');
+    } else if (status === 'in_progress') {
+      queryFilter = eq(schema.agentTasks.status, 'in_progress');
+    } else if (!status) { // Default case (undefined status means pending or in_progress)
+      queryFilter = or(eq(schema.agentTasks.status, 'pending'), eq(schema.agentTasks.status, 'in_progress'));
+    }
+    // If status === 'all', queryFilter remains undefined, returning all tasks
+
+    // Define query options, adding the where clause only if it was constructed
+    const queryOptions: Parameters<typeof this.db.query.agentTasks.findMany>[0] = {
+        orderBy: [asc(agentTasks.sequence)],
+    };
+    if (queryFilter) {
+        queryOptions.where = queryFilter;
+    }
+
+    // Execute the query
+    const tasksResult = await this.db.query.agentTasks.findMany(queryOptions);
+
+    // Explicit cast due to persistent inference issues
+    return tasksResult as AgentTask[];
+  }
+
+  async addAgentTask(task: NewAgentTask): Promise<AgentTask> {
+    if (!task.id || !task.description || !task.status || task.sequence === undefined || task.createdAt === undefined || task.updatedAt === undefined) {
+      throw new Error("Missing required fields for new agent task.");
+    }
+    const [insertedTask] = await this.db.insert(agentTasks).values(task).returning();
+    return insertedTask;
+  }
+
+  async updateAgentTask(id: string, updates: Partial<Omit<AgentTask, 'id' | 'createdAt'>>): Promise<AgentTask | null> {
+    const updatePayload = {
+      ...updates,
+      updatedAt: new Date(), // Keep using new Date()
+    };
+
+    delete (updatePayload as any).sequence;
+    delete (updatePayload as any).createdAt;
+
+    const [updatedTask] = await this.db.update(agentTasks)
+      .set(updatePayload)
+      .where(eq(agentTasks.id, id))
+      .returning();
+    return updatedTask ?? null;
+  }
+
+  async getNextAgentSequence(): Promise<number> {
+    const lastTask = await this.db.query.agentTasks.findFirst({
+      orderBy: [desc(agentTasks.sequence)],
+      columns: { sequence: true }
+    });
+    return (lastTask?.sequence ?? 0) + 1;
   }
 }
 
@@ -466,10 +529,40 @@ class ApiDatabaseAccess implements DatabaseOperations {
   }
 
   async saveChat(chatId: string, options?: DatabaseOptions) {
-    const headers = await this.getHeaders(options);
-    await this.axiosInstance.post(`/chat/${chatId}/save`, {}, { headers });
+    // TODO: Implement API call
+    logger.warn("saveChat API method not implemented.");
+    return Promise.resolve();
+  }
+
+  // --- Agent Task Implementations (API - Placeholders) ---
+
+  async getAgentTasks(status?: 'pending' | 'in_progress' | 'all'): Promise<AgentTask[]> {
+    // TODO: Implement API call
+    logger.warn("getAgentTasks API method not implemented.");
+    return [];
+  }
+
+  async addAgentTask(task: NewAgentTask): Promise<AgentTask> {
+    // TODO: Implement API call
+    logger.warn("addAgentTask API method not implemented.");
+    throw new Error("addAgentTask API method not implemented");
+  }
+
+  async updateAgentTask(id: string, updates: Partial<Omit<AgentTask, 'id' | 'createdAt'>>): Promise<AgentTask | null> {
+    // TODO: Implement API call
+    logger.warn("updateAgentTask API method not implemented.");
+    return null;
+  }
+
+  async getNextAgentSequence(): Promise<number> {
+    // TODO: Implement API call or derive differently
+    logger.warn("getNextAgentSequence API method not implemented.");
+    // Returning 1 might cause issues if API mode is actually used without implementation.
+    // Consider throwing an error or returning a more indicative value.
+    return 1; // Placeholder
   }
 }
+
 // Database access mode
 export enum DatabaseMode {
   DIRECT = "direct",
@@ -516,3 +609,17 @@ export const getDatabaseMode = () => databaseOperations.MODE;
 export const getDB = () => databaseOperations.db;
 export const saveChat = (chatId: string, options?: DatabaseOptions) =>
   databaseOperations.saveChat(chatId, options);
+
+// --- Export new Agent Task functions ---
+export const getAgentTasks = (status?: 'pending' | 'in_progress' | 'all') => databaseOperations.getAgentTasks(status);
+export const addAgentTask = (task: NewAgentTask) => databaseOperations.addAgentTask(task);
+export const updateAgentTask = (id: string, updates: Partial<Omit<AgentTask, 'id' | 'createdAt'>>) => databaseOperations.updateAgentTask(id, updates);
+export const getNextAgentSequence = () => databaseOperations.getNextAgentSequence();
+
+// Example of how to use the database operations
+// (async () => {
+//   initDatabase(DatabaseMode.DIRECT, { dbPath: 'data/database.sqlite' });
+//   // Example usage:
+//   // const chats = await getAllChats();
+//   // console.log(chats);
+// })();

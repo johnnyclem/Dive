@@ -24,6 +24,23 @@ export const knowledgeBases = sqliteTable('knowledge_bases', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
 
+export const config = sqliteTable("config", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+});
+
+export const agentTasks = sqliteTable("agent_tasks", {
+  id: text("id").primaryKey(),             // UUID for the task
+  description: text("description").notNull(), // Detailed description of the task (can be the prompt for the LLM)
+  status: text("status").notNull().default('pending'), // 'pending', 'in_progress', 'completed', 'failed'
+  sequence: integer("sequence").notNull(), // Integer for ordering tasks (higher number = executed later)
+  createdAt: integer("created_at", { mode: 'timestamp_ms' }).notNull(), // Timestamp in milliseconds
+  updatedAt: integer("updated_at", { mode: 'timestamp_ms' }).notNull(), // Timestamp in milliseconds
+  resultSummary: text("result_summary"),   // Optional: Brief summary of the task outcome
+  failReason: text("fail_reason"),         // Optional: Reason if status is 'failed'
+  // Add context fields if needed later, e.g., context: text("context", { mode: "json" })
+});
+
 // export types
 export type Chat = typeof chats.$inferSelect;
 export type NewChat = typeof chats.$inferInsert;
@@ -31,3 +48,5 @@ export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
 export type KnowledgeBase = typeof knowledgeBases.$inferSelect;
 export type NewKnowledgeBase = typeof knowledgeBases.$inferInsert;
+export type AgentTask = typeof agentTasks.$inferSelect;
+export type NewAgentTask = typeof agentTasks.$inferInsert;
