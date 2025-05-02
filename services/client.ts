@@ -7,6 +7,7 @@ import {
   createMessage,
   deleteMessagesAfter,
   getChatWithMessages,
+  saveChat,
 } from "./database/index.js";
 import { MCPServerManager } from "./mcpServer/index.js";
 import { ModelManager } from "./models/index.js";
@@ -55,8 +56,8 @@ export class MCPClient {
     const chat_id = chatId || randomUUID();
     logger.debug(`[${chat_id}] Processing query`);
     let history: BaseMessage[] = [];
+    let titlePromise: Promise<string> | null = null;
     let title = "New Chat";
-    let titlePromise: Promise<string> | undefined;
 
     let systemPrompt = PromptManager.getInstance().getPrompt("system");
     
@@ -95,6 +96,16 @@ export class MCPClient {
 
     logger.debug(`[${chat_id}] Query pre-processing time: ${new Date().getTime() - startTime.getTime()}ms`);
 
+    // Create the chat entry before processing the query to avoid "Chat does not exist" errors
+    const isChatExists = await checkChatExists(chat_id);
+    if (!isChatExists) {
+      logger.debug(`[${chat_id}] Creating chat entry in database before processing`);
+      await createChat(chat_id, "New Chat", {
+        fingerprint: fingerprint,
+        user_access_token: user_access_token,
+      });
+    }
+
     if (onStream) {
       onStream(
         JSON.stringify({
@@ -129,7 +140,7 @@ export class MCPClient {
         console.log("\nAssistant:\n", result);
       }
 
-      // Pending title generation, wait for it here with timeout
+      // Update chat title after processing if needed (don't re-create the chat)
       if (titlePromise) {
         // Timeout is to prevent the title generation delay long time when the query process is aborted
         try {
@@ -137,19 +148,22 @@ export class MCPClient {
             titlePromise,
             new Promise<string>((_, reject) => setTimeout(() => reject(new Error("Title generation timeout")), 5000)),
           ]);
-        } catch (error: any) {
-          logger.warn(`[${chat_id}] Title generation failed or timed out: ${error.message}`);
+          
+          // Update the chat title if we have a new one
+          if (title && title !== "New Chat") {
+            logger.debug(`[${chat_id}] Updating chat title to: ${title}`);
+            // Consider adding an updateChatTitle function to the database operations
+            // For now, we can use saveChat which should preserve the chat
+            await saveChat(chat_id, {
+              fingerprint: fingerprint,
+              user_access_token: user_access_token,
+            });
+          }
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          logger.warn(`[${chat_id}] Title generation failed or timed out: ${errorMessage}`);
           title = "New Chat";
         }
-      }
-
-      // double check the chat exists and create to database if necessary
-      const isChatExists = await checkChatExists(chat_id);
-      if (!isChatExists) {
-        await createChat(chat_id, title || "New Chat", {
-          fingerprint: fingerprint,
-          user_access_token: user_access_token,
-        });
       }
 
       // if retry then delete the messages after the regenerateMessageId firstly
@@ -285,8 +299,9 @@ export class MCPCliClient extends MCPClient {
 
         await this.processQuery(chatId, input, onStream);
         console.log("\n");
-      } catch (error: any) {
-        console.error("\nError processing query:", error.message);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("\nError processing query:", errorMessage);
       }
     }
 

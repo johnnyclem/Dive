@@ -9,13 +9,13 @@ const ResponseContentSchema = z.union([
   }),
   z.object({
     type: z.literal("image"),
-    data: z.unknown(),
-    mimeType: z.unknown(),
+    data: z.string(),
+    mimeType: z.string(),
   }),
   z.object({
     type: z.literal("audio"),
-    data: z.unknown(),
-    mimeType: z.unknown(),
+    data: z.string(),
+    mimeType: z.string(),
   }),
   z.object({
     type: z.literal("resource"),
@@ -85,6 +85,40 @@ export function convertCamelCaseToKebabCase(params: Record<string, unknown>): Re
  */
 export function adaptToolResponse(response: unknown): ResponseContent[] {
   try {
+    logger.debug(`adaptToolResponse received: ${JSON.stringify(response)}`);
+
+    // Handle special case for get_crypto_price and other similar tools
+    if (response && typeof response === 'object' && !Array.isArray(response)) {
+      // Handle error responses
+      if ('error' in response && response.error) {
+        const errorMsg = 'message' in response ? String(response.message) : 'Unknown tool error';
+        logger.warn(`Tool returned an error: ${errorMsg}`);
+        return [{
+          type: "text",
+          text: `Tool Error: ${errorMsg}`,
+        }];
+      }
+
+      // Handle crypto price responses
+      if ('price' in response || 'value' in response || 'data' in response) {
+        // Format the response based on available properties
+        let formattedText = 'Tool Result:';
+        const obj = response as Record<string, unknown>;
+        
+        if ('price' in obj) formattedText += ` Price: ${obj.price}`;
+        if ('value' in obj) formattedText += ` Value: ${obj.value}`;
+        if ('currency' in obj) formattedText += ` ${obj.currency}`;
+        if ('symbol' in obj) formattedText += ` ${obj.symbol}`;
+        if ('name' in obj) formattedText += ` for ${obj.name}`;
+        
+        logger.debug(`Formatted tool response as text: ${formattedText}`);
+        return [{
+          type: "text",
+          text: formattedText,
+        }];
+      }
+    }
+    
     // If response is a string, wrap it as text content
     if (typeof response === "string") {
       // Return as regular text content
@@ -99,7 +133,7 @@ export function adaptToolResponse(response: unknown): ResponseContent[] {
       try {
         return [{
           type: "image",
-          data: (response as Record<string, unknown>).imageUrl,
+          data: String((response as Record<string, unknown>).imageUrl),
           mimeType: "image/png",
         }];
       } catch (imageError) {
@@ -116,11 +150,12 @@ export function adaptToolResponse(response: unknown): ResponseContent[] {
     try {
       const parsed = ResponseContentSchema.parse(response);
       return [parsed];
-    } catch {
+    } catch (parseError) {
+      logger.warn(`Response didn't match schema, converting to string: ${parseError}`);
       // If parsing fails, convert to string and wrap as text
       return [{
         type: "text",
-        text: JSON.stringify(response),
+        text: typeof response === "string" ? response : JSON.stringify(response, null, 2),
       }];
     }
   } catch (error) {
