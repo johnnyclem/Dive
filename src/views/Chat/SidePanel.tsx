@@ -6,7 +6,7 @@ import InfiniteCanvasComponent from "../../components/Canvas/InfiniteCanvasCompo
 import useCanvasStore from "../../components/Canvas/CanvasStore";
 import CodeModal from "./CodeModal";
 import { useUIStore } from "../../stores/uiStore";
-
+import TaskListModal from "./TaskListModal";
 interface SidePanelProps {
   chatId: string;
 }
@@ -45,6 +45,9 @@ const SidePanel: React.FC<Omit<SidePanelProps, 'isOpen' | 'onClose'>> = ({ chatI
         </Tab>
         <Tab key="code" title="Code">
           <CodeModal />
+        </Tab>
+        <Tab key="task-list" title="Task List">
+          <TaskListModal />
         </Tab>
       </Tabs>
     </div>

@@ -7,6 +7,7 @@ import { toolsRouter } from "./tools.js";
 import { knowledgeRouter } from "./knowledge.js";
 import { memoryRouter } from "./memory.js";
 import { tasksRouter } from "./tasks.js";
+import { scheduledTasksRouter } from "./scheduledTasks.js";
 
 const OFFLINE_MODE = true
 
@@ -47,6 +48,7 @@ export function createRouter() {
   router.use("/api/memory", memoryRouter());
   router.use("/api/tasks", tasksRouter());
   router.use("/api/chat", chatRouter());
+  router.use("/api/scheduled-tasks", scheduledTasksRouter());
 
   return router;
 }

@@ -1,7 +1,8 @@
-import { useAtom } from "jotai"
 import { useTranslation } from "react-i18next"
 import Select from "../components/Select"
 import React, { useState, useEffect } from "react"
+import { Tabs, Tab } from "@heroui/react"
+import SchedulerPage from "./SchedulerPage"
 
 import ThemeSwitch from "../components/ThemeSwitch"
 import Switch from "../components/Switch"
@@ -13,6 +14,7 @@ const SystemSettingsPage = () => {
   const [autoDownload, setAutoDownload] = useState(false)
   const [autoLaunch, setAutoLaunch] = useState(false)
   const [minimalToTray, setMinimalToTray] = useState(false)
+  const [selectedTab, setSelectedTab] = useState<string>("general")
 
   useEffect(() => {
     window.electron.ipcRenderer.getAutoLaunch()
@@ -74,49 +76,56 @@ const SystemSettingsPage = () => {
 
   return (
     <div className="system-settings-container max-w-2xl mx-auto">
-      <div className="space-y-4">
-        <div className="flex justify-between items-center p-4 bg-card rounded-lg border border-border">
-          <span className="font-medium">{t("system.language")}:</span>
-          <Select
-            options={languageOptions}
-            value={language}
-            onSelect={(value) => handleLanguageChange(value)}
-            align="end"
-          />
-        </div>
+      <Tabs aria-label="System Settings Tabs" selectedKey={selectedTab} onSelectionChange={(key: string) => setSelectedTab(key)} className="mb-4">
+        <Tab key="general" title={t("system.general")}>        
+          <div className="space-y-4">
+            <div className="flex justify-between items-center p-4 bg-card rounded-lg border border-border">
+              <span className="font-medium">{t("system.language")}:</span>
+              <Select
+                options={languageOptions}
+                value={language}
+                onSelect={(value) => handleLanguageChange(value)}
+                align="end"
+              />
+            </div>
 
-        <div className="flex justify-between items-center p-4 bg-card rounded-lg border border-border">
-          <span className="font-medium">{t("system.theme")}:</span>
-          <ThemeSwitch />
-        </div>
+            <div className="flex justify-between items-center p-4 bg-card rounded-lg border border-border">
+              <span className="font-medium">{t("system.theme")}:</span>
+              <ThemeSwitch />
+            </div>
 
-        <div className="flex justify-between items-center p-4 bg-card rounded-lg border border-border">
-          <span className="font-medium">{t("system.autoDownload")}:</span>
-          <Switch
-            checked={autoDownload}
-            onChange={(e) => {
-              setAutoDownload(e.target.checked)
-              _setAutoDownload(e.target.checked)
-            }}
-          />
-        </div>
+            <div className="flex justify-between items-center p-4 bg-card rounded-lg border border-border">
+              <span className="font-medium">{t("system.autoDownload")}:</span>
+              <Switch
+                checked={autoDownload}
+                onChange={(e) => {
+                  setAutoDownload(e.target.checked)
+                  _setAutoDownload(e.target.checked)
+                }}
+              />
+            </div>
 
-        <div className="flex justify-between items-center p-4 bg-card rounded-lg border border-border">
-          <span className="font-medium">{t("system.autoLaunch")}:</span>
-          <Switch
-            checked={autoLaunch}
-            onChange={e => handleAutoLaunchChange(e.target.checked)}
-          />
-        </div>
+            <div className="flex justify-between items-center p-4 bg-card rounded-lg border border-border">
+              <span className="font-medium">{t("system.autoLaunch")}:</span>
+              <Switch
+                checked={autoLaunch}
+                onChange={e => handleAutoLaunchChange(e.target.checked)}
+              />
+            </div>
 
-        <div className="flex justify-between items-center p-4 bg-card rounded-lg border border-border">
-          <span className="font-medium">{t("system.minimalToTray")}:</span>
-          <Switch
-            checked={minimalToTray}
-            onChange={e => handleMinimalToTrayChange(e.target.checked)}
-          />
-        </div>
-      </div>
+            <div className="flex justify-between items-center p-4 bg-card rounded-lg border border-border">
+              <span className="font-medium">{t("system.minimalToTray")}:</span>
+              <Switch
+                checked={minimalToTray}
+                onChange={e => handleMinimalToTrayChange(e.target.checked)}
+              />
+            </div>
+          </div>
+        </Tab>
+        <Tab key="scheduler" title={t("system.scheduler")}>        
+          <SchedulerPage />
+        </Tab>
+      </Tabs>
     </div>
   )
 }
