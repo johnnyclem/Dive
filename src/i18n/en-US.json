@@ -1,0 +1,41 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "tools": {
+    "title": "Tools",
+    "subtitle": "Manage available tools and their configurations",
+    "configTitle": "Edit Tools Configuration",
+    "addServerTitle": "Add Tool Server",
+    "addServerSubtitle": "Add a new tool server by providing its configuration in JSON format.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "invalidJson": "Invalid JSON format",
+    "saveSuccess": "Configuration saved successfully",
+    "saveFailed": "Failed to save configuration",
+    "fetchFailed": "Failed to fetch tools",
+    "configFetchFailed": "Failed to fetch configuration",
+    "updateFailed": "Failed to update {{serverName}}: {{error}}",
+    "toggleFailed": "Failed to toggle tool state",
+    "installFailed": "Tool installation failed or connection lost",
+    "addServer": "Add",
+    "addServer.alt": "Add a new tool server",
+    "editConfig": "Edit Config",
+    "editConfig.alt": "Edit the tool configuration file",
+    "openConfigFolder": "Config Folder",
+    "openConfigFolder.alt": "Open the folder containing configuration files",
+    "reloadMCPServers": "Reload",
+    "reloadMCPServers.alt": "Reload all tool servers",
+    "restoreDefaults": "Restore Defaults",
+    "restoreDefaults.alt": "Restore default tool configuration",
+    "restoreSuccess": "Default configuration restored successfully",
+    "restoreFailed": "Failed to restore default configuration",
+    "builtIn": "Built-in",
+    "builtIn.alt": "This is a built-in tool",
+    "enableSubTool": "Enable this action",
+    "disableSubTool": "Disable this action",
+    "subToolToggleSuccess": "Action {{name}} {{action}}",
+    "subToolToggleFailed": "Failed to toggle action state"
+  }
+} 

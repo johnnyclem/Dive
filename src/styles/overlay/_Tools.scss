@@ -431,11 +431,15 @@
     .sub-tools {
       display: grid;
       gap: 12px;
+      margin-top: 10px;
 
       .sub-tool {
         padding: 12px;
         border-radius: 6px;
         background: var(--bg-op-dark-extremeweak);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
 
         .sub-tool-name {
           font-weight: 500;
@@ -445,6 +449,23 @@
         .sub-tool-description {
           font-size: 14px;
           color: var(--text-weak);
+        }
+        
+        .sub-tool-content {
+          flex: 1;
+        }
+        
+        .sub-tool-toggle {
+          margin-left: 12px;
+          cursor: pointer;
+        }
+        
+        &.disabled {
+          opacity: 0.6;
+        }
+        
+        &:hover {
+          background: var(--bg-op-dark-weakmedium);
         }
       }
     }

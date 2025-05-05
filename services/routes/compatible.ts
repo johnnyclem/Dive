@@ -7,6 +7,7 @@ import axios, { AxiosResponse } from "axios";
 import { abortControllerMap, handleProcessQuery } from "../processQuery.js";
 import { PromptManager } from "../prompt/index.js";
 import logger from "../utils/logger.js";
+import { MCPServerManager } from "../mcpServer/index.js";
 
 interface ChatCompletionResponse {
   id: string;
@@ -39,6 +40,7 @@ export function compatibleRouter() {
   const router = express.Router();
   const modelManager = ModelManager.getInstance();
   const promptManager = PromptManager.getInstance();
+  const serverManager = MCPServerManager.getInstance();
 
   router.get("/", (req, res) => {
     res.json({
@@ -169,7 +171,7 @@ export function compatibleRouter() {
       }
 
       const input = messages[messages.length - 1]?.content;
-      const availableTools = tool_choice === "auto" ? modelManager.getAvailableTools() : [];
+      const availableTools = tool_choice === "auto" ? await serverManager.getAvailableTools() : [];
 
       const modelName = modelSettings.model;
       const baseUrl = modelSettings.configuration?.baseURL || modelSettings.baseURL || "";

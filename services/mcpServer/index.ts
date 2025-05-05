@@ -10,6 +10,7 @@ import { convertToOpenAITools, loadConfigAndServers } from "../utils/toolHandler
 import { iConfig, iServerConfig, iTool } from "../utils/types.js";
 import { IMCPServerManager } from "./interface.js";
 import { ipcMain } from "electron";
+import fs from "fs/promises";
 
 // Add the new import for accessing knowledge base API
 import * as KnowledgeStore from "../../electron/main/knowledge-store.js";
@@ -467,8 +468,48 @@ export class MCPServerManager implements IMCPServerManager {
     else return false;
   }
 
-  getAvailableTools(): ToolDefinition[] {
-    return this.availableTools;
+  // Update the getAvailableTools method to be async and properly filter tools
+  public async getAvailableTools(): Promise<ToolDefinition[]> {
+    const tools: ToolDefinition[] = [];
+    
+    // Get tools from all connected and enabled servers
+    for (const [serverName, server] of this.servers.entries()) {
+      if (server.isConnected() && server.isEnabled()) {
+        const serverTools = this.pendingToolCache.get(serverName) || [];
+        tools.push(...serverTools);
+      }
+    }
+
+    // Filter out disabled sub-tools
+    try {
+      const config = await this.loadSubToolConfig();
+      const disabledSubTools = config.disabledSubTools || [];
+      
+      if (disabledSubTools.length === 0) {
+        return tools; // No filtering needed
+      }
+      
+      return tools.filter(tool => {
+        // Skip if no function name (shouldn't happen)
+        if (!tool.function?.name) return true;
+        
+        // Extract server name and function name
+        const parts = tool.function.name.split('.');
+        if (parts.length !== 2) return true;
+        
+        const [toolName, subToolName] = parts;
+        
+        // Check if this specific sub-tool is disabled
+        const isDisabled = disabledSubTools.some(
+          item => item.toolName === toolName && item.subToolName === subToolName
+        );
+        
+        return !isDisabled;
+      });
+    } catch (error) {
+      logger.error(`Error filtering disabled sub-tools: ${error}`);
+      return tools; // Return unfiltered tools on error
+    }
   }
 
   getToolInfos(): iTool[] {
@@ -672,5 +713,24 @@ export class MCPServerManager implements IMCPServerManager {
     this.ensureUniqueWebSearchTool();
     
     logger.info('Knowledge tools reconfigured successfully');
+  }
+
+  // Add function to load sub-tool config
+  private async loadSubToolConfig() {
+    try {
+      const configDir = process.env.CONFIG_DIR || path.join(process.cwd(), 'config');
+      const configPath = path.join(configDir, 'subtool-config.json');
+      const configExists = await fs.access(configPath).then(() => true).catch(() => false);
+      
+      if (configExists) {
+        const configData = await fs.readFile(configPath, 'utf-8');
+        return JSON.parse(configData);
+      } else {
+        return { disabledSubTools: [] };
+      }
+    } catch (error) {
+      logger.error(`Error loading sub-tool config: ${error}`);
+      return { disabledSubTools: [] };
+    }
   }
 }

@@ -1,0 +1,93 @@
+/* Add these styles to the end of the file */
+
+/* Sub-tool toggle styles */
+.sub-tool {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 6px;
+  background-color: var(--bg-op-dark-ultraweak);
+  transition: background-color 0.2s ease;
+}
+
+.sub-tool:hover {
+  background-color: var(--bg-op-dark-extremeweak);
+}
+
+.sub-tool-content {
+  flex: 1;
+}
+
+.sub-tool-toggle {
+  margin-left: 12px;
+  cursor: pointer;
+}
+
+.sub-tool-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.sub-tool-description {
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* Add a disabled style for sub-tools */
+.sub-tool.disabled {
+  opacity: 0.6;
+}
+
+/* Add these styles to hide sub-tools by default */
+.sub-tools {
+  display: none;
+  margin-top: 10px;
+}
+
+.tool-section.expanded .sub-tools {
+  display: block;
+}
+
+/* Add a visual indicator for expanded sections */
+.tool-section.expanded .tool-toggle {
+  transform: rotate(180deg);
+}
+
+/* These styles may override _Tools.scss - ensure they're compatible */
+
+/* Override sub-tools display for expanded tools */
+.tool-section.expanded .sub-tools {
+  display: grid !important;  /* Force display when expanded */
+}
+
+/* Ensure sub-tool toggles are visible */
+.sub-tool-toggle {
+  display: flex !important;
+  align-items: center;
+}
+
+/* Make the Switch component more visible */
+.sub-tool .sub-tool-toggle .MuiSwitch-root {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Target styles specifically for the standalone ToolsPage */
+main .tools-list .sub-tool {
+  display: flex !important;
+  justify-content: space-between !important;
+}
+
+main .tools-list .sub-tool-toggle {
+  display: flex !important;
+  align-items: center !important;
+  margin-left: 12px !important;
+  cursor: pointer !important;
+}
+
+main .tools-list .expanded .sub-tools {
+  display: grid !important;
+} 
