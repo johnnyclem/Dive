@@ -5,6 +5,7 @@ import { DatabaseMode, initDatabase, getDatabaseMode } from "./database/index.js
 import { SystemCommandManager } from "./syscmd/index.js";
 import { registerENSServer } from "./mcpServer/ensServer.js";
 import { execSync } from 'child_process';
+import { SchedulerService } from './agent/schedulerService.js';
 
 dotenv.config();
 
@@ -61,6 +62,10 @@ async function main() {
       logger.info('Skipping database migrations: API database mode.');
     }
 
+    // Initialize the SchedulerService
+    const scheduler = SchedulerService.getInstance();
+    await scheduler.initialize();
+
     // Register the ENS utility server
     registerENSServer();
 
@@ -71,6 +76,9 @@ async function main() {
 
     // Keep command line interface
     await client.chatLoop();
+
+    // Shutdown scheduler when CLI exits
+    scheduler.shutdown();
   } catch (error) {
     logger.error("Error:", error);
     await client?.cleanup();
