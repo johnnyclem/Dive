@@ -41,6 +41,21 @@ export const agentTasks = sqliteTable("agent_tasks", {
   // Add context fields if needed later, e.g., context: text("context", { mode: "json" })
 });
 
+// Add scheduledTasks table
+export const scheduledTasks = sqliteTable("scheduled_tasks", {
+  id: text("id").primaryKey(),                     // UUID for the task
+  description: text("description").notNull(),       // Prompt/Goal for the LLM when triggered
+  type: text("type").notNull(),                    // 'once', 'recurring', 'interval', 'heartbeat'
+  schedule: text("schedule").notNull(),             // Stores schedule details (ISO string, pattern, or interval)
+  status: text("status").notNull().default('active'), // 'active', 'paused', 'completed', 'error'
+  nextRunTime: integer("next_run_time", { mode: 'timestamp_ms' }).notNull(), // When the task should next run (epoch ms)
+  lastRunTime: integer("last_run_time", { mode: 'timestamp_ms' }),            // When the task last ran (epoch ms)
+  createdAt: integer("created_at", { mode: 'timestamp_ms' }).notNull(),      // Timestamp in milliseconds
+  updatedAt: integer("updated_at", { mode: 'timestamp_ms' }).notNull(),      // Timestamp in milliseconds
+  createdBy: text("created_by").notNull().default('user'),                  // 'user' or 'agent'
+  failReason: text("fail_reason"),                                           // Optional: Reason if status is 'error'
+});
+
 // export types
 export type Chat = typeof chats.$inferSelect;
 export type NewChat = typeof chats.$inferInsert;
@@ -50,3 +65,5 @@ export type KnowledgeBase = typeof knowledgeBases.$inferSelect;
 export type NewKnowledgeBase = typeof knowledgeBases.$inferInsert;
 export type AgentTask = typeof agentTasks.$inferSelect;
 export type NewAgentTask = typeof agentTasks.$inferInsert;
+export type ScheduledTask = typeof scheduledTasks.$inferSelect;
+export type NewScheduledTask = typeof scheduledTasks.$inferInsert;

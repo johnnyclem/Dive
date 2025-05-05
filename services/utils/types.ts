@@ -117,3 +117,21 @@ export interface ModelVerificationStreamResponse {
   message?: string;
   aborted?: boolean;
 }
+
+// Scheduled tasks types
+export type ScheduledTaskType = 'once' | 'recurring' | 'interval' | 'heartbeat';
+export type ScheduledTaskStatus = 'active' | 'paused' | 'completed' | 'error';
+
+export interface IScheduledTask {
+  id: string;
+  description: string;
+  type: ScheduledTaskType;
+  schedule: string; // Schedule details: ISO timestamp, recurring pattern, or interval in minutes
+  status: ScheduledTaskStatus;
+  nextRunTime: number; // Epoch milliseconds when the task should next run
+  lastRunTime?: number | null; // Epoch milliseconds of the last run
+  createdAt: number; // Epoch milliseconds when the task was created
+  updatedAt: number; // Epoch milliseconds when the task was last updated
+  createdBy: 'user' | 'agent';
+  failReason?: string | null; // Optional failure reason if status is 'error'
+}
