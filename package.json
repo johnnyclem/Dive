@@ -22,6 +22,7 @@
     "build": "vite build",
     "build:electron": "vite build --config vite.config.electron.ts",
     "build:services": "vite build --config vite.config.service.ts",
+    "migrate:db": "drizzle-kit push --config drizzle.config.ts",
     "start:services": "node -v && vite-node services/main.ts",
     "postinstall": "patch-package && electron-builder install-app-deps",
     "docker:build-win": "scripts/docker/build-win.sh",
