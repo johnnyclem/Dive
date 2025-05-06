@@ -524,21 +524,37 @@
       "model": "gpt-4.1-nano-2025-04-14",
       "modelProvider": "openai"
     },
-    "openai-4-0": {
-      "name": "openai",
-      "checked": false,
+    "venice-4-0": {
+      "name": "venice",
+      "checked": true,
       "configuration": {
         "baseURL": "",
         "topP": 0.5,
         "temperature": 0.4
       },
-      "apiKey": "",
-      "baseURL": "",
+      "apiKey": "Elqc0mbsuZ-OF6xLX9FLjlOOgZkJuAY9Inm-KxB_7h",
+      "baseURL": "https://api.venice.ai/v1",
       "active": true,
-      "topP": 0.5,
-      "temperature": 0.4,
-      "model": "https://openrouter.ai/api/v1",
-      "modelProvider": "openai"
+      "topP": 0.7,
+      "temperature": 0.2,
+      "model": "llama-4-maverick-17b",
+      "modelProvider": "venice"
+    },
+    "venice-4-1": {
+      "configuration": {
+        "baseURL": "https://api.venice.ai/v1",
+        "topP": 0.7,
+        "temperature": 0.2
+      },
+      "name": "venice",
+      "checked": true,
+      "apiKey": "Elqc0mbsuZ-OF6xLX9FLjlOOgZkJuAY9Inm-KxB_7h",
+      "baseURL": "https://api.venice.ai/v1",
+      "active": true,
+      "topP": 0.7,
+      "temperature": 0.2,
+      "model": "mistral-31-24b",
+      "modelProvider": "venice"
     }
   }
 }

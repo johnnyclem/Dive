@@ -153,7 +153,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
     // Personas icon (using user-group outline)
     { label: t("sidebar.personas"), path: "/personas", icon: <UserGroupIcon className="w-5 h-5" /> },
     // Storage icon (using archive-box outline)
-    { label: t("sidebar.storage"), path: "/storage", icon: <ArchiveBoxIcon className="w-5 h-5" /> },
+    { label: t("sidebar.knowledge"), path: "/knowledge-base", icon: <ArchiveBoxIcon className="w-5 h-5" /> },
     // Tools icon (using wrench-screwdriver outline)
     { label: t("sidebar.tools"), path: "/tools", icon: <WrenchScrewdriverIcon className="w-5 h-5" /> },
     // System Settings icon (using cog-6-tooth outline)
