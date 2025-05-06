@@ -1,7 +1,7 @@
 {
   "name": "souls",
   "private": true,
-  "version": "0.8.2",
+  "version": "0.10.0",
   "type": "module",
   "main": "dist-electron/main/index.mjs",
   "debug": {

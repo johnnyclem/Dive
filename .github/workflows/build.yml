@@ -1,11 +1,10 @@
 name: Build
 
 on:
-  pull_request_target:
+  pull_request:
     branches:
       - main
   push:
-    branches: [main]
     paths-ignore:
       - "**.md"
       - "**.spec.js"
@@ -19,8 +18,7 @@ on:
 
 jobs:
   build:
-    runs-on:
-      group: MacRunners
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:

@@ -15,6 +15,26 @@ Souls is an open-source MCP Host Desktop Application that seamlessly integrates 
 ![Souls Demo](./docs/SoulsAI.gif)
 
 
+
+# TODO 
+When ready to distribute, you need to add a notarization step to sign for having apple accept the application. Add to the root of electron-builder.json:
+```
+  "afterSign": "./scripts/notarizer.js",
+```
+
+After that, please update the below release process to trigger tags as production releases.
+
+## Release Process
+As of May 1, 2025 any and all changes that are committed to the main branch will be automatically built and released. The documentation will be updated
+for each release through the CI/CD pipeline. Therefore to ensure proper setup and builds, you must do the following:
+
+1. Update the version number in the package.json file.
+2. have the commit message explain the changes that are being made. 
+3. All non tagged commits will be assumed to be dev commits
+4. For production releases, (TODO only allow tags to be production releases)
+
+
+
 ## Features 🎯
 
 - 🌐 **Universal LLM Support**: Compatible with ChatGPT, Anthropic, Ollama and OpenAI-compatible models

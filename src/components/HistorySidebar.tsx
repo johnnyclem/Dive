@@ -165,7 +165,7 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   return (
     <>
       <div
-        className={`flex flex-col h-screen text-default-200 border-r border-default-100 transition-all duration-300 ease-in-out ${collapsed ? 'w-20' : 'w-64'
+        className={`flex flex-col h-screen text-default-200 transition-all duration-300 ease-in-out ${collapsed ? 'w-20' : 'w-64'
           }`}
         ref={containerRef}
       >
