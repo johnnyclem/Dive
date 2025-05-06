@@ -360,7 +360,6 @@
 }
 
 .message {
-  max-width: 100%;
   margin: 10px 0;
   padding: 10px 15px;
   border-radius: 18px;
@@ -445,8 +444,8 @@
   }
 
   &.sent {
-    background: var(--bg-pri-blue);
-    color: var(--text-light);
+    // background: var(--bg-pri-blue);
+    // color: var(--text-light);
     margin-left: auto;
     animation: slideFromRight 0.3s ease;
 

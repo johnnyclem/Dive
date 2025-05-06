@@ -38,7 +38,7 @@ interface Window {
       closePopup: () => Promise<boolean>
       unsubscribeAll: (channel: string) => void
     }
-    
+
     knowledge: {
       createCollection: (name: string, description?: string) => Promise<any>
       listCollections: () => Promise<any[]>
@@ -48,7 +48,7 @@ interface Window {
       selectFiles: () => Promise<any>
       removeFile: (fileId: string) => Promise<boolean>
     }
-    
+
     embeddings: {
       getModelFileStatus: () => Promise<{ [key: string]: boolean }>
       removeModel: () => Promise<void>

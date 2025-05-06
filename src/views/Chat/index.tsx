@@ -124,7 +124,7 @@ const ChatWindow = () => {
         }
       };
       saveCurrentChat();
-      
+
       // Signal that we're starting a new chat
       console.log("Navigating to new chat from:", currentChatId.current);
       // Clear the current chat ID atom to trigger canvas reset
