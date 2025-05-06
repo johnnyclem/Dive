@@ -25,6 +25,8 @@ declare global {
 
   interface ElectronAPI {
     ipcRenderer: CustomIpcRenderer;
+    // Agent Task management API exposed at top level
+    tasks: ElectronTasksAPI;
     // ...other exposed APIs...
   }
 

@@ -18,7 +18,7 @@ const TaskListModal: React.FC = () => {
   const fetchTasks = async () => {
     try {
       const list: AgentTask[] = await window.electron.tasks.list('all');
-      setTasks(list);
+      setTasks(list.filter(t => t.status !== 'completed'));
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
     }

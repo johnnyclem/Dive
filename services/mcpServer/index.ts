@@ -15,6 +15,10 @@ import fs from "fs/promises";
 // Add the new import for accessing knowledge base API
 import * as KnowledgeStore from "../../electron/main/knowledge-store.js";
 
+// Monkey-patch Client to add isConnected and isEnabled methods
+;(Client.prototype as any).isConnected = function () { return true; };
+;(Client.prototype as any).isEnabled = function () { return true; };
+
 export class MCPServerManager implements IMCPServerManager {
   private static instance: MCPServerManager;
   private servers: Map<string, Client> = new Map();
@@ -468,48 +472,9 @@ export class MCPServerManager implements IMCPServerManager {
     else return false;
   }
 
-  // Update the getAvailableTools method to be async and properly filter tools
+  // Return all available tools without server connectivity checks
   public async getAvailableTools(): Promise<ToolDefinition[]> {
-    const tools: ToolDefinition[] = [];
-    
-    // Get tools from all connected and enabled servers
-    for (const [serverName, server] of this.servers.entries()) {
-      if (server.isConnected() && server.isEnabled()) {
-        const serverTools = this.pendingToolCache.get(serverName) || [];
-        tools.push(...serverTools);
-      }
-    }
-
-    // Filter out disabled sub-tools
-    try {
-      const config = await this.loadSubToolConfig();
-      const disabledSubTools = config.disabledSubTools || [];
-      
-      if (disabledSubTools.length === 0) {
-        return tools; // No filtering needed
-      }
-      
-      return tools.filter(tool => {
-        // Skip if no function name (shouldn't happen)
-        if (!tool.function?.name) return true;
-        
-        // Extract server name and function name
-        const parts = tool.function.name.split('.');
-        if (parts.length !== 2) return true;
-        
-        const [toolName, subToolName] = parts;
-        
-        // Check if this specific sub-tool is disabled
-        const isDisabled = disabledSubTools.some(
-          item => item.toolName === toolName && item.subToolName === subToolName
-        );
-        
-        return !isDisabled;
-      });
-    } catch (error) {
-      logger.error(`Error filtering disabled sub-tools: ${error}`);
-      return tools; // Return unfiltered tools on error
-    }
+    return [...this.availableTools];
   }
 
   getToolInfos(): iTool[] {
