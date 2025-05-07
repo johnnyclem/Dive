@@ -18,6 +18,7 @@ const LANGCHAIN_SUPPORTED_PROVIDERS = [
   "mistralai",
   "groq",
   "bedrock",
+  "venice",
 ] as const;
 
 const MCP_SUPPORTED_PROVIDERS = [
@@ -31,6 +32,7 @@ const MCP_SUPPORTED_PROVIDERS = [
   "OpenAI Compatible", // openai          - @langchain/openai          // x
   "LM Studio", // custom          - custom chat model          // x
   "Ollama", // ollama          - @langchain/ollama          // v
+  "Venice", // venice          - @langchain/venice          // v
 ] as const;
 
 export class ModelManager {
@@ -111,7 +113,7 @@ export class ModelManager {
         };
         // Update config to persist Venice fallback
         config.activeProvider = 'venice';
-        config.configs['venice'] = modelSettings;
+        (config as iModelConfig).configs['venice'] = modelSettings;
         await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), 'utf-8');
       } else {
         logger.error('No model settings found and VENICE_ENDPOINT or VENICE_API_KEY not set');
@@ -119,6 +121,30 @@ export class ModelManager {
         this.cleanModel = null;
         this.currentModelSettings = null;
         return null;
+      }
+    }
+
+    // Ensure 'venice' provider uses 'openai' for Langchain compatibility
+    if (modelSettings && modelSettings.modelProvider === 'venice') {
+      logger.info(`Normalizing modelProvider from 'venice' to 'openai' for Langchain initialization. Original model: ${modelSettings.model}`);
+      modelSettings.modelProvider = 'openai';
+      // If the activeProvider name itself is 'venice', and its config was just corrected,
+      // it might be good to persist this correction in the config file.
+      const currentConfig = config as iModelConfig;
+      if (activeProvider === 'venice' && currentConfig.configs['venice']?.modelProvider !== 'openai') {
+        logger.info("Persisting modelProvider:'openai' for 'venice' config.");
+        currentConfig.configs['venice'].modelProvider = 'openai';
+        // Also update the model if it wasn't already set by the fallback
+        if (!currentConfig.configs['venice'].model && process.env.VENICE_MODEL) {
+            currentConfig.configs['venice'].model = process.env.VENICE_MODEL || 'gpt-3.5-turbo';
+        }
+        if (!currentConfig.configs['venice'].apiKey && process.env.VENICE_API_KEY) {
+            currentConfig.configs['venice'].apiKey = process.env.VENICE_API_KEY;
+        }
+        if (!currentConfig.configs['venice'].configuration?.baseURL && process.env.VENICE_ENDPOINT) {
+            currentConfig.configs['venice'].configuration = { ...(currentConfig.configs['venice'].configuration || {}), baseURL: process.env.VENICE_ENDPOINT };
+        }
+        await fs.writeFile(this.configPath, JSON.stringify(currentConfig, null, 2), 'utf-8');
       }
     }
 

@@ -1,5 +1,5 @@
 {
-  "activeProvider": "google_genai-2-1",
+  "activeProvider": "venice_auto_config",
   "enableTools": true,
   "configs": {
     "ollama-0-0": {
@@ -457,7 +457,7 @@
       "active": true,
       "topP": 0.5,
       "temperature": 0.4,
-      "model": "models/gemma-3-27b-it",
+      "model": "models/gemini-2.5-pro-exp-03-25",
       "modelProvider": "google-genai"
     },
     "google_genai-2-8": {
