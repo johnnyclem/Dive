@@ -14,7 +14,7 @@ interface ModelConfigFormProps {
   provider: InterfaceProvider
   fields: Record<string, FieldDefinition>
   onProviderChange?: (provider: InterfaceProvider) => void
-  onSubmit: (data: any) => void
+  onSubmit: (data: InterfaceModelConfig) => void
   submitLabel?: string
 }
 
@@ -104,6 +104,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
   const verifyModel = async () => {
     try {
       setIsVerifying(true)
+      console.log(`Verifying model with provider: ${provider}`, formData)
       const data = await verifyModelWithConfig(formData)
       if (data.success) {
         setIsVerified(true)
@@ -152,6 +153,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
 
     try {
       setIsSubmitting(true)
+      console.log(`Submitting config for provider: ${provider}`, _formData)
       await onSubmit(await saveConfig({ data: _formData, provider }))
       loadConfig()
       navigate("/", { replace: true })
@@ -160,7 +162,7 @@ const ModelConfigForm: React.FC<ModelConfigFormProps> = ({
     }
   }
 
-  const handleChange = (key: string, value: any) => {
+  const handleChange = (key: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [key]: value

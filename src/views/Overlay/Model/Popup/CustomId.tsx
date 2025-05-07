@@ -94,7 +94,6 @@ const CustomIdPopup = ({
                   onChange={(e) => handleCustomModelIDChange(e.target.value)}
                   placeholder={t("models.customModelIDPlaceholder")}
                   className="model-option-name-input"
-                  autoFocus={true}
                 />
                 {customModelIDError && (
                   <div className="model-option-edit-error">

@@ -74,7 +74,14 @@ export async function handleProcessQuery(
   let finalResponse = "";
 
   const modelManager = ModelManager.getInstance();
-  const currentModelSettings = modelManager.currentModelSettings;
+  const originalModelSettings = modelManager.currentModelSettings;
+  // Create a mutable copy for potential normalization
+  const effectiveModelSettings = originalModelSettings ? { ...originalModelSettings } : null;
+
+  if (effectiveModelSettings && effectiveModelSettings.modelProvider === 'venice') {
+    logger.info(`[${chatId}] Normalizing modelProvider from 'venice' to 'openai' for handleProcessQuery context.`);
+    effectiveModelSettings.modelProvider = 'openai';
+  }
 
   const tokenUsage = {
     totalInputTokens: 0,
@@ -216,7 +223,7 @@ export async function handleProcessQuery(
 
     // Include built-in agent task management tools
     const combinedTools = [...availableTools, ...taskManagementTools];
-    const tools = currentModelSettings?.modelProvider === "google-genai"
+    const tools = effectiveModelSettings?.modelProvider === "google-genai"
       ? openAIConvertToGeminiTools(combinedTools)
       : combinedTools;
 
@@ -248,12 +255,12 @@ export async function handleProcessQuery(
     // Only bind tools if we're not asking about them and tools are enabled
     const runModel = (isAskingAboutTools || !modelManager.enableTools) ? model : (model.bindTools?.(correctedTools) || model);
 
-    const isOllama = currentModelSettings?.modelProvider === "ollama";
+    const isOllama = effectiveModelSettings?.modelProvider === "ollama";
     const isDeepseek =
-      currentModelSettings?.configuration?.baseURL?.toLowerCase().includes("deepseek") ||
-      currentModelSettings?.model?.toLowerCase().includes("deepseek");
-    const isMistralai = currentModelSettings?.modelProvider === "mistralai";
-    const isBedrock = currentModelSettings?.modelProvider === "bedrock";
+      effectiveModelSettings?.configuration?.baseURL?.toLowerCase().includes("deepseek") ||
+      effectiveModelSettings?.model?.toLowerCase().includes("deepseek");
+    const isMistralai = effectiveModelSettings?.modelProvider === "mistralai";
+    const isBedrock = effectiveModelSettings?.modelProvider === "bedrock";
 
     logger.debug(`[${chatId}] Start to process LLM query`);
 
@@ -275,7 +282,7 @@ export async function handleProcessQuery(
       try {
         // Track token usage if available
         for await (const chunk of stream) {
-          caculateTokenUsage(tokenUsage, chunk, currentModelSettings!);
+          caculateTokenUsage(tokenUsage, chunk, effectiveModelSettings!);
 
           if (chunk.content) {
             let chunkMessage = "";
