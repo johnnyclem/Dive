@@ -392,41 +392,70 @@ export async function handleProcessQuery(
       }
 
       logger.debug(`[${chatId}] Tool calls: ${JSON.stringify(toolCalls, null, 2)}`);
-      // support anthropic multiple tool calls version but other not sure
+
+      // Prepare standardized tool_calls for AIMessage
+      const aiMessageToolCalls = toolCalls.map(tc => {
+        let parsedArgs: Record<string, any> = {};
+        try {
+          // Ensure tc.function.arguments is a string. If empty or not a string, default to {}.
+          if (tc.function && tc.function.arguments && typeof tc.function.arguments === 'string' && tc.function.arguments.trim() !== '') {
+            parsedArgs = JSON.parse(tc.function.arguments);
+          }
+        } catch (e) {
+          logger.error(`[${chatId}] Error parsing tool call arguments for AIMessage.tool_calls ('${tc.function.name}'): "${tc.function.arguments}". Error: ${e}. Defaulting to empty args.`);
+          // parsedArgs remains {}
+        }
+        return {
+          name: tc.function.name,
+          args: parsedArgs,
+          id: tc.id,
+        };
+      }).filter(tc => tc.id && tc.name); // Ensure essential properties are present
+
+
       messages.push(
         new AIMessage({
           content: [
             {
               type: "text",
               // some model not allow empty content in text block
-              text: currentContent || ".",
+              text: currentContent || (aiMessageToolCalls.length > 0 ? "" : "."), // Allow empty content if tool calls exist
             },
             // Deepseek will recursive when tool_use exist in content
+            // For Mistral (isMistralai = true), this part results in an empty array,
+            // meaning no tool_use blocks are added to the content array itself.
             ...(isDeepseek || isMistralai || isBedrock
               ? []
               : toolCalls.map((toolCall) => {
-                let parsedArgs = {}
+                let parsedArgsForContent = {}
                 try {
-                  parsedArgs = toolCall.function.arguments === "" ? {} : JSON.parse(toolCall.function.arguments);
+                  if (toolCall.function.arguments && typeof toolCall.function.arguments === 'string' && toolCall.function.arguments.trim() !== '') {
+                    parsedArgsForContent = JSON.parse(toolCall.function.arguments);
+                  }
                 } catch {
-                  toolCall.function.arguments = "{}";
-                  logger.error(`[${chatId}] Error parsing tool call ${toolCall.function.name} args`);
+                  // Avoid mutating original toolCall.function.arguments here
+                  logger.error(`[${chatId}] Error parsing tool call ${toolCall.function.name} args for content block`);
+                  parsedArgsForContent = {};
                 }
                 return {
                   type: "tool_use",
                   id: toolCall.id,
                   name: toolCall.function.name,
-                  input: parsedArgs,
+                  input: parsedArgsForContent,
                 }
               })),
           ],
+          // Add the standardized tool_calls property
+          tool_calls: aiMessageToolCalls.length > 0 ? aiMessageToolCalls : undefined,
+          
+          // Keep existing additional_kwargs for potential backward compatibility or specific model needs
           additional_kwargs: {
             tool_calls: toolCalls.map((toolCall) => ({
               id: toolCall.id,
               type: "function",
               function: {
                 name: toolCall.function.name,
-                arguments: toolCall.function.arguments,
+                arguments: toolCall.function.arguments, // Keep as string here for the original structure
               },
             })),
           },
@@ -519,7 +548,7 @@ export async function handleProcessQuery(
 
                 return {
                   tool_call_id: toolCall.id,
-                  role: "tool" as const,
+                  name: toolName,
                   content: JSON.stringify(adaptToolResponse(result)),
                 };
               } catch (error) {
@@ -537,7 +566,7 @@ export async function handleProcessQuery(
               onStream?.(
                 JSON.stringify({ type: 'tool_result', content: { name: toolName, result } })
               );
-              return { tool_call_id: toolCall.id, role: 'tool', content: JSON.stringify(result) };
+              return { tool_call_id: toolCall.id, name: toolName, content: JSON.stringify(result) };
             } else if (toolName === 'list_tasks') {
               const tasks = await TaskManager.getInstance().getActiveTasks();
               const summarized = tasks.map(t => ({ id: t.id, description: t.description, status: t.status }));
@@ -545,7 +574,7 @@ export async function handleProcessQuery(
               onStream?.(
                 JSON.stringify({ type: 'tool_result', content: { name: toolName, result } })
               );
-              return { tool_call_id: toolCall.id, role: 'tool', content: JSON.stringify(result) };
+              return { tool_call_id: toolCall.id, name: toolName, content: JSON.stringify(result) };
             } else if (toolName === 'complete_task') {
               const taskId = toolArgs.task_id;
               const summary = toolArgs.result_summary;
@@ -555,7 +584,7 @@ export async function handleProcessQuery(
               onStream?.(
                 JSON.stringify({ type: 'tool_result', content: { name: toolName, result } })
               );
-              return { tool_call_id: toolCall.id, role: 'tool', content: JSON.stringify(result) };
+              return { tool_call_id: toolCall.id, name: toolName, content: JSON.stringify(result) };
             }
 
             try {
@@ -623,7 +652,7 @@ export async function handleProcessQuery(
 
               return {
                 tool_call_id: toolCall.id,
-                role: "tool" as const,
+                name: toolName,
                 content: JSON.stringify(adaptToolResponse(result)),
               };
             } finally {
