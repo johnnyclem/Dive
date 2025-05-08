@@ -6,7 +6,7 @@
  * Now connected to TLDraw for actual functionality.
  */
 
-import { Editor, TLShape, createShapeId, TLGeoShape, TLImageShape, TLArrowShape } from '@tldraw/tldraw';
+import { Editor, TLShape, createShapeId, TLGeoShape, TLImageShape, TLArrowShape, TLImageAsset, TLDefaultColorStyle, TLEventMap, TLNoteShape, TLAssetId } from '@tldraw/tldraw';
 
 export interface CanvasPosition {
   x: number;
@@ -53,14 +53,14 @@ export interface CanvasElement {
 }
 
 // Map of colors to TLDraw color values
-const COLOR_MAP: Record<string, string> = {
+const COLOR_MAP: Record<string, TLDefaultColorStyle> = {
   'black': 'black',
   'blue': 'blue',
   'green': 'green',
   'gray': 'grey',
   'grey': 'grey',
   'orange': 'orange',
-  'pink': 'pink',
+  'pink': 'light-red',
   'purple': 'violet',
   'red': 'red',
   'white': 'white',
@@ -70,6 +70,9 @@ const COLOR_MAP: Record<string, string> = {
   'teal': 'green',
   'lime': 'light-green'
 };
+
+// Placeholder for actual TLDraw color type - replace with official if known
+type TLDRAW_COLOR_TYPE = 'black' | 'blue' | 'green' | 'grey' | 'orange' | 'pink' | 'violet' | 'red' | 'yellow' | 'light-violet' | 'light-blue' | 'light-green';
 
 // Implementation that now connects to TLDraw editor
 export class CanvasInteraction {
@@ -113,6 +116,7 @@ export class CanvasInteraction {
   public resetEditor(): void {
     this.editorRef = null;
     this.initialized = false;
+    console.log('TLDraw editor reference reset in CanvasInteraction');
   }
 
   /**
@@ -128,10 +132,10 @@ export class CanvasInteraction {
   /**
    * Map a color string to a TLDraw color
    */
-  private mapColor(color: string | undefined): string {
+  private mapColor(color: string | undefined): TLDefaultColorStyle {
     if (!color) return 'black';
     
-    const lowerColor = color.toLowerCase();
+    const lowerColor = color.toLowerCase() as keyof typeof COLOR_MAP;
     return COLOR_MAP[lowerColor] || 'black';
   }
 
@@ -229,7 +233,6 @@ export class CanvasInteraction {
     const colorValue = this.mapColor(options.color || 'black');
     
     if (shapeType === 'geo') {
-      // Create a geo shape (rectangle, circle, etc.)
       editor.createShape<TLGeoShape>({
         id,
         type: shapeType,
@@ -238,16 +241,15 @@ export class CanvasInteraction {
         props: {
           geo: this.mapGeoType(type),
           color: colorValue,
-          text: options.text || '',
           size: 'l',
           w: options.size?.width || 100,
           h: options.size?.height || 100,
           fill: options.fillOpacity === 0 ? 'none' : 'solid',
           dash: 'draw',
+          text: type === 'rectangle' || type === 'circle' || type === 'triangle' ? (options.text || '') : undefined
         },
       });
     } else if (shapeType === 'line') {
-      // Create a line
       editor.createShape({
         id,
         type: shapeType,
@@ -256,15 +258,10 @@ export class CanvasInteraction {
         props: {
           color: colorValue,
           size: 'l',
-          // Create a line with start and end points
-          handles: {
-            start: { x: 0, y: 0 },
-            end: { x: options.size?.width || 100, y: options.size?.height || 0 },
-          },
+          points: options.points ? options.points.map(p => ({ x: p.x - position.x, y: p.y - position.y, z:0.5 })) : [{x:0,y:0,z:0.5}, {x:options.size?.width || 100, y:options.size?.height || 0, z:0.5}]
         },
       });
     } else if (shapeType === 'arrow') {
-      // Create an arrow
       editor.createShape<TLArrowShape>({
         id,
         type: shapeType,
@@ -273,15 +270,11 @@ export class CanvasInteraction {
         props: {
           color: colorValue,
           size: 'l',
-          // Create a line with start and end points
-          handles: {
-            start: { x: 0, y: 0 },
-            end: { x: options.size?.width || 100, y: options.size?.height || 0 },
-          },
+          start: { type: 'point', x: 0, y: 0 },
+          end: { type: 'point', x: options.size?.width || 100, y: options.size?.height || 0 },
         },
       });
     } else if (shapeType === 'text') {
-      // Create a text shape
       editor.createShape({
         id,
         type: 'text',
@@ -318,34 +311,40 @@ export class CanvasInteraction {
     rotation?: number
   ): CanvasElement {
     const editor = this.getEditor();
-    const id = createShapeId();
-    
-    // First create the asset
-    const assetId = editor.createAssets([
-      {
-        type: 'image',
+    const imageShapeId = createShapeId();
+    const assetId = createShapeId() as unknown as TLAssetId;
+
+    const imageAsset: TLImageAsset = {
+      id: assetId,
+      type: 'image',
+      typeName: 'asset',
+      props: {
+        name: src.substring(src.lastIndexOf('/') + 1) || 'image.png',
         src: src,
-        size: [size?.width || 200, size?.height || 200],
-        isCopying: false
-      }
-    ])[0];
+        w: size?.width || 200,
+        h: size?.height || 200,
+        mimeType: 'image/png',
+        isAnimated: false,
+      },
+      meta: {},
+    };
+    editor.createAssets([imageAsset]);
     
-    // Then create the image shape with the asset ID
     editor.createShape<TLImageShape>({
-      id,
+      id: imageShapeId,
       type: 'image',
       x: position.x,
       y: position.y,
       props: {
         w: size?.width || 200,
         h: size?.height || 200,
-        assetId,
-        rotation: rotation || 0,
+        assetId: assetId, 
       },
+      rotation: rotation || 0,
     });
 
     return {
-      id: id.toString(),
+      id: imageShapeId.toString(),
       type: 'image',
       data: {
         src,
@@ -469,19 +468,17 @@ export class CanvasInteraction {
   /**
    * Zoom in on the canvas
    */
-  public zoomIn(factor: number = 1.2): void {
+  public zoomIn(): void {
     const editor = this.getEditor();
-    const currentZoom = editor.getZoomLevel();
-    editor.setZoomLevel(currentZoom * factor);
+    editor.zoomIn();
   }
 
   /**
    * Zoom out on the canvas
    */
-  public zoomOut(factor: number = 0.8): void {
+  public zoomOut(): void {
     const editor = this.getEditor();
-    const currentZoom = editor.getZoomLevel();
-    editor.setZoomLevel(currentZoom * factor);
+    editor.zoomOut();
   }
 
   /**
@@ -495,14 +492,15 @@ export class CanvasInteraction {
     
     if (shape.type === 'image' && typeof shape.props === 'object' && shape.props !== null) {
       type = 'image';
+      const imageProps = shape.props as TLImageShape['props']; // Cast to specific props type
       data = {
-        src: 'asset_id:' + shape.props.assetId,
+        src: 'asset_id:' + imageProps.assetId, // assetId is correct here
         position,
         size: { 
-          width: typeof shape.props.w === 'number' ? shape.props.w : 100, 
-          height: typeof shape.props.h === 'number' ? shape.props.h : 100 
+          width: imageProps.w || 100, 
+          height: imageProps.h || 100 
         },
-        rotation: typeof shape.props.rotation === 'number' ? shape.props.rotation : 0,
+        rotation: shape.rotation || 0, // rotation is on the base shape
       };
     } else if (shape.type === 'note' && typeof shape.props === 'object' && shape.props !== null) {
       type = 'url';

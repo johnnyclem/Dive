@@ -2,14 +2,14 @@ import { z } from "zod";
 import logger from "./logger";
 
 // Define the expected response schema
-const ResponseContentSchema = z.union([
+const BaseResponseContentSchema = z.union([
   z.object({
     type: z.literal("text"),
     text: z.string(),
   }),
   z.object({
     type: z.literal("image"),
-    data: z.string(),
+    data: z.string(), // Could be URL or base64
     mimeType: z.string(),
   }),
   z.object({
@@ -32,7 +32,24 @@ const ResponseContentSchema = z.union([
   }),
 ]);
 
-export type ResponseContent = z.infer<typeof ResponseContentSchema>;
+// New schema for in-app URL display
+const InAppUrlContentSchema = z.object({
+  type: z.literal("in_app_url"),
+  url: z.string(),
+  displayText: z.string().optional(),
+  messageText: z.string().optional(), // The rest of the original message, cleaned up
+});
+
+// Extended schema including the new type
+const ExtendedResponseContentSchema = z.union([
+  BaseResponseContentSchema.options[0], // text
+  BaseResponseContentSchema.options[1], // image
+  BaseResponseContentSchema.options[2], // audio
+  BaseResponseContentSchema.options[3], // resource
+  InAppUrlContentSchema,
+]);
+
+export type ResponseContent = z.infer<typeof ExtendedResponseContentSchema>; // Export the extended type
 
 /**
  * Converts camelCase parameter names to kebab-case
@@ -83,15 +100,78 @@ export function convertCamelCaseToKebabCase(params: Record<string, unknown>): Re
  * @param response The raw tool response
  * @returns A properly formatted response object
  */
-export function adaptToolResponse(response: unknown): ResponseContent[] {
+export function adaptToolResponse(rawResponse: unknown): ResponseContent[] {
   try {
-    logger.debug(`adaptToolResponse received: ${JSON.stringify(response)}`);
+    logger.debug(`adaptToolResponse received raw: ${JSON.stringify(rawResponse)}`);
 
-    // Handle special case for get_crypto_price and other similar tools
-    if (response && typeof response === 'object' && !Array.isArray(response)) {
+    let currentResponse = rawResponse;
+
+    // Check for the nested structure like {"content": [{...}]}
+    if (
+      rawResponse &&
+      typeof rawResponse === 'object' &&
+      'content' in rawResponse &&
+      Array.isArray((rawResponse as { content: unknown[] }).content) &&
+      (rawResponse as { content: unknown[] }).content.length > 0
+    ) {
+      // Use the first element of the 'content' array
+      currentResponse = (rawResponse as { content: unknown[] }).content[0];
+      logger.debug(`Unwrapped response from content array: ${JSON.stringify(currentResponse)}`);
+    }
+
+    let textToParse: string | null = null;
+    let originalTextObject: ResponseContent | null = null;
+
+    if (typeof currentResponse === "string") {
+      textToParse = currentResponse;
+    } else if (currentResponse && typeof currentResponse === 'object' && 'type' in currentResponse && currentResponse.type === 'text' && 'text' in currentResponse && typeof (currentResponse as { text: unknown }).text === 'string') {
+      textToParse = (currentResponse as {text: string}).text;
+      originalTextObject = currentResponse as ResponseContent; // Save the original text object
+    }
+
+    if (textToParse) {
+      const imageUrlRegex = /(?:Image URL:|URL:)\\s*(https?:\/\/[^\\s\\n]+)/i; // Made regex case-insensitive and more general
+      const match = textToParse.match(imageUrlRegex);
+      if (match && match[1]) {
+        logger.info(`Found URL for in-app display: ${match[1]}`);
+        let messageText = textToParse
+          .replace(imageUrlRegex, "") // Remove the "Image URL: <url>" line
+          .replace(/\\n?The image has been opened in your default browser\\.\\n?/gi, '\\n') // Remove browser opening message
+          .replace(/\\n?You can also click the URL above to view the image again\\.\\n?/gi, '\\n') // Remove redundant click message
+          .replace(/Image generated successfully!\\n*/i, '') // Remove success prefix if it was just for the image
+          .trim();
+        
+        // If the messageText becomes empty or too short, provide a default.
+        if (messageText.length < 20 && !messageText.includes("Generation details")) {
+            messageText = "Image generation details below.";
+        }
+        // Ensure generation details are preserved if they exist
+        const generationDetailsMatch = textToParse.match(/Generation details:[\\s\\S]*/i);
+        if (generationDetailsMatch && !messageText.includes(generationDetailsMatch[0])) {
+            messageText = `${messageText.trim()}\\n\\n${generationDetailsMatch[0].trim()}`.trim();
+        }
+
+        return [{
+          type: "in_app_url",
+          url: match[1],
+          displayText: "View Generated Content",
+          messageText: messageText.trim(),
+        }];
+      }
+      // If no image URL was found, return the original text content
+      if (originalTextObject) { // This was an original {type: "text", ...} object
+        return [originalTextObject];
+      }
+      if (typeof currentResponse === "string") { // This was an original plain string
+        return [{ type: "text", text: currentResponse }];
+      }
+    }
+    
+    // Handle special case for get_crypto_price and other similar tools (operating on unwrapped 'currentResponse')
+    if (currentResponse && typeof currentResponse === 'object' && !Array.isArray(currentResponse)) {
       // Handle error responses
-      if ('error' in response && response.error) {
-        const errorMsg = 'message' in response ? String(response.message) : 'Unknown tool error';
+      if ('error' in currentResponse && currentResponse.error) {
+        const errorMsg = 'message' in currentResponse ? String(currentResponse.message) : 'Unknown tool error';
         logger.warn(`Tool returned an error: ${errorMsg}`);
         return [{
           type: "text",
@@ -100,10 +180,10 @@ export function adaptToolResponse(response: unknown): ResponseContent[] {
       }
 
       // Handle crypto price responses
-      if ('price' in response || 'value' in response || 'data' in response) {
+      if ('price' in currentResponse || 'value' in currentResponse || 'data' in currentResponse) {
         // Format the response based on available properties
         let formattedText = 'Tool Result:';
-        const obj = response as Record<string, unknown>;
+        const obj = currentResponse as Record<string, unknown>;
         
         if ('price' in obj) formattedText += ` Price: ${obj.price}`;
         if ('value' in obj) formattedText += ` Value: ${obj.value}`;
@@ -119,43 +199,36 @@ export function adaptToolResponse(response: unknown): ResponseContent[] {
       }
     }
     
-    // If response is a string, wrap it as text content
-    if (typeof response === "string") {
-      // Return as regular text content
-      return [{
-        type: "text",
-        text: response,
-      }];
-    }
-    
-    // If response is an object with imageUrl property
-    if (response && typeof response === "object" && !Array.isArray(response) && "imageUrl" in response) {
+    // If response is an object with imageUrl property (direct image, not text)
+    if (currentResponse && typeof currentResponse === "object" && !Array.isArray(currentResponse) && "imageUrl" in currentResponse) {
       try {
+        // This could also become an "in_app_url" if desired for consistency
         return [{
-          type: "image",
-          data: String((response as Record<string, unknown>).imageUrl),
-          mimeType: "image/png",
+          type: "image", // For now, keep as image. Could be in_app_url too.
+          data: String((currentResponse as Record<string, unknown>).imageUrl),
+          mimeType: "image/png", // Assuming png, might need to be more dynamic
         }];
       } catch (imageError) {
         logger.error(`Error handling image response: ${imageError}`);
         // Fallback to text
         return [{
           type: "text",
-          text: JSON.stringify(response),
+          text: JSON.stringify(currentResponse),
         }];
       }
     }
 
     // If response is an object that already matches our schema, return it as is
     try {
-      const parsed = ResponseContentSchema.parse(response);
+      // Use the extended schema for parsing
+      const parsed = ExtendedResponseContentSchema.parse(currentResponse); // Parse the unwrapped response
       return [parsed];
     } catch (parseError) {
-      logger.warn(`Response didn't match schema, converting to string: ${parseError}`);
+      logger.warn(`Response didn't match schema after unwrapping and specific checks, converting to string: ${parseError}`);
       // If parsing fails, convert to string and wrap as text
       return [{
         type: "text",
-        text: typeof response === "string" ? response : JSON.stringify(response, null, 2),
+        text: typeof currentResponse === "string" ? currentResponse : JSON.stringify(currentResponse, null, 2),
       }];
     }
   } catch (error) {
@@ -163,7 +236,7 @@ export function adaptToolResponse(response: unknown): ResponseContent[] {
     logger.error(`Unexpected error in adaptToolResponse: ${error}`);
     return [{
       type: "text",
-      text: typeof response === "string" ? response : JSON.stringify(response),
+      text: typeof currentResponse === "string" ? currentResponse : JSON.stringify(currentResponse),
     }];
   }
 } 

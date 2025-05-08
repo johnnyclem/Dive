@@ -76,12 +76,13 @@ const SchedulerPage: React.FC = () => {
             <option value="recurring">Recurring</option>
             <option value="interval">Interval</option>
             <option value="heartbeat">Heartbeat</option>
+            <option value="runloop">Runloop</option>
           </select>
           <input
             type="text"
             value={newSchedule}
             onChange={(e) => setNewSchedule(e.target.value)}
-            placeholder="Schedule (cron or ISO)"
+            placeholder="Schedule (cron, ISO, or interval in seconds for runloop)"
             className="w-full px-2 py-1 border rounded"
           />
           <div className="flex justify-end space-x-2">
@@ -129,11 +130,13 @@ const SchedulerPage: React.FC = () => {
                     <option value="recurring">Recurring</option>
                     <option value="interval">Interval</option>
                     <option value="heartbeat">Heartbeat</option>
+                    <option value="runloop">Runloop</option>
                   </select>
                   <input
                     type="text"
                     value={editSchedule}
                     onChange={(e) => setEditSchedule(e.target.value)}
+                    placeholder="Schedule (cron, ISO, or interval in seconds for runloop)"
                     className="w-full mb-2 px-2 py-1 border rounded"
                   />
                   <div className="flex justify-end space-x-2">

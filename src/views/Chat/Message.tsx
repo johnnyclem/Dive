@@ -43,6 +43,125 @@ interface MessageProps {
   onEdit: (editedText: string) => void
 }
 
+// Helper function to detect if a string is JSON
+const isJsonString = (str: string): boolean => {
+  try {
+    const result = JSON.parse(str);
+    return (typeof result === 'object');
+  } catch (e) {
+    return false;
+  }
+}
+
+// Helper function to check if an object is an image type
+const isImageType = (obj: any): boolean => {
+  return obj && obj.type === 'image' && obj.data && obj.mimeType;
+}
+
+// Helper to check if a string is likely base64 encoded image data
+const isLikelyBase64Image = (str: string): boolean => {
+  // Base64 strings are typically long, contain only valid base64 chars, and don't have spaces
+  if (str.length < 100) return false; // Too short to be an image
+  
+  // Check if string contains only valid base64 characters
+  return /^[A-Za-z0-9+/]+={0,2}$/i.test(str.trim());
+}
+
+// Helper to extract image data from a malformed/partial JSON or raw text
+const tryExtractImageData = (text: string): { data: string, mimeType: string } | null => {
+  console.log("Attempting to extract image data from text:", text.substring(0, 100) + "...");
+  
+  // NEW: Check for markdown-style image syntax first - this is the most common pattern
+  // Allow for line breaks between ![image] and (data:...)
+  // Format: ![image]\n(data:image/png;base64,...)
+  const markdownImageRegex = /!\[(.*?)\][\s\n]*\(\s*(data:([^;]+);base64,[^\s)]+)\s*\)/is;
+  const markdownMatch = text.match(markdownImageRegex);
+  if (markdownMatch) {
+    console.log("Found markdown-style image data");
+    const dataUrl = markdownMatch[2]; // Full data URL
+    const mimeType = markdownMatch[3] || "image/png"; // mime type or default to png
+    return {
+      data: dataUrl, // Return the complete data URL
+      mimeType: mimeType
+    };
+  }
+  
+  // Also check for a special case where the format is ![image] on one line and (data:...) on the next
+  if (text.includes("![image]") && text.includes("(data:")) {
+    console.log("Found split markdown image pattern");
+    const dataUrlMatch = text.match(/\(data:([^;]+);base64,([^)]+)\)/);
+    if (dataUrlMatch) {
+      const mimeType = dataUrlMatch[1];
+      const fullDataUrl = `data:${mimeType};base64,${dataUrlMatch[2]}`;
+      return {
+        data: fullDataUrl,
+        mimeType: mimeType
+      };
+    }
+  }
+  
+  // Also check for plain data URLs without markdown wrapper
+  if (text.trim().startsWith('data:')) {
+    console.log("Found direct data URL");
+    const mimeTypeMatch = text.match(/data:([^;]+);/);
+    return {
+      data: text.trim(),
+      mimeType: mimeTypeMatch ? mimeTypeMatch[1] : "image/png"
+    };
+  }
+  
+  // Check for the common JSON structure pattern with image type
+  const typeImageMatch = text.match(/"type"\s*:\s*"image"/i);
+  const dataMatch = text.match(/"data"\s*:\s*"([^"]+)"/i);
+  const mimeTypeMatch = text.match(/"mimeType"\s*:\s*"([^"]+)"/i);
+  
+  if (typeImageMatch && dataMatch && mimeTypeMatch) {
+    console.log("Found image data pattern in text");
+    return {
+      data: dataMatch[1],
+      mimeType: mimeTypeMatch[1]
+    };
+  }
+  
+  // Check if it's a raw base64 string
+  if (isLikelyBase64Image(text)) {
+    console.log("Text appears to be raw base64 data");
+    return {
+      data: text.trim(),
+      mimeType: "image/jpeg" // Default to JPEG as a fallback
+    };
+  }
+  
+  return null;
+}
+
+// Helper to safely render image from base64 or URL
+const renderImage = (data: string, mimeType: string): JSX.Element => {
+  console.log(`Rendering image with mimeType: ${mimeType}, data starts with: ${data.substring(0, 30)}...`);
+  
+  // If data is already a complete data URL, use it directly
+  if (data.startsWith('data:')) {
+    console.log("Rendering complete data URL");
+    return <img src={data} className="max-w-full rounded" alt="Generated content" />;
+  }
+  // Check if it's a URL
+  else if (data.startsWith('http')) {
+    console.log("Rendering as URL");
+    return <img src={data} className="max-w-full rounded" alt="Generated content" />;
+  }
+  // Otherwise assume it's base64 data, create a data URL
+  else {
+    console.log("Rendering as base64 data");
+    try {
+      const dataUrl = `data:${mimeType};base64,${data}`;
+      return <img src={dataUrl} className="max-w-full rounded" alt="Generated content" />;
+    } catch (error) {
+      console.error("Failed to render image:", error);
+      return <div className="text-red-500">Error displaying image</div>;
+    }
+  }
+}
+
 const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, onEdit }: MessageProps) => {
   const { t } = useTranslation()
   const [theme] = useAtom(themeAtom)
@@ -125,6 +244,46 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
 
   const formattedText = useMemo(() => {
     const _text = isSent ? content : text
+    
+    // Check if the message text is from the AI and might contain an image
+    if (!isSent) {
+      console.log("Processing AI message:", messageId);
+      console.log("Message text snippet:", _text.substring(0, 100));
+      
+      // FIRST: Try to extract image data directly from text patterns
+      // This will catch markdown-style images like ![image](data:image/png;base64,...)
+      const extractedImage = tryExtractImageData(_text);
+      if (extractedImage) {
+        console.log("Successfully extracted image data directly from text");
+        return renderImage(extractedImage.data, extractedImage.mimeType);
+      }
+      
+      // SECOND: Try parsing as JSON if direct extraction fails
+      if (isJsonString(_text)) {
+        try {
+          const parsedMessage = JSON.parse(_text);
+          
+          // Handle array of content (common in responses)
+          if (Array.isArray(parsedMessage)) {
+            console.log("Message is a JSON array");
+            // If it's an array with a single image object
+            if (parsedMessage.length === 1 && isImageType(parsedMessage[0])) {
+              const imageObj = parsedMessage[0];
+              console.log("Found image object in array");
+              return renderImage(imageObj.data, imageObj.mimeType);
+            }
+          } 
+          // Handle direct image object
+          else if (isImageType(parsedMessage)) {
+            console.log("Message is a direct image object");
+            return renderImage(parsedMessage.data, parsedMessage.mimeType);
+          }
+        } catch (error) {
+          console.error("Error parsing JSON message:", error);
+        }
+      }
+    }
+    
     if (isSent) {
       const splitText = _text.split("\n")
       return splitText.map((line, i) => (
@@ -274,7 +433,7 @@ const Message = ({ messageId, text, isSent, files, isError, isLoading, onRetry, 
         {_text.replaceAll("file://", "https://localfile")}
       </ReactMarkdown>
     )
-  }, [content, text, isSent, isLoading])
+  }, [content, text, isSent, isLoading, messageId])
 
   return (
     <div className={`message-wrapper ${isSent ? "sent" : "received"} ${isError ? "error" : ""}`}>

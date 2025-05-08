@@ -1,7 +1,7 @@
 export interface ScheduledItem {
   id: string;
   description: string;
-  type: 'once' | 'recurring' | 'interval' | 'heartbeat';
+  type: 'once' | 'recurring' | 'interval' | 'heartbeat' | 'runloop';
   schedule: string;
   status: 'active' | 'paused' | 'completed' | 'error';
   nextRunTime: number;

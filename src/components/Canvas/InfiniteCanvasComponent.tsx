@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Tldraw, Editor, createShapeId } from '@tldraw/tldraw';
+import { Tldraw, Editor, createShapeId, TLNoteShape } from '@tldraw/tldraw';
 import '@tldraw/tldraw/tldraw.css';
 import { CanvasContentData } from './CanvasStore';
 import { useAtomValue } from 'jotai';
@@ -126,11 +126,9 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
     console.log("TLDraw mounted for chat:", currentChatId || 'new chat', "with key:", persistenceKey);
     editorRef.current = editor;
     
-    // Set the editor reference in the CanvasInteraction singleton
     canvasInteraction.setEditor(editor);
     console.log("Canvas interaction connected to editor");
 
-    // Set up drop handling
     const handleDrop = (e: DragEvent) => {
       e.preventDefault();
       const text = e.dataTransfer?.getData('text/plain');
@@ -141,63 +139,99 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
         y: e.clientY,
       });
 
-      // Use CanvasInteraction instead of direct manipulation
+      const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
+      const isUrl = urlRegex.test(text);
+
+      console.log(`Attempting to create a note for dropped ${isUrl ? 'URL' : 'text'}: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`);
+
+      // Skip custom CanvasInteraction for debugging purposes
+      // This direct approach enables us to test exactly how notes should be created
       try {
-        // Create a sticky note with the dropped text
-        canvasInteraction.drawPrimitiveOnCanvas(
-          'rectangle', 
-          point, 
-          {
-            color: 'yellow',
-            text: text,
-            size: { width: 200, height: 100 }
-          }
-        );
-      } catch (err) {
-        console.error("Failed to use CanvasInteraction:", err);
-        // Fallback to direct method if CanvasInteraction fails
-        editor.mark('creating sticky note');
-        const id = createShapeId();
-        editor.createShape({
-          id,
-          type: 'geo',
+        console.log("ATTEMPT #1: Creating note with text IN props");
+        const id1 = createShapeId();
+        // Use type assertion to bypass TypeScript checking
+        const noteWithTextInProps = {
+          id: id1,
+          type: 'note',
           x: point.x,
           y: point.y,
           props: {
-            geo: 'rectangle',
-            color: 'yellow',
-            size: 'l',
             text: text,
-            fill: 'solid',
-          },
-        });
-        // Select the newly created shape
-        editor.select(id);
+            color: isUrl ? 'yellow' : 'light-blue',
+            size: 'm'
+          }
+        } as any; // Type assertion to bypass TS checking
+        
+        console.log("Creating note shape (text IN props):", JSON.stringify(noteWithTextInProps));
+        editor.mark('creating note - text IN props');
+        editor.createShape(noteWithTextInProps);
+        editor.select(id1);
         editor.complete();
+        console.log("Note with text IN props created successfully!");
+        
+        // If the first attempt works, we can return here
+        // But for debugging, let's try the other approach in a separate position
+        
+        console.log("ATTEMPT #2: Creating note with text at TOP level");
+        const id2 = createShapeId();
+        // Try alternative structure with text at top level
+        const noteWithTextAtTopLevel = {
+          id: id2,
+          type: 'note',
+          x: point.x + 300, // Offset position for clarity
+          y: point.y,
+          text: text, // Text at TOP LEVEL
+          props: {
+            color: isUrl ? 'yellow' : 'light-blue',
+            size: 'm'
+          }
+        } as any; // Type assertion to bypass TS checking
+        
+        console.log("Creating note shape (text at TOP level):", JSON.stringify(noteWithTextAtTopLevel));
+        editor.mark('creating note - text at TOP level');
+        editor.createShape(noteWithTextAtTopLevel);
+        // Uncomment the following lines to select the second note instead
+        // editor.select(id2);
+        // editor.complete();
+        console.log("Note with text at TOP level created successfully!");
+      } catch (err) {
+        console.error("Error creating notes:", err);
       }
     };
 
-    // Add drop event listener to the editor's container
     const container = editor.getContainer();
     container.addEventListener('drop', handleDrop);
     container.addEventListener('dragover', (e) => {
       e.preventDefault();
-      e.dataTransfer!.dropEffect = 'copy';
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
     });
 
-    // Set up listener for changes
     const handleChange = () => {
       debouncedSave();
     };
     editor.on('change', handleChange);
 
-    // Cleanup listener on unmount or editor change
     return () => {
+      console.log("Cleaning up Tldraw editor instance for key:", persistenceKey);
       container.removeEventListener('drop', handleDrop);
-      container.removeEventListener('dragover', (e) => e.preventDefault());
+      container.removeEventListener('dragover', (e) => { 
+        e.preventDefault(); 
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'none';
+      });
       editor.off('change', handleChange);
+      canvasInteraction.resetEditor();
     };
-  }, [debouncedSave, currentChatId, persistenceKey]);
+  }, [debouncedSave, currentChatId, persistenceKey, canvasInteraction]);
+
+  // useEffect for top-level component unmount cleanup (might be redundant now but safe)
+  useEffect(() => {
+    return () => {
+      // This resetEditor call might be redundant if handleMount cleanup always fires,
+      // but it's a safeguard for the entire InfiniteCanvasComponent unmounting.
+      console.log("InfiniteCanvasComponent unmounting, attempting resetEditor as safeguard.");
+      canvasInteraction.resetEditor();
+    };
+  }, [canvasInteraction]); // Depends only on canvasInteraction instance
 
   // Generate a unique key for both the component and the persistence to ensure proper remounting
   // For existing chats, use the chat ID

@@ -62,6 +62,7 @@ export class SchedulerService {
           or(
             eq(scheduledTasks.type, 'recurring'),
             eq(scheduledTasks.type, 'interval'),
+            eq(scheduledTasks.type, 'runloop'),
             and(
               eq(scheduledTasks.type, 'once'),
               gte(scheduledTasks.nextRunTime, nowMs)
@@ -100,8 +101,13 @@ export class SchedulerService {
   }
 
   /** Compute next run time based on type and schedule string */
-  private calculateNextRunTime(task: ScheduledTask | NewScheduledTask): number {
+  private calculateNextRunTime(task: Pick<ScheduledTask, 'id' | 'type' | 'schedule' | 'nextRunTime' | 'status'>): number {
     const nowMs = Date.now();
+    let currentNextRunTime = 0;
+    if (typeof task.nextRunTime === 'number') {
+        currentNextRunTime = task.nextRunTime;
+    }
+
     switch (task.type) {
       case 'once': {
         const runTime = new Date(task.schedule).getTime();
@@ -111,13 +117,22 @@ export class SchedulerService {
       case 'heartbeat': {
         const intervalMinutes = parseInt(task.schedule, 10);
         if (isNaN(intervalMinutes) || intervalMinutes <= 0) {
-          logger.error(`Invalid interval for task ${task.id}: ${task.schedule}`);
+          logger.error(`Invalid interval for task ${task.id || 'new'}: ${task.schedule}`);
           return 0;
         }
-        return nowMs + intervalMinutes * 60 * 1000;
+        const baseTime = (currentNextRunTime > nowMs && task.type === 'interval') ? currentNextRunTime : nowMs;
+        return baseTime + intervalMinutes * 60 * 1000;
+      }
+      case 'runloop': {
+        const intervalSeconds = parseInt(task.schedule, 10);
+        if (isNaN(intervalSeconds) || intervalSeconds <= 0) {
+          logger.error(`Invalid interval for runloop task ${task.id || 'new'}: ${task.schedule}`);
+          return 0;
+        }
+        const baseTime = (currentNextRunTime > nowMs) ? currentNextRunTime : nowMs;
+        return baseTime + intervalSeconds * 1000;
       }
       case 'recurring': {
-        // Support patterns like daily@HH:MM or weekdays@HH:MM
         if (task.schedule.startsWith('daily@')) {
           const [, time] = task.schedule.split('@');
           const [hour, minute] = time.split(':').map(Number);
@@ -136,11 +151,11 @@ export class SchedulerService {
           }
           return next.getTime();
         }
-        logger.error(`Unsupported recurring schedule format for task ${task.id}: ${task.schedule}`);
+        logger.error(`Unsupported recurring schedule format for task ${task.id || 'new'}: ${task.schedule}`);
         return 0;
       }
       default:
-        logger.error(`Unknown task type for task ${task.id}: ${task.type}`);
+        logger.error(`Unknown task type for task ${task.id || 'new'}: ${task.type}`);
         return 0;
     }
   }
@@ -153,7 +168,16 @@ export class SchedulerService {
     createdBy: 'user' | 'agent' = 'user'
   ): Promise<ScheduledTask> {
     const nowMs = Date.now();
-    const nextMs = this.calculateNextRunTime({ description, type, schedule, id: '', status: 'active', nextRunTime: 0, createdAt: nowMs, updatedAt: nowMs, createdBy } as NewScheduledTask);
+    const tempTaskForCalc: Pick<ScheduledTask, 'id' | 'type' | 'schedule' | 'nextRunTime' | 'status'> = {
+      id: 'temp-id-for-calc',
+      type,
+      schedule,
+      nextRunTime: 0, 
+      status: 'active',
+    };
+    
+    const nextMs = this.calculateNextRunTime(tempTaskForCalc);
+
     if (nextMs === 0 && type !== 'once') {
       throw new Error(`Could not calculate next run time for schedule: ${schedule}`);
     }
@@ -177,9 +201,10 @@ export class SchedulerService {
   /** Schedule next run in memory */
   private scheduleNextRun(task: ScheduledTask): void {
     if (task.status !== 'active') return;
+    const nextRunTimeNumber = typeof task.nextRunTime === 'number' ? task.nextRunTime : new Date(task.nextRunTime).getTime();
     const existing = this.timers.get(task.id);
     if (existing) clearTimeout(existing);
-    const delay = task.nextRunTime.getTime() - Date.now();
+    const delay = nextRunTimeNumber - Date.now();
     if (delay <= 0) {
       setImmediate(() => this.runScheduledTask(task));
     } else {
@@ -196,14 +221,14 @@ export class SchedulerService {
   private async runScheduledTask(task: ScheduledTask): Promise<void> {
     if (this.isProcessingScheduledAction) {
       logger.warn(`Already processing a scheduled action, skipping ${task.id}`);
-      if (task.type === 'recurring' || task.type === 'interval') {
+      if (task.type === 'recurring' || task.type === 'interval' || task.type === 'runloop') {
         await this.rescheduleTask(task);
       }
       return;
     }
     if (!getAgentState().isIdle) {
       logger.info(`Agent is busy, deferring scheduled task ${task.id}`);
-      if (task.type === 'recurring' || task.type === 'interval') {
+      if (task.type === 'recurring' || task.type === 'interval' || task.type === 'runloop') {
         await this.rescheduleTask(task);
       }
       return;
@@ -212,26 +237,34 @@ export class SchedulerService {
     setAgentState({ isIdle: false });
     logger.info(`Running scheduled task ${task.id}: "${task.description.slice(0,50)}..."`);
     try {
-      const nowUpdate = new Date();
+      const nowMsUpdate = Date.now();
       await this.db.update(scheduledTasks)
-        .set({ lastRunTime: nowUpdate, updatedAt: nowUpdate })
+        .set({ lastRunTime: nowMsUpdate, updatedAt: nowMsUpdate })
         .where(eq(scheduledTasks.id, task.id));
-      await triggerAgentProcessing(task.description, task.id);
+
+      if (task.type === 'runloop') {
+        logger.info(`Runloop task ${task.id} triggered. Attempting to process next agent task.`);
+        const taskManager = TaskManager.getInstance();
+        await taskManager.processNextTaskIfIdle();
+      } else {
+        await triggerAgentProcessing(task.description, task.id);
+      }
+
       if (task.type === 'once') {
-        const now2 = new Date();
+        const nowMs2 = Date.now();
         await this.db.update(scheduledTasks)
-          .set({ status: 'completed', updatedAt: now2 })
+          .set({ status: 'completed', updatedAt: nowMs2 })
           .where(eq(scheduledTasks.id, task.id));
         logger.info(`Once task ${task.id} completed.`);
       }
     } catch (error) {
       logger.error(`Error executing scheduled task ${task.id}:`, error);
-      const nowErr = new Date();
+      const nowMsErr = Date.now();
       await this.db.update(scheduledTasks)
-        .set({ status: 'error', failReason: error instanceof Error ? error.message : String(error), updatedAt: nowErr })
+        .set({ status: 'error', failReason: error instanceof Error ? error.message : String(error), updatedAt: nowMsErr })
         .where(eq(scheduledTasks.id, task.id));
     } finally {
-      if (task.type === 'recurring' || task.type === 'interval') {
+      if (task.type === 'recurring' || task.type === 'interval' || task.type === 'runloop') {
         await this.rescheduleTask(task);
       }
       this.isProcessingScheduledAction = false;
@@ -240,12 +273,19 @@ export class SchedulerService {
 
   /** Recalculate and persist the next run time */
   private async rescheduleTask(task: ScheduledTask): Promise<void> {
-    const nextMs = this.calculateNextRunTime(task);
+    const taskForCalc: Pick<ScheduledTask, 'id' | 'type' | 'schedule' | 'nextRunTime' | 'status'> = {
+        id: task.id,
+        type: task.type,
+        schedule: task.schedule,
+        nextRunTime: typeof task.nextRunTime === 'number' ? task.nextRunTime : new Date(task.nextRunTime).getTime(),
+        status: task.status,
+    };
+    const nextMs = this.calculateNextRunTime(taskForCalc);
     if (nextMs > 0) {
       try {
-        const nowResched = new Date();
+        const nowMsResched = Date.now();
         const [updated] = await this.db.update(scheduledTasks)
-          .set({ nextRunTime: new Date(nextMs), updatedAt: nowResched })
+          .set({ nextRunTime: nextMs, updatedAt: nowMsResched })
           .where(eq(scheduledTasks.id, task.id))
           .returning();
         if (updated) this.scheduleNextRun(updated);
@@ -263,29 +303,56 @@ export class SchedulerService {
   /** Update task properties */
   public async updateScheduledTask(
     id: string,
-    updates: Partial<ScheduledTask>
+    updates: Partial<Omit<ScheduledTask, 'id' | 'createdAt'>>
   ): Promise<ScheduledTask | null> {
     const nowMs = Date.now();
     const current = await this.db.query.scheduledTasks.findFirst({ where: eq(scheduledTasks.id, id) });
     if (!current) return null;
-    const merged = { ...current, ...updates } as ScheduledTask;
-    if (updates.schedule || updates.type || updates.status) {
-      const nextMs = this.calculateNextRunTime(merged);
-      merged.nextRunTime = nextMs;
-      merged.updatedAt = nowMs;
-      merged.updatedAt = now;
-      if (merged.nextRunTime === 0 && merged.type !== 'once') {
+
+    const currentNextRunTimeNumber = typeof current.nextRunTime === 'number' ? current.nextRunTime : new Date(current.nextRunTime).getTime();
+    let updatesNextRunTimeNumber: number | undefined = undefined;
+    if (updates.nextRunTime !== undefined) {
+        updatesNextRunTimeNumber = typeof updates.nextRunTime === 'number' ? updates.nextRunTime : new Date(updates.nextRunTime).getTime();
+    }
+
+    const taskStateForCalc: Pick<ScheduledTask, 'id' | 'type' | 'schedule' | 'nextRunTime' | 'status'> = {
+      id: current.id,
+      type: updates.type ?? current.type,
+      schedule: updates.schedule ?? current.schedule,
+      nextRunTime: updatesNextRunTimeNumber ?? currentNextRunTimeNumber,
+      status: updates.status ?? current.status,
+    };
+    
+    let finalNextRunTime = taskStateForCalc.nextRunTime;
+
+    if (updates.schedule || updates.type || (updates.status === 'active' && current.status !== 'active')) {
+      finalNextRunTime = this.calculateNextRunTime(taskStateForCalc);
+      if (finalNextRunTime === 0 && taskStateForCalc.type !== 'once') {
         throw new Error('Invalid next run time for updated schedule');
       }
-      if (current.status !== 'active' && merged.status === 'active') {
-        merged.status = 'active';
-      }
     }
+    
+    const dbUpdates: Partial<NewScheduledTask> = { ...updates };
+    dbUpdates.updatedAt = nowMs;
+    if (finalNextRunTime !== undefined) {
+        dbUpdates.nextRunTime = typeof finalNextRunTime === 'number' ? finalNextRunTime : new Date(finalNextRunTime).getTime();
+    }
+
+    if (updates.lastRunTime !== undefined) {
+        dbUpdates.lastRunTime = typeof updates.lastRunTime === 'number' ? updates.lastRunTime : new Date(updates.lastRunTime).getTime();
+    }
+
+    delete dbUpdates.id;
+    delete dbUpdates.createdAt;
+
     const [updated] = await this.db.update(scheduledTasks)
-      .set({ ...updates, nextRunTime: merged.nextRunTime, updatedAt: now })
+      .set(dbUpdates)
       .where(eq(scheduledTasks.id, id))
       .returning();
-    if (updated) this.scheduleNextRun(updated);
+
+    if (updated) {
+        this.scheduleNextRun(updated);
+    }
     return updated ?? null;
   }
 

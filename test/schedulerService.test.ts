@@ -4,6 +4,8 @@ import path from 'path';
 import Database from 'better-sqlite3';
 import { initDatabase, DatabaseMode } from '../services/database/index.js';
 import { SchedulerService } from '../services/agent/schedulerService.js';
+import { TaskManager } from '../services/agent/taskManager.js';
+import { vi } from 'vitest';
 
 const TEST_DB = path.resolve(__dirname, 'test_scheduler_tasks.sqlite');
 const MIGRATIONS_DIR = path.resolve(__dirname, '../drizzle');
@@ -95,4 +97,48 @@ describe('SchedulerService E2E', () => {
     const active = await service.getActiveScheduledTasks();
     expect(active.map(t => t.id)).toEqual([onceTask.id]);
   });
+
+  it('adds and processes a runloop task', async () => {
+    const service = SchedulerService.getInstance();
+    const taskManager = TaskManager.getInstance(); // Get TaskManager instance
+
+    // Mock processNextTaskIfIdle
+    const mockProcessNextTask = vi.spyOn(taskManager, 'processNextTaskIfIdle').mockResolvedValue(undefined);
+
+    const intervalSeconds = 1; // Run every 1 second for testing
+    const description = 'E2E test runloop';    
+
+    // Add a runloop task scheduled to run almost immediately
+    const addedRunloopTask = await service.addScheduledTask(
+      description,
+      'runloop',
+      String(intervalSeconds), // schedule is interval in seconds
+      'user'
+    );
+
+    expect(addedRunloopTask.description).toBe(description);
+    expect(addedRunloopTask.type).toBe('runloop');
+    expect(addedRunloopTask.schedule).toBe(String(intervalSeconds));
+
+    // Wait for a bit longer than the interval to ensure it has a chance to run
+    await new Promise(resolve => setTimeout(resolve, intervalSeconds * 1000 + 500));
+
+    // Check if processNextTaskIfIdle was called
+    // Due to the nature of setTimeout and event loop, it might be called multiple times
+    expect(mockProcessNextTask).toHaveBeenCalled();
+
+    // Check if the task was rescheduled (its nextRunTime should be in the future)
+    const updatedTask = await service.getAllScheduledTasks().then(tasks => tasks.find(t => t.id === addedRunloopTask.id));
+    expect(updatedTask).toBeDefined();
+    // nextRunTime is number (timestamp)
+    // Ensure both are numbers before comparison to satisfy TypeScript
+    const updatedNextRunTime = typeof updatedTask!.nextRunTime === 'number' ? updatedTask!.nextRunTime : new Date(updatedTask!.nextRunTime).getTime();
+    const addedNextRunTime = typeof addedRunloopTask.nextRunTime === 'number' ? addedRunloopTask.nextRunTime : new Date(addedRunloopTask.nextRunTime).getTime();
+    expect(updatedNextRunTime).toBeGreaterThan(addedNextRunTime);
+
+    // Clean up
+    mockProcessNextTask.mockRestore();
+    await service.deleteScheduledTask(addedRunloopTask.id);
+    service.shutdown(); // ensure timers are cleared
+  }, { timeout: 5000 }); // Increase timeout for this test due to setTimeout
 }); 
