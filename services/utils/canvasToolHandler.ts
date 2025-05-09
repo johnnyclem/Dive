@@ -6,6 +6,7 @@
  */
 
 import { CanvasInteraction, CanvasPosition, CanvasElement } from './canvasInteraction';
+import { summarizeCanvasContents } from './canvasContentExtractor';
 
 interface CanvasToolResult {
   success: boolean;
@@ -57,9 +58,10 @@ export class CanvasToolHandler {
     // Also check for specific operation keywords
     const hasPrimitiveKeyword = this.primitiveKeywords.some(keyword => lowerQuery.includes(keyword));
     const hasZoomKeyword = this.zoomKeywords.some(keyword => lowerQuery.includes(keyword));
+    const hasReadKeyword = this.readKeywords.some(keyword => lowerQuery.includes(keyword));
     
     return (hasDrawKeyword && (hasCanvasKeyword || hasPrimitiveKeyword)) || 
-           (hasCanvasKeyword && (hasDrawKeyword || hasPrimitiveKeyword || hasZoomKeyword));
+           (hasCanvasKeyword && (hasDrawKeyword || hasPrimitiveKeyword || hasZoomKeyword || hasReadKeyword));
   }
 
   /**
@@ -153,10 +155,11 @@ export class CanvasToolHandler {
       // Handle read operations
       if (this.readKeywords.some(keyword => lowerQuery.includes(keyword))) {
         const contents = this.canvasInteraction.readCanvasContents();
+        const summary = summarizeCanvasContents(contents);
         return {
           success: true,
-          message: "Retrieved canvas contents",
-          data: contents
+          message: summary,
+          data: contents // Still provide the raw data
         };
       }
       
@@ -187,12 +190,31 @@ export class CanvasToolHandler {
       }
       
       // Default drawing operation
-      const element = this.canvasInteraction.drawOnCanvas(position);
+      // Check if the query implies drawing but didn't match a specific primitive
+      if (this.drawKeywords.some(keyword => lowerQuery.includes(keyword))) {
+          const element = this.canvasInteraction.drawOnCanvas(position);
+          return {
+              success: true,
+              message: "Drew on canvas",
+              data: element
+          };
+      }
+
+
+      // If no specific canvas command is matched, but it's a canvas query, return a default message
+       if (this.canvasKeywords.some(keyword => lowerQuery.includes(keyword))) {
+         return {
+           success: true,
+           message: "Acknowledged canvas query. Please specify an action like draw, add image, zoom, or read."
+         };
+       }
+
+
       return {
-        success: true,
-        message: "Drew on canvas",
-        data: element
+        success: false,
+        message: "Could not understand the canvas operation requested."
       };
+
     } catch (error) {
       return {
         success: false,
@@ -232,5 +254,15 @@ export class CanvasToolHandler {
     const containingMatch = query.match(textAfterContaining);
     
     return withMatch?.[1] || sayingMatch?.[1] || containingMatch?.[1];
+  }
+
+  private async readCanvas(): Promise<{ summary: string; data: CanvasElement[] | string; success: boolean }> {
+    // This triggers the summarization logic
+    const result = await CanvasToolHandler.getInstance().handleCanvasQuery("read canvas");
+    return {
+      summary: result.message,
+      data: result.data,
+      success: result.success,
+    };
   }
 } 

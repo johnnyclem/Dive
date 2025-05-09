@@ -8,6 +8,7 @@ import useCanvasStore from './CanvasStore';
 import { debounce } from 'lodash';
 // Import the CanvasInteraction class
 import { CanvasInteraction } from '../../../services/utils/canvasInteraction';
+import { summarizeCanvasElements } from './canvasContentExtractor'; // Import the new function
 
 interface InfiniteCanvasComponentProps {
   // data prop might be deprecated if we solely rely on chatStore

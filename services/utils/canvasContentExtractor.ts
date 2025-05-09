@@ -1,4 +1,5 @@
-import { CanvasContentType, CanvasContentData } from '../stores/useCanvasStore';
+import { CanvasContentType, CanvasContentData } from '../../src/components/Canvas/CanvasStore';
+import { CanvasElement, CanvasPrimitive, CanvasImage, CanvasURL } from './canvasInteraction';
 
 interface CalendarEvent {
   title: string;
@@ -23,7 +24,7 @@ function extractCodeBlock(text: string): { language: string; code: string } | nu
   const matches = [...text.matchAll(codeBlockRegex)];
   
   if (matches.length > 0) {
-    const [_, language, code] = matches[0];
+    const [, language, code] = matches[0];
     return { language: language || 'text', code: code.trim() };
   }
   
@@ -198,7 +199,8 @@ export function extractContent(message: string): {
   const jsonContentMatch = message.match(/```json([\s\S]*?)```/);
   if (jsonContentMatch) {
     try {
-      const jsonContent = JSON.parse(jsonContentMatch[1]);
+      const [, jsonContentText] = jsonContentMatch;
+      const jsonContent = JSON.parse(jsonContentText);
       if (jsonContent.contentType && jsonContent.data) {
         return {
           contentType: jsonContent.contentType as CanvasContentType,
@@ -213,7 +215,7 @@ export function extractContent(message: string): {
   // Then try to extract code blocks
   const codeBlockMatch = message.match(/```(\w*)\n([\s\S]*?)```/);
   if (codeBlockMatch) {
-    const [_, language, code] = codeBlockMatch;
+    const [, language, code] = codeBlockMatch;
     return {
       contentType: 'code',
       data: {
@@ -224,7 +226,7 @@ export function extractContent(message: string): {
   }
 
   // Then try to extract images
-  const imageMatch = message.match(/!\[.*?\]\((.*?)\)/);
+  const imageMatch = message.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/);
   if (imageMatch && imageMatch[1]) {
     return {
       contentType: 'image',
@@ -259,7 +261,51 @@ export function hasDisplayableContent(message: string): boolean {
   // Check for code blocks, images, or explicit content definitions
   return (
     message.includes('```') || 
-    message.match(/!\[.*?\]\(https?:\/\/[^\s)]+\)/) !== null ||
-    message.match(/\[.*?\]\(https?:\/\/[^\s)]+\)/) !== null
+    message.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/) !== null ||
+    message.match(/\[.*?\]\((https?:\/\/[^\s)]+)\)/) !== null
   );
+}
+
+/**
+ * Summarizes the contents of the canvas from an array of CanvasElement objects.
+ */
+export function summarizeCanvasContents(elements: CanvasElement[]): string {
+  if (!elements || elements.length === 0) {
+    return "The canvas is empty.";
+  }
+
+  const summaryParts: string[] = [];
+  const counts: Record<string, number> = {};
+  const details: string[] = [];
+
+  elements.forEach(element => {
+    counts[element.type] = (counts[element.type] || 0) + 1;
+
+    if (element.type === 'primitive') {
+      const primitive = element.data as CanvasPrimitive;
+      details.push(`- A ${primitive.type}${primitive.text ? ` with text "${primitive.text}"` : ''}${primitive.color && primitive.color !== 'black' ? ` colored ${primitive.color}` : ''} at position (${primitive.position.x}, ${primitive.position.y})`);
+    } else if (element.type === 'image') {
+      const image = element.data as CanvasImage;
+      details.push(`- An image from ${image.src} at position (${image.position.x}, ${image.position.y})${image.size ? ` with size ${image.size.width}x${image.size.height}` : ''}`);
+    } else if (element.type === 'url') {
+      const url = element.data as CanvasURL;
+      details.push(`- A link to ${url.url}${url.title ? ` titled "${url.title}"` : ''} at position (${url.position.x}, ${url.position.y})`);
+    }
+  });
+
+  // Add counts summary
+  const countSummary = Object.entries(counts)
+    .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`)
+    .join(', ');
+  summaryParts.push(`The canvas contains ${countSummary}.`);
+
+  // Add details if not too many elements
+  if (elements.length <= 10) { // Limit detailed listing to prevent overwhelming response
+    summaryParts.push('Details:');
+    summaryParts.push(...details);
+  } else {
+    summaryParts.push('Further details are available upon request for specific elements.');
+  }
+
+  return summaryParts.join('\n');
 }

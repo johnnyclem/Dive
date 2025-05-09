@@ -11,6 +11,14 @@
     {
       "toolName": "mcpollinations",
       "subToolName": "generateImage"
+    },
+    {
+      "toolName": "mcpollinations",
+      "subToolName": "listImageModels"
+    },
+    {
+      "toolName": "mcpollinations",
+      "subToolName": "generateImageUrl"
     }
   ]
 }
