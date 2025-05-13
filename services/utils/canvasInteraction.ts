@@ -76,13 +76,15 @@ type TLDRAW_COLOR_TYPE = 'black' | 'blue' | 'green' | 'grey' | 'orange' | 'pink'
 
 // Implementation that now connects to TLDraw editor
 export class CanvasInteraction {
-  private static instance: CanvasInteraction;
+  private static instance: CanvasInteraction | null = null;
+  private _debugId = Math.random().toString(36).substring(2, 10);
   private editorRef: Editor | null = null;
   private initialized = false;
 
-  /**
-   * Gets the singleton instance of the CanvasInteraction class
-   */
+  private constructor() {
+    console.log(`[CanvasInteraction] Created new instance`, this._debugId);
+  }
+
   public static getInstance(): CanvasInteraction {
     if (!CanvasInteraction.instance) {
       CanvasInteraction.instance = new CanvasInteraction();
@@ -90,24 +92,54 @@ export class CanvasInteraction {
     return CanvasInteraction.instance;
   }
 
-  private constructor() {
-    // Private constructor for singleton pattern
-  }
-
   /**
    * Check if the editor is initialized
    */
   public isInitialized(): boolean {
-    return this.initialized && this.editorRef !== null;
+    const result = this.initialized && this.editorRef !== null;
+    if (!result && this.editorRef) {
+      console.log("have editor but not initialized");
+      this.setEditor(this.editorRef);
+      const newResult = this.initialized && this.editorRef !== null;
+      return newResult;
+    };
+    console.log(`[CanvasInteraction] isInitialized called: ${result}`);
+    return result;
   }
 
   /**
    * Set the TLDraw editor reference
    */
   public setEditor(editor: Editor): void {
+    if (!editor) {
+      console.error('[CanvasInteraction] Attempted to set null editor');
+      return;
+    }
     this.editorRef = editor;
     this.initialized = true;
-    console.log('TLDraw editor connected to CanvasInteraction');
+    console.log(`[CanvasInteraction] Editor initialized successfully`);
+  }
+
+  /**
+   * Check if the editor is ready for operations
+   */
+  public isEditorReady(): boolean {
+    if (!this.editorRef) {
+      console.log('[CanvasInteraction] Editor reference is null');
+      return false;
+    }
+    if (!this.initialized) {
+      console.log('[CanvasInteraction] Editor not initialized');
+      return false;
+    }
+    try {
+      // Try a simple operation to verify editor is ready
+      this.editorRef.getViewportPageBounds();
+      return true;
+    } catch (error) {
+      console.error('[CanvasInteraction] Editor check failed:', error);
+      return false;
+    }
   }
 
   /**
@@ -123,10 +155,10 @@ export class CanvasInteraction {
    * Get the TLDraw editor reference
    */
   private getEditor(): Editor {
-    if (!this.editorRef || !this.initialized) {
-      throw new Error('TLDraw editor not initialized');
+    if (!this.isEditorReady()) {
+      throw new Error('TLDraw editor not ready for operations');
     }
-    return this.editorRef;
+    return this.editorRef!;
   }
 
   /**
@@ -396,10 +428,25 @@ export class CanvasInteraction {
    * Read the contents of the canvas
    */
   public readCanvasContents(): CanvasElement[] {
-    const editor = this.getEditor();
-    const shapes = editor.getCurrentPageShapesSorted();
-    
-    return shapes.map(shape => this.convertShapeToCanvasElement(shape));
+    if (!this.isEditorReady()) {
+      console.error('[CanvasInteraction] Cannot read canvas contents - editor not ready');
+      return [];
+    }
+
+    try {
+      const editor = this.getEditor();
+      const shapes = editor.getCurrentPageShapes();
+      
+      if (!shapes || shapes.length === 0) {
+        console.log('[CanvasInteraction] Canvas is empty');
+        return [];
+      }
+
+      return shapes.map(shape => this.convertShapeToCanvasElement(shape));
+    } catch (error) {
+      console.error('[CanvasInteraction] Error reading canvas contents:', error);
+      return [];
+    }
   }
 
   /**

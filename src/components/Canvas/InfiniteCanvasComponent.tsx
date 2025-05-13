@@ -6,12 +6,10 @@ import { useAtomValue } from 'jotai';
 import { currentChatIdAtom } from '../../atoms/chatState';
 import useCanvasStore from './CanvasStore';
 import { debounce } from 'lodash';
-// Import the CanvasInteraction class
+import { CanvasToolHandler } from '../../../services/utils/canvasToolHandler';
 import { CanvasInteraction } from '../../../services/utils/canvasInteraction';
-import { summarizeCanvasElements } from './canvasContentExtractor'; // Import the new function
 
 interface InfiniteCanvasComponentProps {
-  // data prop might be deprecated if we solely rely on chatStore
   data: CanvasContentData;
 }
 
@@ -26,8 +24,13 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
   const previousChatIdRef = useRef<string | null>(null);
   const forceNewCanvasRef = useRef<boolean>(false);
   
-  // Get CanvasInteraction instance
+  // Get CanvasInteraction instance from context
   const canvasInteraction = CanvasInteraction.getInstance();
+
+  const [canvasReady, setCanvasReady] = useState(false);
+
+  // Add a ref to queue dropped text if it arrives before the canvas is ready
+  const queuedDropRef = useRef<{ text: string; timestamp: number } | null>(null);
 
   // Set persistence key when chat ID changes
   useEffect(() => {
@@ -63,38 +66,44 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
     return () => {
       // Reset the canvas interaction when component unmounts
       canvasInteraction.resetEditor();
+      setCanvasReady(false);
       console.log("Canvas component unmounted, editor reference reset");
     };
-  }, []);
+  }, [canvasInteraction]);
 
-  // Handle dropped text when contentData changes
+  // Update the dropped text useEffect
   useEffect(() => {
-    if (editorRef.current && contentData.droppedText && contentData.timestamp) {
-      if (!canvasInteraction.isInitialized()) {
-        canvasInteraction.setEditor(editorRef.current);
+    if (
+      editorRef.current &&
+      contentData.droppedText &&
+      contentData.timestamp
+    ) {
+      if (!canvasReady) {
+        // Queue the dropped text to process when ready
+        queuedDropRef.current = {
+          text: contentData.droppedText,
+          timestamp: contentData.timestamp,
+        };
+        return;
       }
-      
-      // Get the center of the viewport
+      // Process dropped text
       const { width, height } = editorRef.current.getViewportPageBounds();
       const point = {
         x: width / 2,
         y: height / 2,
       };
-
-      // Create a note shape with the dropped text through CanvasInteraction
       try {
         canvasInteraction.drawPrimitiveOnCanvas(
-          'rectangle', 
-          point, 
+          'rectangle',
+          point,
           {
             color: 'yellow',
             text: contentData.droppedText,
-            size: { width: 200, height: 100 }
+            size: { width: 200, height: 100 },
           }
         );
       } catch (err) {
-        console.error("Failed to use CanvasInteraction:", err);
-        // If CanvasInteraction fails, fallback to direct method
+        console.error('Failed to use CanvasInteraction:', err);
         const editor = editorRef.current;
         editor.createShape({
           id: createShapeId(),
@@ -110,8 +119,50 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
           },
         });
       }
+      // Clear the queue if processed
+      queuedDropRef.current = null;
     }
-  }, [contentData.droppedText, contentData.timestamp]);
+  }, [contentData.droppedText, contentData.timestamp, canvasReady, currentChatId]);
+
+  // Add an effect to process queued dropped text when canvas becomes ready
+  useEffect(() => {
+    if (canvasReady && queuedDropRef.current && editorRef.current) {
+      const { text, timestamp } = queuedDropRef.current;
+      const { width, height } = editorRef.current.getViewportPageBounds();
+      const point = {
+        x: width / 2,
+        y: height / 2,
+      };
+      try {
+        canvasInteraction.drawPrimitiveOnCanvas(
+          'rectangle',
+          point,
+          {
+            color: 'yellow',
+            text,
+            size: { width: 200, height: 100 },
+          }
+        );
+      } catch (err) {
+        console.error('Failed to use CanvasInteraction (queued):', err);
+        const editor = editorRef.current;
+        editor.createShape({
+          id: createShapeId(),
+          type: 'geo',
+          x: point.x,
+          y: point.y,
+          props: {
+            geo: 'rectangle',
+            color: 'yellow',
+            size: 'l',
+            text,
+            fill: 'solid',
+          },
+        });
+      }
+      queuedDropRef.current = null;
+    }
+  }, [canvasReady]);
 
   // Debounced function - no longer needs to explicitly save if relying on tldraw persistence
   const debouncedSave = useCallback(
@@ -126,8 +177,11 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
   const handleMount = useCallback((editor: Editor) => {
     console.log("TLDraw mounted for chat:", currentChatId || 'new chat', "with key:", persistenceKey);
     editorRef.current = editor;
-    
     canvasInteraction.setEditor(editor);
+    console.log("handleMount: editor set, updating handler with", canvasInteraction);
+    console.log("CanvasInteraction.isInitialized:", canvasInteraction.isInitialized());
+    CanvasToolHandler.getInstance(canvasInteraction);
+    setCanvasReady(true);
     console.log("Canvas interaction connected to editor");
 
     const handleDrop = (e: DragEvent) => {
@@ -224,16 +278,6 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
     };
   }, [debouncedSave, currentChatId, persistenceKey, canvasInteraction]);
 
-  // useEffect for top-level component unmount cleanup (might be redundant now but safe)
-  useEffect(() => {
-    return () => {
-      // This resetEditor call might be redundant if handleMount cleanup always fires,
-      // but it's a safeguard for the entire InfiniteCanvasComponent unmounting.
-      console.log("InfiniteCanvasComponent unmounting, attempting resetEditor as safeguard.");
-      canvasInteraction.resetEditor();
-    };
-  }, [canvasInteraction]); // Depends only on canvasInteraction instance
-
   // Generate a unique key for both the component and the persistence to ensure proper remounting
   // For existing chats, use the chat ID
   // For new chats, use a unique temporary ID that changes each time a new chat is created
@@ -242,14 +286,29 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
     : `new-chat-${tempIdRef.current}-${forceNewCanvasRef.current ? 'fresh' : 'existing'}`;
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full" style={{ position: 'relative' }}>
       <Tldraw
-        key={tldrawKey} // Force re-mount on chat change with a truly unique key
-        persistenceKey={persistenceKey} // Let tldraw handle load/save via this key
+        key={tldrawKey}
+        persistenceKey={persistenceKey}
         onMount={handleMount}
         autoFocus
         inferDarkMode
       />
+      {!canvasReady && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(30,30,30,0.7)',
+            zIndex: 10
+          }}
+        >
+          <span style={{ color: '#fff' }}>Loading canvas...</span>
+        </div>
+      )}
     </div>
   );
 };

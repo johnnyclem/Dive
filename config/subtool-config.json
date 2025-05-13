@@ -19,6 +19,10 @@
     {
       "toolName": "mcpollinations",
       "subToolName": "generateImageUrl"
+    },
+    {
+      "toolName": "apple-mcp",
+      "subToolName": "webSearch"
     }
   ]
 }

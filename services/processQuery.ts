@@ -21,7 +21,7 @@ import { CanvasToolHandler } from './utils/canvasToolHandler.js';
 import * as KnowledgeStore from "../electron/main/knowledge-store.js";
 import { TaskManager } from "./agent/taskManager.js";
 import { taskManagementTools } from "./prompt/system.js";
-import { read_canvas } from "./tools/canvasTools";
+import { canvasTools } from "./prompt/system.js";
 
 // Map to store abort controllers
 export const abortControllerMap = new Map<string, AbortController>();
@@ -221,18 +221,6 @@ export async function handleProcessQuery(
     // Check if the query is asking about available tools
     const isAskingAboutTools = typeof input === 'string' &&
       input.toLowerCase().match(/(what|which|list|show|tell me about).*(tools|functions|capabilities|can you use)/i);
-
-    // Add this before combinedTools definition
-    const canvasTools = [
-      {
-        type: "function" as const,
-        function: {
-          name: "read_canvas",
-          description: "Read and summarize the current contents of the canvas, including images, shapes, and links.",
-          parameters: { type: "object", properties: {} }
-        }
-      }
-    ];
 
     // Include built-in agent task management tools
     const combinedTools = [...availableTools, ...taskManagementTools, ...canvasTools];
@@ -647,7 +635,7 @@ export async function handleProcessQuery(
                 setImmediate(executeToolCall);
               });
 
-              if ('isError' in result && result.isError) {
+              if (result && 'isError' in result && result.isError) {
                 logger.error(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);
               } else {
                 logger.info(`[Tool Result] [${toolName}] ${JSON.stringify(result, null, 2)}`);

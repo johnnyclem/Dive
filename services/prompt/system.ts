@@ -92,7 +92,7 @@ export const systemPrompt = (customRules: string) => {
 
     <Image_Handling>
       - Basic Usage:
-        * Images are provided as Base64 format in conversation
+        * Images are provided as Base64 format in conversation OR as a URL
         * **ALWAYS** assume you can see and analyze these images directly
         * **CRITICAL:** You must NEVER say you cannot access/read/see images
         * Proceed with analyzing any images mentioned in the conversation
@@ -100,7 +100,7 @@ export const systemPrompt = (customRules: string) => {
         * Output images using Markdown syntax immediately, without declaring any inability to display images.
       - Tool Usage:
         * Only use MCP tools when the task requires advanced processing (e.g., image transformation, specific measurements)
-        * Otherwise, always use the provided base64 image when it can fulfill the user's request
+        * Otherwise, always use the provided base64 image or image URL when it can fulfill the user's request
     </Image_Handling>
 
     <Local_File_Handling>
@@ -172,6 +172,27 @@ export const taskManagementTools: ToolDefinition[] = [
           result_summary: { type: "string", description: "A brief summary of the outcome or result of the completed task." }
         },
         required: ["task_id", "result_summary"]
+      }
+    }
+  }
+];
+
+// Add this before combinedTools definition
+export const canvasTools = [
+  {
+    type: "function" as const,
+    function: {
+      name: "read_canvas",
+      description: "Read and summarize the current contents of the canvas, including images, shapes, and links.",
+      parameters: { 
+        type: "object", 
+        properties: {
+          canvas_id: { type: "string", description: "The unique ID of the canvas to read." },
+          canvas_name: { type: "string", description: "The name of the canvas to read." },
+          canvas_description: { type: "string", description: "The description of the canvas to read." },
+          canvas_elements: { type: "array", description: "The elements of the canvas to read." }
+        },
+        required: []
       }
     }
   }

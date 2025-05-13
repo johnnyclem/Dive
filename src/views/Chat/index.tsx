@@ -13,6 +13,7 @@ import { currentChatIdAtom, isChatStreamingAtom, lastMessageAtom } from "../../a
 import { addChatToHistoryAtom } from "../../atoms/historyState"
 import { safeBase64Encode } from "../../util"
 import { injectPersonaToRequest } from "../../utils/chatApiUtils"
+import { useCanvasInteraction } from '../../contexts/CanvasInteractionContext';
 
 interface ToolCall {
   name: string
@@ -46,6 +47,7 @@ const ChatWindow = () => {
   const toolResultCount = useRef(0)
   const toolResultTotal = useRef(0)
   const isNewChat = useRef<boolean>(false)
+  const { getOrCreateCanvas } = useCanvasInteraction();
 
   const loadChat = useCallback(async (id: string) => {
     try {
@@ -470,6 +472,12 @@ const ChatWindow = () => {
 
     lastChatId.current = chatId
   }, [updateStreamingCode, chatId])
+
+  useEffect(() => {
+    if (chatId) {
+      getOrCreateCanvas(chatId);
+    }
+  }, [chatId, getOrCreateCanvas]);
 
   return (
     <div className="h-full w-full relative">

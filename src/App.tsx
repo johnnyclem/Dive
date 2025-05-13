@@ -7,6 +7,7 @@ import { handleGlobalHotkey, loadHotkeyMapAtom } from "./atoms/hotkeyState"
 import { handleWindowResizeAtom } from "./atoms/sidebarState"
 import { systemThemeAtom, userThemeAtom } from "./atoms/themeState"
 import Updater from "./updater"
+import { CanvasInteractionProvider } from './contexts/CanvasInteractionContext'
 
 
 function App() {
@@ -59,10 +60,10 @@ function App() {
   // render UI immediately; config loads in background
 
   return (
-    <>
+    <CanvasInteractionProvider>
       <RouterProvider router={router} />
       <Updater />
-    </>
+    </CanvasInteractionProvider>
   )
 }
 

@@ -202,11 +202,25 @@ export class WebServer {
             ]
           };
           
-          return res.json({
-            success: true,
-            results: searchResponse.results,
-            source: "web_search"
-          });
+          if (searchResponse.results && searchResponse.results.length > 0) {
+            // Return the first result as a summary
+            return res.json({
+              success: true,
+              result: {
+                type: "text",
+                text: searchResponse.results[0].snippet
+              }
+            });
+          } else {
+            // No results found
+            return res.json({
+              success: true,
+              result: {
+                type: "text",
+                text: "Sorry, I couldn't find any information about the current weather in Austin."
+              }
+            });
+          }
         } catch (searchError) {
           logger.error(`Web search API error: ${searchError}`);
           return res.json({

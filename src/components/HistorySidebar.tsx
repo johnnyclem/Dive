@@ -27,6 +27,7 @@ import { useSidebarStore } from "../stores/sidebarStore"
 import soulsLogo from "../assets/Souls_Logo_Gradient.png"
 import soulsIcon from "../assets/souls-icon.svg"
 import glassIcon from "../assets/glass-icon.svg"
+import { useCanvasInteraction } from '../contexts/CanvasInteractionContext'
 
 // Define a union type for the button properties
 type FooterButton =
@@ -79,10 +80,17 @@ const HistorySidebar = ({ onNewChat }: Props) => {
   const [currentChatId, setCurrentChatId] = useAtom(currentChatIdAtom)
   const containerRef = useRef<HTMLDivElement>(null)
   const { collapsed, toggleSidebar } = useSidebarStore()
+  const { getOrCreateCanvas } = useCanvasInteraction()
 
   useEffect(() => {
     loadHistories()
   }, [loadHistories])
+
+  useEffect(() => {
+    if (currentChatId) {
+      getOrCreateCanvas(currentChatId)
+    }
+  }, [currentChatId, getOrCreateCanvas])
 
   useHotkeyEvent("chat:delete", () => {
     currentChatId && setDeletingChatId(currentChatId)

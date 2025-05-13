@@ -14,6 +14,85 @@ interface CanvasToolResult {
   data?: CanvasElement | CanvasElement[] | string;
 }
 
+/**
+ * Utility to format known data structures for user-friendly output
+ */
+function formatKnownData(data: unknown): string {
+  // Handle forms structure
+  if (
+    typeof data === 'object' &&
+    data !== null &&
+    'forms' in data &&
+    Array.isArray((data as { forms: unknown[] }).forms)
+  ) {
+    return (data as { forms: { name?: string; ID?: string; fields?: { label?: string; name?: string; type?: string }[] }[] }).forms
+      .map((form) => {
+        const fields = form.fields?.map((f) => `  - ${f.label || f.name} (${f.type})`).join('\n') || '  (No fields)';
+        return `Form: ${form.name || form.ID || 'Unnamed'}\nFields:\n${fields}`;
+      })
+      .join('\n\n');
+  }
+  // Add more known structures as needed
+  // Fallback: pretty-print JSON
+  return 'Result:\n' + JSON.stringify(data, null, 2);
+}
+
+/**
+ * Centralized handler for tool/MCP responses
+ */
+function parseToolResponse(response: unknown): { success: boolean; message: string; data?: unknown } {
+  if (!response) {
+    return { success: false, message: 'No response received from tool.' };
+  }
+  // If response is an array, handle first element (common for MCP tools)
+  const res = Array.isArray(response) ? response[0] : response;
+  if (typeof res === 'object' && res !== null && 'type' in res && (res as { type: string }).type === 'text') {
+    try {
+      const parsed = JSON.parse((res as { text: string }).text);
+      // If the response has a success field and is true, treat as success
+      if (parsed.success) {
+        // Try to format known data structures
+        let formatted = '';
+        if (parsed.forms) {
+          formatted = formatKnownData(parsed.forms);
+        } else {
+          formatted = formatKnownData(parsed);
+        }
+        return {
+          success: true,
+          message: formatted,
+          data: parsed
+        };
+      } else {
+        // If success is false or missing, but we have data, still show it
+        if (parsed.forms || parsed.data) {
+          return {
+            success: true,
+            message: formatKnownData(parsed.forms || parsed.data),
+            data: parsed
+          };
+        }
+        return {
+          success: false,
+          message: parsed.message || 'Operation failed.',
+          data: parsed
+        };
+      }
+    } catch {
+      // Not JSON, just return the text
+      return {
+        success: false,
+        message: 'Failed to parse tool response as JSON. Raw response: ' + (res as { text: string }).text
+      };
+    }
+  }
+  // Handle other response types if needed
+  return {
+    success: false,
+    message: 'Unknown response type.'
+  };
+}
+
 export class CanvasToolHandler {
   private static instance: CanvasToolHandler;
   private canvasInteraction: CanvasInteraction;
@@ -34,15 +113,17 @@ export class CanvasToolHandler {
   /**
    * Gets the singleton instance of the CanvasToolHandler
    */
-  public static getInstance(): CanvasToolHandler {
+  public static getInstance(canvasInteraction?: CanvasInteraction): CanvasToolHandler {
     if (!CanvasToolHandler.instance) {
-      CanvasToolHandler.instance = new CanvasToolHandler();
+      CanvasToolHandler.instance = new CanvasToolHandler(canvasInteraction);
+    } else if (canvasInteraction) {
+      CanvasToolHandler.instance.canvasInteraction = canvasInteraction;
     }
     return CanvasToolHandler.instance;
   }
 
-  private constructor() {
-    this.canvasInteraction = CanvasInteraction.getInstance();
+  private constructor(canvasInteraction?: CanvasInteraction) {
+    this.canvasInteraction = canvasInteraction || null;
   }
 
   /**
@@ -68,15 +149,31 @@ export class CanvasToolHandler {
    * Check if the editor is ready for canvas operations
    */
   private checkEditorReady(): boolean {
+    if (!this.canvasInteraction) {
+      console.warn("CanvasInteraction instance not set in CanvasToolHandler!");
+      return false;
+    }
+    console.log("CanvasToolHandler checking isInitialized:", this.canvasInteraction.isInitialized());
     return this.canvasInteraction.isInitialized();
   }
 
   /**
    * Handles a canvas-related query by routing to the appropriate method
+   * Now also handles generic tool/MCP responses robustly.
    */
-  public handleCanvasQuery(query: string): CanvasToolResult {
+  public handleCanvasQuery(query: string, toolResponse?: unknown): CanvasToolResult {
     const lowerQuery = query.toLowerCase();
-    
+
+    // If a tool/MCP response is provided, parse and present it
+    if (toolResponse) {
+      const parsed = parseToolResponse(toolResponse);
+      return {
+        success: parsed.success,
+        message: parsed.message,
+        data: parsed.data as string | CanvasElement | CanvasElement[] | undefined
+      };
+    }
+
     // Check if the editor is initialized
     if (!this.checkEditorReady()) {
       return {
@@ -261,7 +358,7 @@ export class CanvasToolHandler {
     const result = await CanvasToolHandler.getInstance().handleCanvasQuery("read canvas");
     return {
       summary: result.message,
-      data: result.data,
+      data: result.data as CanvasElement[] | string,
       success: result.success,
     };
   }
