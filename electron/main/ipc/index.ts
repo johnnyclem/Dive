@@ -10,6 +10,7 @@ import { ipcLlmHandler } from "./llm"
 import { ipcMenuHandler } from "./menu"
 import { setupKnowledgeBaseHandlers } from "./knowledge"
 import { setupTaskHandlers } from "./tasks"
+import { setupCanvasIPC } from "./canvas"
 import type { IpcMainInvokeEvent } from "electron"
 
 export function ipcHandler(win: BrowserWindow) {
@@ -138,6 +139,7 @@ export function ipcHandler(win: BrowserWindow) {
   ipcMenuHandler()
   setupKnowledgeBaseHandlers()
   setupTaskHandlers()
+  setupCanvasIPC(win);
 
   // Wallet IPC handlers for embedded BrowserView
   let walletClient: AlgorandMcpClient | null = null

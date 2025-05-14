@@ -17,11 +17,11 @@ import { openAIConvertToGeminiTools } from "./utils/toolHandler.js";
 import { ToolDefinition } from "@langchain/core/language_models/base";
 import { adaptToolResponse, convertCamelCaseToKebabCase } from "./utils/toolResponseAdapter.js";
 import { ENSUtility } from './utils/ensUtility.js';
-import { CanvasToolHandler } from './utils/canvasToolHandler.js';
 import * as KnowledgeStore from "../electron/main/knowledge-store.js";
 import { TaskManager } from "./agent/taskManager.js";
 import { taskManagementTools } from "./prompt/system.js";
 import { canvasTools } from "./prompt/system.js";
+import { read_canvas_tool_implementation } from "./tools/canvasTools.js";
 
 // Map to store abort controllers
 export const abortControllerMap = new Map<string, AbortController>();
@@ -95,12 +95,12 @@ export async function handleProcessQuery(
     const messages: BaseMessage[] = [...history]; // Copy the history array to avoid modifying the original
 
     // Extract query text for canvas detection and other analysis
-    let queryText = "";
-    if (typeof input === "string") {
-      queryText = input;
-    } else if (input && input.text) {
-      queryText = input.text;
-    }
+    // let queryText = ""; // No longer needed
+    // if (typeof input === "string") {
+    //   queryText = input;
+    // } else if (input && input.text) {
+    //   queryText = input.text;
+    // }
 
     // NEW CODE: Merge knowledge base instruction into existing system message or prepend if none
     const activeKnowledgeBaseId = KnowledgeStore.getActiveKnowledgeBase();
@@ -118,50 +118,6 @@ export async function handleProcessQuery(
           logger.info(`Adding knowledge base instruction for active KB: ${kb.name}`);
           messages.unshift(new SystemMessage(kbInstructionText));
         }
-      }
-    }
-
-    // Check if this is a canvas-related query
-    if (queryText) {
-      const canvasToolHandler = CanvasToolHandler.getInstance();
-      if (canvasToolHandler.isCanvasQuery(queryText)) {
-        logger.info(`[${chatId}] Detected canvas-related query: ${queryText}`);
-        const result = canvasToolHandler.handleCanvasQuery(queryText);
-
-        // Return the canvas operation result
-        const responseMessage = result.success
-          ? result.message
-          : `I tried to perform your canvas operation but encountered an error: ${result.message}`;
-
-        // Send to stream if available
-        onStream?.(
-          JSON.stringify({
-            type: "text",
-            content: responseMessage,
-          } as iStreamMessage)
-        );
-
-        // If there's data, also send as tool result
-        if (result.data) {
-          onStream?.(
-            JSON.stringify({
-              type: "tool_result",
-              content: {
-                name: "canvas",
-                result: result.data,
-              },
-            } as iStreamMessage)
-          );
-        }
-
-        return {
-          result: responseMessage,
-          tokenUsage: {
-            totalInputTokens: queryText.length / 4, // Rough estimation
-            totalOutputTokens: responseMessage.length / 4, // Rough estimation
-            totalTokens: (queryText.length + responseMessage.length) / 4, // Rough estimation
-          }
-        };
       }
     }
 
@@ -586,6 +542,18 @@ export async function handleProcessQuery(
                 JSON.stringify({ type: 'tool_result', content: { name: toolName, result } })
               );
               return { tool_call_id: toolCall.id, name: toolName, content: JSON.stringify(result) };
+            } else if (toolName === 'read_canvas') {
+              logger.info(`[Tool Execution] Calling read_canvas_tool_implementation for tool call ID: ${toolCall.id}`);
+              const canvasResult = await read_canvas_tool_implementation();
+              logger.info(`[Tool Execution] Result from read_canvas_tool_implementation:`, canvasResult);
+              onStream?.(
+                JSON.stringify({ type: 'tool_result', content: { name: toolName, result: canvasResult } })
+              );
+              return {
+                tool_call_id: toolCall.id,
+                name: toolName,
+                content: JSON.stringify(canvasResult)
+              };
             }
 
             try {

@@ -89,6 +89,7 @@ export class CanvasInteraction {
     if (!CanvasInteraction.instance) {
       CanvasInteraction.instance = new CanvasInteraction();
     }
+    console.log('[CanvasInteraction] getInstance:', CanvasInteraction.instance._debugId);
     return CanvasInteraction.instance;
   }
 

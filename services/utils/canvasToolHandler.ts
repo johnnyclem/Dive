@@ -119,6 +119,7 @@ export class CanvasToolHandler {
     } else if (canvasInteraction) {
       CanvasToolHandler.instance.canvasInteraction = canvasInteraction;
     }
+    console.log('[CanvasToolHandler] getInstance, using CanvasInteraction:', CanvasToolHandler.instance.canvasInteraction?._debugId);
     return CanvasToolHandler.instance;
   }
 

@@ -12,5 +12,8 @@
   ],
   "i18n-ally.localesPaths": [
     "public/locales"
-  ]
+  ],
+  "files.associations": {
+    "*.yaml": "home-assistant"
+  }
 }
