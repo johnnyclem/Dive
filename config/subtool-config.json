@@ -17,12 +17,24 @@
       "subToolName": "listImageModels"
     },
     {
-      "toolName": "mcpollinations",
-      "subToolName": "generateImageUrl"
-    },
-    {
       "toolName": "apple-mcp",
       "subToolName": "webSearch"
+    },
+    {
+      "toolName": "mcpollinations",
+      "subToolName": "respondAudio"
+    },
+    {
+      "toolName": "mcpollinations",
+      "subToolName": "listAudioVoices"
+    },
+    {
+      "toolName": "mcpollinations",
+      "subToolName": "respondText"
+    },
+    {
+      "toolName": "mcpollinations",
+      "subToolName": "listTextModels"
     }
   ]
 }

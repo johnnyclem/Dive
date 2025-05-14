@@ -32,17 +32,6 @@
       ],
       "enabled": true
     },
-    "thirdweb-mcp": {
-      "command": "thirdweb-mcp",
-      "args": [],
-      "env": {
-        "THIRDWEB_SECRET_KEY": "your thirdweb secret key from dashboard",
-        "THIRDWEB_ENGINE_URL": "(OPTIONAL) your engine url",
-        "THIRDWEB_ENGINE_AUTH_JWT": "(OPTIONAL) your engine auth jwt",
-        "THIRDWEB_ENGINE_BACKEND_WALLET_ADDRESS": "(OPTIONAL) your engine backend wallet address"
-      },
-      "enabled": false
-    },
     "apple-mcp": {
       "command": "npx",
       "args": [
@@ -65,6 +54,12 @@
         "mcp-server-apple-shortcuts"
       ],
       "enabled": true
+    },
+    "macOS Notifications": {
+      "command": "uvx",
+      "args": [
+        "macos-notification-mcp"
+      ]
     }
   }
 }

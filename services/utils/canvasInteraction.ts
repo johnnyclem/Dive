@@ -533,60 +533,92 @@ export class CanvasInteraction {
    * Convert a TLDraw shape to our CanvasElement format
    */
   private convertShapeToCanvasElement(shape: TLShape): CanvasElement {
+    // Log the raw shape object from TLDraw
+    console.log('[CanvasInteraction] convertShapeToCanvasElement - Raw TLDraw Shape:', JSON.stringify(shape, null, 2));
+
     let type: 'primitive' | 'image' | 'url' = 'primitive';
-    let data: CanvasPrimitive | CanvasImage | CanvasURL;
+    let data: CanvasPrimitive | CanvasImage | CanvasURL | any; // Using any for data flexibility with bookmarks
     
     const position: CanvasPosition = { x: shape.x, y: shape.y };
     
     if (shape.type === 'image' && typeof shape.props === 'object' && shape.props !== null) {
       type = 'image';
-      const imageProps = shape.props as TLImageShape['props']; // Cast to specific props type
+      const imageProps = shape.props as TLImageShape['props'];
+      const asset = this.editorRef?.getAsset(imageProps.assetId);
       data = {
-        src: 'asset_id:' + imageProps.assetId, // assetId is correct here
+        src: asset && asset.type === 'image' ? asset.props.src : 'asset_id:' + imageProps.assetId,
         position,
         size: { 
           width: imageProps.w || 100, 
           height: imageProps.h || 100 
         },
-        rotation: shape.rotation || 0, // rotation is on the base shape
+        rotation: shape.rotation || 0,
+      };
+    } else if (shape.type === 'bookmark' && typeof shape.props === 'object' && shape.props !== null) {
+      type = 'url'; // Treat bookmarks primarily as URLs
+      const bookmarkProps = shape.props as any; // tldraw types for bookmark might not be fully exposed
+      const asset = bookmarkProps.assetId ? this.editorRef?.getAsset(bookmarkProps.assetId) : undefined;
+      const imageSrc = asset && asset.type === 'image' ? asset.props.src : undefined;
+
+      data = {
+        url: bookmarkProps.url || 'unknown_url',
+        position,
+        title: bookmarkProps.title || '',
+        description: bookmarkProps.description || '',
+        imageSrc: imageSrc || (bookmarkProps.src && typeof bookmarkProps.src === 'string' ? bookmarkProps.src : undefined), // Prefer resolved asset, fallback to direct src
+        text: bookmarkProps.text || '', // General text content
       };
     } else if (shape.type === 'note' && typeof shape.props === 'object' && shape.props !== null) {
-      type = 'url';
-      
-      // Try to extract URL from note text
+      type = 'url'; // Assuming notes with URLs are the primary use case for 'note' to 'url'
       let noteText = '';
       if ('text' in shape.props && typeof shape.props.text === 'string') {
         noteText = shape.props.text;
       }
-      
       const urlMatch = noteText.match(/https?:\/\/[^\s]+/);
       const url = urlMatch ? urlMatch[0] : 'https://example.com';
-      
       data = {
         url,
         position,
         title: noteText.split('\n')[0] || '',
+        description: noteText.substring(noteText.indexOf('\n') + 1) || '', // Text after the first line as description
       };
-    } else {
-      // Handle primitive shapes
-      let primitiveType: 'circle' | 'square' | 'rectangle' | 'triangle' | 'line' | 'arrow' | 'text' = 'rectangle';
+    } else if (shape.type === 'text' && typeof shape.props === 'object' && shape.props !== null) {
+      type = 'primitive';
+      // More specific cast based on tldraw's typical text props
+      const textProps = shape.props as {
+        text: string; // Expect text to be a string
+        color?: TLDefaultColorStyle | string;
+        size?: string; // e.g., 's', 'm', 'l', 'xl'
+        font?: string; // e.g., 'draw', 'sans', 'serif', 'mono'
+        align?: string; // e.g., 'start', 'middle', 'end'
+        w?: number;
+        h?: number;
+        autoSize?: boolean;
+      };
+
+      // Log specifically what we see for textProps.text
+      console.log(`[CanvasInteraction] Text shape processing: ID=${shape.id}, props.text=${JSON.stringify(textProps.text)}`);
+
+      data = {
+        type: 'text', // Our internal type for the primitive
+        position,
+        color: String(textProps.color || 'black'), // Ensure color is a string, default from tldraw is black
+        text: textProps.text || '',     // Assign text
+        size: { width: textProps.w || 100, height: textProps.h || (textProps.autoSize ? 50 : 100) }, // Estimate height if autoSize
+      };
+    }
+     else { // Handles 'geo', 'line', 'arrow', and other potential primitives
+      type = 'primitive';
+      let primitiveType: string = 'rectangle'; // Default, will be overridden by geo
       
       if (shape.type === 'geo' && typeof shape.props === 'object' && shape.props !== null && 'geo' in shape.props) {
-        const geo = shape.props.geo as string;
-        if (geo === 'ellipse') {
-          primitiveType = 'circle';
-        } else if (geo === 'rectangle') {
-          primitiveType = 'rectangle';
-        } else if (geo === 'triangle') {
-          primitiveType = 'triangle';
-        }
+        primitiveType = shape.props.geo as string; // Use the actual geo type (star, heart, etc.)
       } else if (shape.type === 'line') {
         primitiveType = 'line';
       } else if (shape.type === 'arrow') {
         primitiveType = 'arrow';
-      } else if (shape.type === 'text') {
-        primitiveType = 'text';
       }
+      // Note: 'text' type is handled in its own block now.
       
       let textContent = '';
       let colorValue = '#000000';
@@ -594,6 +626,7 @@ export class CanvasInteraction {
       let height = 100;
       
       if (typeof shape.props === 'object' && shape.props !== null) {
+        // For geo shapes, text might be directly in props.text
         if ('text' in shape.props && typeof shape.props.text === 'string') {
           textContent = shape.props.text;
         }
@@ -612,7 +645,7 @@ export class CanvasInteraction {
         type: primitiveType,
         position,
         color: colorValue,
-        text: textContent,
+        text: textContent, // Include text for geo shapes if present
         size: { width, height },
       };
     }
