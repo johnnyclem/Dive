@@ -352,7 +352,7 @@ export async function handleProcessQuery(
 
       // Prepare standardized tool_calls for AIMessage
       const aiMessageToolCalls = toolCalls.map(tc => {
-        let parsedArgs: Record<string, any> = {};
+        let parsedArgs: Record<string, unknown> = {};
         try {
           // Ensure tc.function.arguments is a string. If empty or not a string, default to {}.
           if (tc.function && tc.function.arguments && typeof tc.function.arguments === 'string' && tc.function.arguments.trim() !== '') {
@@ -428,9 +428,10 @@ export async function handleProcessQuery(
               logger.info(
                 `[Tool Calls] [${call.function.name}] ${JSON.stringify(call.function.arguments || "{}", null, 2)}`
               );
+              const parsedCallArgs: Record<string, unknown> = JSON.parse(call.function.arguments || "{}");
               return {
                 name: call.function.name,
-                arguments: JSON.parse(call.function.arguments || "{}"),
+                arguments: parsedCallArgs,
               };
             }),
           } as iStreamMessage)
@@ -453,7 +454,7 @@ export async function handleProcessQuery(
             }
 
             const toolName = toolCall.function.name;
-            const toolArgs = JSON.parse(toolCall.function.arguments || "{}");
+            const toolArgs: Record<string, unknown> = JSON.parse(toolCall.function.arguments || "{}");
             const client = toolToClientMap.get(toolName);
 
             // Create an AbortSignal for this specific tool call
@@ -516,7 +517,7 @@ export async function handleProcessQuery(
 
             // Custom agent tasks handling
             if (toolName === 'add_task') {
-              const description = toolArgs.description;
+              const description = (toolArgs as { description: string }).description;
               if (!description) throw new Error('Task description is required');
               const task = await TaskManager.getInstance().addTask(description);
               const result = { success: true, taskId: task.id };
@@ -533,8 +534,8 @@ export async function handleProcessQuery(
               );
               return { tool_call_id: toolCall.id, name: toolName, content: JSON.stringify(result) };
             } else if (toolName === 'complete_task') {
-              const taskId = toolArgs.task_id;
-              const summary = toolArgs.result_summary;
+              const taskId = (toolArgs as { task_id: string }).task_id;
+              const summary = (toolArgs as { result_summary: string }).result_summary;
               if (!taskId || !summary) throw new Error('Task ID and result summary are required');
               await TaskManager.getInstance().handleTaskCompletion(taskId, summary);
               const result = { success: true, message: `Task ${taskId} marked complete.` };
@@ -572,11 +573,14 @@ export async function handleProcessQuery(
                         {
                           name: toolName,
                           // Convert camelCase to kebab-case for tool arguments with error handling
-                          arguments: (() => {
+                          arguments: ((): Record<string, unknown> => {
+                            if (toolName === 'think') {
+                              return toolArgs;
+                            }
                             try {
                               return convertCamelCaseToKebabCase(toolArgs);
                             } catch (conversionError) {
-                              logger.error(`Error converting tool args to kebab-case: ${conversionError}`);
+                              logger.error(`Error converting tool args to kebab-case for tool ${toolName}: ${conversionError}`);
                               // Fall back to original args if conversion fails
                               return toolArgs;
                             }

@@ -6,7 +6,7 @@
  * Now connected to TLDraw for actual functionality.
  */
 
-import { Editor, TLShape, createShapeId, TLGeoShape, TLImageShape, TLArrowShape, TLImageAsset, TLDefaultColorStyle, TLEventMap, TLNoteShape, TLAssetId } from '@tldraw/tldraw';
+import { Editor, TLShape, createShapeId, TLGeoShape, TLImageShape, TLArrowShape, TLImageAsset, TLDefaultColorStyle, TLEventMap, TLNoteShape, TLAssetId, TLBookmarkShape } from '@tldraw/tldraw';
 
 export interface CanvasPosition {
   x: number;
@@ -19,7 +19,7 @@ export interface CanvasSize {
 }
 
 export interface CanvasPrimitive {
-  type: 'circle' | 'square' | 'rectangle' | 'triangle' | 'line' | 'arrow' | 'text';
+  type: string;
   position: CanvasPosition;
   size?: CanvasSize;
   radius?: number;
@@ -44,6 +44,29 @@ export interface CanvasURL {
   position: CanvasPosition;
   title?: string;
   description?: string;
+  imageSrc?: string;
+  text?: string;
+}
+
+// Define interfaces for richText structure
+interface RichTextContentItem {
+  type: string;
+  text?: string;
+  attrs?: any; // Can be further specified if needed
+  content?: RichTextContentItem[];
+}
+
+interface RichTextRoot {
+  type: string;
+  content?: RichTextContentItem[];
+}
+
+interface TLBookmarkProps {
+  src?: string;
+  title?: string;
+  description?: string;
+  assetId?: TLAssetId;
+  url?:string;
 }
 
 export interface CanvasElement {
@@ -537,7 +560,7 @@ export class CanvasInteraction {
     console.log('[CanvasInteraction] convertShapeToCanvasElement - Raw TLDraw Shape:', JSON.stringify(shape, null, 2));
 
     let type: 'primitive' | 'image' | 'url' = 'primitive';
-    let data: CanvasPrimitive | CanvasImage | CanvasURL | any; // Using any for data flexibility with bookmarks
+    let data: CanvasPrimitive | CanvasImage | CanvasURL;
     
     const position: CanvasPosition = { x: shape.x, y: shape.y };
     
@@ -556,17 +579,39 @@ export class CanvasInteraction {
       };
     } else if (shape.type === 'bookmark' && typeof shape.props === 'object' && shape.props !== null) {
       type = 'url'; // Treat bookmarks primarily as URLs
-      const bookmarkProps = shape.props as any; // tldraw types for bookmark might not be fully exposed
-      const asset = bookmarkProps.assetId ? this.editorRef?.getAsset(bookmarkProps.assetId) : undefined;
-      const imageSrc = asset && asset.type === 'image' ? asset.props.src : undefined;
+      const bookmarkShapeProps = shape.props as TLBookmarkShape['props']; // Standard tldraw props
+      const customBookmarkProps = shape.props as TLBookmarkProps; // Our extended/expected direct props
+      
+      const asset = bookmarkShapeProps.assetId ? this.editorRef?.getAsset(bookmarkShapeProps.assetId) : undefined;
+      
+      let url = 'unknown_url';
+      let title = '';
+      let description = '';
+      let assetImageSrc: string | undefined = undefined;
+
+      if (asset && asset.type === 'bookmark') {
+        url = asset.props.src || url;
+        title = asset.props.title || title;
+        description = asset.props.description || description;
+        assetImageSrc = asset.props.image;
+      }
+
+      // Override with direct props from shape if they exist (custom or convenience)
+      url = customBookmarkProps.url || url;
+      title = customBookmarkProps.title || title;
+      description = customBookmarkProps.description || description;
+
+      const imageSrcFromDirectProps = customBookmarkProps.src; // Might be on customBookmarkProps
+      // If asset itself was an image type (e.g. linked image instead of bookmark asset, less common for a bookmark shape)
+      const imageSrcFromImageAsset = (asset && asset.type === 'image' ? asset.props.src : undefined);
 
       data = {
-        url: bookmarkProps.url || 'unknown_url',
+        url,
         position,
-        title: bookmarkProps.title || '',
-        description: bookmarkProps.description || '',
-        imageSrc: imageSrc || (bookmarkProps.src && typeof bookmarkProps.src === 'string' ? bookmarkProps.src : undefined), // Prefer resolved asset, fallback to direct src
-        text: bookmarkProps.text || '', // General text content
+        title,
+        description,
+        imageSrc: imageSrcFromDirectProps || assetImageSrc || imageSrcFromImageAsset,
+        text: description || title || '', // Populate CanvasURL.text from description or title
       };
     } else if (shape.type === 'note' && typeof shape.props === 'object' && shape.props !== null) {
       type = 'url'; // Assuming notes with URLs are the primary use case for 'note' to 'url'
@@ -594,16 +639,36 @@ export class CanvasInteraction {
         w?: number;
         h?: number;
         autoSize?: boolean;
+        richText?: RichTextRoot; // Use the new interface
       };
 
       // Log specifically what we see for textProps.text
       console.log(`[CanvasInteraction] Text shape processing: ID=${shape.id}, props.text=${JSON.stringify(textProps.text)}`);
+      // Log richText if available
+      if (textProps.richText) {
+        console.log(`[CanvasInteraction] Text shape richText: ID=${shape.id}, richText=${JSON.stringify(textProps.richText)}`);
+      }
+
+      let actualText = textProps.text || '';
+      if (textProps.richText && 
+          textProps.richText.content && 
+          textProps.richText.content[0] &&
+          textProps.richText.content[0].content &&
+          textProps.richText.content[0].content[0] &&
+          textProps.richText.content[0].content[0].text) {
+        actualText = textProps.richText.content[0].content[0].text;
+        console.log(`[CanvasInteraction] Extracted text from richText: ID=${shape.id}, actualText=${actualText}`);
+      } else if (textProps.richText && textProps.richText.content && textProps.richText.content[0] && textProps.richText.content[0].text) {
+        // Fallback for slightly different structures if the primary path fails
+        actualText = textProps.richText.content[0].text;
+        console.log(`[CanvasInteraction] Extracted text from richText (fallback): ID=${shape.id}, actualText=${actualText}`);
+      }
 
       data = {
         type: 'text', // Our internal type for the primitive
         position,
         color: String(textProps.color || 'black'), // Ensure color is a string, default from tldraw is black
-        text: textProps.text || '',     // Assign text
+        text: actualText,     // Assign text
         size: { width: textProps.w || 100, height: textProps.h || (textProps.autoSize ? 50 : 100) }, // Estimate height if autoSize
       };
     }

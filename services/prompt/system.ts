@@ -183,15 +183,10 @@ export const canvasTools = [
     type: "function" as const,
     function: {
       name: "read_canvas",
-      description: "Read and summarize the current contents of the canvas, including images, shapes, and links.",
-      parameters: { 
-        type: "object", 
-        properties: {
-          canvas_id: { type: "string", description: "The unique ID of the canvas to read." },
-          canvas_name: { type: "string", description: "The name of the canvas to read." },
-          canvas_description: { type: "string", description: "The description of the canvas to read." },
-          canvas_elements: { type: "array", description: "The elements of the canvas to read." }
-        },
+      description: "Read and summarize the current contents of the active canvas, including images, shapes, and links.",
+      parameters: {
+        type: "object",
+        properties: {},
         required: []
       }
     }

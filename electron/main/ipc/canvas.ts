@@ -27,7 +27,7 @@ async function fetchCanvasDataViaIPC(mainWindow: BrowserWindow): Promise<{ succe
       clearTimeout(timeoutHandle);
       ipcMain.removeListener(responseChannel, listener);
       if (responseArgs.success) {
-        logging.info(`[MainIPC-Core] Received success response for ${responseChannel} with data: ${JSON.stringify(responseArgs.data, null, 2)}`);
+        logging.info(`[MainIPC-Core] Received success response for ${responseChannel} with data: ${JSON.stringify(responseArgs.data, null, 3)}`);
         resolve({ success: true, data: responseArgs.data });
       } else {
         logging.error(`[MainIPC-Core] Received error response for ${responseChannel}: ${responseArgs.error}`);
