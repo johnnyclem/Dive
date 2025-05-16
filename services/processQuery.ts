@@ -21,7 +21,7 @@ import * as KnowledgeStore from "../electron/main/knowledge-store.js";
 import { TaskManager } from "./agent/taskManager.js";
 import { taskManagementTools } from "./prompt/system.js";
 import { canvasTools } from "./prompt/system.js";
-import { read_canvas_tool_implementation, add_image_to_canvas_tool_implementation } from "./tools/canvasTools.js";
+import { read_canvas_tool_implementation, add_image_to_canvas_tool_implementation, add_url_to_canvas_tool_implementation, add_embed_to_canvas_tool_implementation } from "./tools/canvasTools.js";
 
 // Map to store abort controllers
 export const abortControllerMap = new Map<string, AbortController>();
@@ -566,6 +566,30 @@ export async function handleProcessQuery(
                 tool_call_id: toolCall.id,
                 name: toolName,
                 content: JSON.stringify(addImageResult)
+              };
+            } else if (toolName === 'add_url_to_canvas') {
+              logger.info(`[Tool Execution] Calling add_url_to_canvas_tool_implementation with args: ${JSON.stringify(toolArgs)} for tool call ID: ${toolCall.id}`);
+              const addUrlResult = await add_url_to_canvas_tool_implementation(toolArgs as any); // Cast to any for now, refine if specific type is available for toolArgs
+              logger.info(`[Tool Execution] Result from add_url_to_canvas_tool_implementation:`, addUrlResult);
+              onStream?.(
+                JSON.stringify({ type: 'tool_result', content: { name: toolName, result: addUrlResult } })
+              );
+              return {
+                tool_call_id: toolCall.id,
+                name: toolName,
+                content: JSON.stringify(addUrlResult)
+              };
+            } else if (toolName === 'add_embed_to_canvas') {
+              logger.info(`[Tool Execution] Calling add_embed_to_canvas_tool_implementation with args: ${JSON.stringify(toolArgs)} for tool call ID: ${toolCall.id}`);
+              const addEmbedResult = await add_embed_to_canvas_tool_implementation(toolArgs as any); // Cast to any for now, refine if specific type is available for toolArgs
+              logger.info(`[Tool Execution] Result from add_embed_to_canvas_tool_implementation:`, addEmbedResult);
+              onStream?.(
+                JSON.stringify({ type: 'tool_result', content: { name: toolName, result: addEmbedResult } })
+              );
+              return {
+                tool_call_id: toolCall.id,
+                name: toolName,
+                content: JSON.stringify(addEmbedResult)
               };
             }
 

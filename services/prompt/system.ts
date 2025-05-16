@@ -243,6 +243,87 @@ export const canvasTools: ToolDefinition[] = [
         required: ["image_source"]
       }
     }
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "add_url_to_canvas",
+      description: "Adds a URL to the active canvas. Use this when the user provides a URL and asks to put it on the canvas.",
+      parameters: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "The URL to add to the canvas." },
+          position: {
+            type: "object",
+            properties: { 
+              x: { type: "number" },
+              y: { type: "number" }
+            },
+            required: ["x", "y"],
+            description: "Optional. The x and y coordinates where the top-left corner of the URL should be placed on the canvas. If not provided, a default position will be used."
+          },
+          options: {
+            type: "object",
+            properties: {
+              title: { 
+                type: "string",
+                description: "Optional. A title for the URL link/bookmark on the canvas."
+              },
+              description: {
+                type: "string",
+                description: "Optional. A short description for the URL link/bookmark."
+              }
+            },
+            description: "Optional. Additional options for the URL, like a title or description."
+          }
+        },
+        required: ["url"]
+      }
+    }
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "add_embed_to_canvas",
+      description: "Adds an embed (e.g., an iframe from a URL like YouTube, Figma, etc.) to the active canvas.",
+      parameters: {
+        type: "object",
+        properties: {
+          url: {
+            type: "string",
+            description: "The URL of the content to embed (e.g., YouTube video URL, Figma design URL)."
+          },
+          position: {
+            type: "object",
+            properties: {
+              x: { type: "number" },
+              y: { type: "number" }
+            },
+            required: ["x", "y"],
+            description: "Optional. The x and y coordinates where the top-left corner of the embed should be placed. Defaults to a central position if not provided."
+          },
+          options: {
+            type: "object",
+            properties: {
+              width: {
+                type: "number",
+                description: "Optional. The desired width of the embedded content frame on the canvas."
+              },
+              height: {
+                type: "number",
+                description: "Optional. The desired height of the embedded content frame on the canvas."
+              },
+              description: {
+                type: "string",
+                description: "Optional. A description for the embed, which might be displayed or used as a title."
+              }
+            },
+            description: "Optional. Additional options for the embed, like width, height, and a description."
+          }
+        },
+        required: ["url"]
+      }
+    }
   }
 ];
 

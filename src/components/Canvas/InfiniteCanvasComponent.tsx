@@ -7,7 +7,7 @@ import { currentChatIdAtom } from '../../atoms/chatState';
 import useCanvasStore from './CanvasStore';
 import { debounce } from 'lodash';
 import { CanvasToolHandler } from '../../../services/utils/canvasToolHandler';
-import { CanvasInteraction, CanvasPosition, CanvasSize } from '../../../services/utils/canvasInteraction';
+import { CanvasInteraction, CanvasPosition, CanvasSize, CanvasTextOptions, CanvasEmbedOptions } from '../../../services/utils/canvasInteraction';
 
 interface InfiniteCanvasComponentProps {
   data: CanvasContentData;
@@ -29,6 +29,29 @@ interface QueuedImageAddArgs {
   requestId: string;
 }
 
+// Define a type for the queued text arguments
+interface QueuedTextAddArgs {
+  text: string;
+  position?: CanvasPosition;
+  options?: CanvasTextOptions; // Using the interface from CanvasInteraction
+  requestId: string;
+}
+
+// Define a type for the queued URL arguments
+interface QueuedUrlAddArgs {
+  url: string;
+  position?: CanvasPosition;
+  options?: { title?: string; description?: string };
+  requestId: string;
+}
+
+// Define a type for the queued embed arguments
+interface QueuedEmbedAddArgs {
+  position?: CanvasPosition;
+  options: CanvasEmbedOptions; // Using the new interface
+  requestId: string;
+}
+
 const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
   const currentChatId = useAtomValue(currentChatIdAtom);
   const contentData = useCanvasStore((state) => state.contentData);
@@ -44,6 +67,9 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
   const [canvasReady, setCanvasReady] = useState(false);
   const queuedDropRef = useRef<{ text: string; timestamp: number } | null>(null);
   const queuedImageAddsRef = useRef<Array<{ args: QueuedImageAddArgs }>>([]); // Queue for image add requests
+  const queuedTextAddsRef = useRef<Array<{ args: QueuedTextAddArgs }>>([]); // Queue for text add requests
+  const queuedUrlAddsRef = useRef<Array<{ args: QueuedUrlAddArgs }>>([]); // Queue for URL add requests
+  const queuedEmbedAddsRef = useRef<Array<{ args: QueuedEmbedAddArgs }>>([]); // Queue for Embed add requests
 
   useEffect(() => {
     if (previousChatIdRef.current !== currentChatId) {
@@ -379,6 +405,244 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
       // canvasInteraction.resetEditor(); // This was already in the component's main unmount effect
     };
   }, [debouncedSave, currentChatId, persistenceKey, canvasInteraction]);
+
+  // IPC Listener for canvas add text requests from the main process
+  useEffect(() => {
+    let textAddHandler: ((_event: unknown, args: QueuedTextAddArgs) => Promise<void>) | null = null;
+
+    if (window.electron && window.electron.ipcRenderer) {
+      console.log("[RendererIPC] Setting up listener for 'canvas:add-text-request-from-main'");
+      const ipcR = window.electron.ipcRenderer; // Capture for cleanup
+      textAddHandler = async (_event: unknown, args: QueuedTextAddArgs) => {
+        const { requestId } = args;
+        const responseChannel = `canvas:add-text-response-from-renderer-${requestId}`;
+        const canvasInteractionInstance = CanvasInteraction.getInstance();
+
+        if (!canvasReady || !canvasInteractionInstance.isEditorReady()) {
+          console.log('[RendererIPC] Add text request received, but canvas not fully ready. Queueing:', args.requestId);
+          queuedTextAddsRef.current.push({ args });
+          return;
+        }
+
+        console.log('[RendererIPC] Processing add-text request immediately:', args.requestId);
+        try {
+          const canvasElement = canvasInteractionInstance.writeText(
+            args.text,
+            args.position,
+            args.options
+          );
+          ipcR.send(responseChannel, { success: true, data: canvasElement });
+        } catch (error) {
+          console.error('Error adding text to canvas in renderer (direct processing):', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error in renderer while adding text';
+          ipcR.send(responseChannel, { success: false, error: errorMessage });
+        }
+      };
+      ipcR.on('canvas:add-text-request-from-main', textAddHandler);
+
+      return () => {
+        if (ipcR && textAddHandler) {
+          console.log("[RendererIPC] Cleaning up listener for 'canvas:add-text-request-from-main'");
+          ipcR.off('canvas:add-text-request-from-main', textAddHandler);
+        }
+      };
+    } else {
+      console.error("[RendererIPC] window.electron.ipcRenderer not available to set up canvas add text listener.");
+    }
+    return undefined;
+  }, [canvasReady, window.electron?.ipcRenderer]); // Added canvasReady dependency
+
+  // New useEffect to process queued text add requests when canvas becomes ready
+  useEffect(() => {
+    if (canvasReady && editorRef.current) { // editorRef.current check ensures Tldraw onMount has run
+      const queue = queuedTextAddsRef.current;
+      if (queue.length > 0) {
+        console.log(`[RendererIPC] Canvas is ready. Processing ${queue.length} queued text add requests.`);
+        const requestsToProcess = [...queue];
+        queuedTextAddsRef.current = []; // Clear queue immediately
+
+        requestsToProcess.forEach(requestItem => {
+          const { args } = requestItem;
+          const { text, position, options, requestId } = args;
+          const responseChannel = `canvas:add-text-response-from-renderer-${requestId}`;
+          try {
+            const canvasInteractionInstance = CanvasInteraction.getInstance();
+            // Double check readiness, though it should be true here
+            if (!canvasInteractionInstance.isEditorReady()) {
+                 console.error('[RendererIPC] Queued text: Editor still not ready! This should not happen.');
+                 window.electron.ipcRenderer.send(responseChannel, { success: false, error: 'Editor not ready even after queue' });
+                 return; // Skip this request
+            }
+            console.log('[RendererIPC] Processing queued add-text request:', requestId);
+            const canvasElement = canvasInteractionInstance.writeText(text, position, options);
+            window.electron.ipcRenderer.send(responseChannel, { success: true, data: canvasElement });
+          } catch (error) {
+            console.error('[RendererIPC] Error processing queued text add:', requestId, error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error processing queued text';
+            window.electron.ipcRenderer.send(responseChannel, { success: false, error: errorMessage });
+          }
+        });
+      }
+    }
+  }, [canvasReady]); // Dependency: runs when canvasReady changes
+
+  // IPC Listener for canvas add URL requests from the main process
+  useEffect(() => {
+    let urlAddHandler: ((_event: unknown, args: QueuedUrlAddArgs) => Promise<void>) | null = null;
+
+    if (window.electron && window.electron.ipcRenderer) {
+      console.log("[RendererIPC] Setting up listener for 'canvas:add-url-request-from-main'");
+      const ipcR = window.electron.ipcRenderer;
+      urlAddHandler = async (_event: unknown, args: QueuedUrlAddArgs) => {
+        const { requestId } = args;
+        const responseChannel = `canvas:add-url-response-from-renderer-${requestId}`;
+        const canvasInteractionInstance = CanvasInteraction.getInstance();
+
+        if (!canvasReady || !canvasInteractionInstance.isEditorReady()) {
+          console.log('[RendererIPC] Add URL request received, but canvas not fully ready. Queueing:', args.requestId);
+          queuedUrlAddsRef.current.push({ args });
+          return;
+        }
+
+        console.log('[RendererIPC] Processing add-url request immediately:', args.requestId);
+        try {
+          const canvasElement = canvasInteractionInstance.addURLToCanvas(
+            args.url,
+            args.position,
+            args.options?.title,
+            args.options?.description
+          );
+          ipcR.send(responseChannel, { success: true, data: canvasElement });
+        } catch (error) {
+          console.error('Error adding URL to canvas in renderer (direct processing):', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error in renderer while adding URL';
+          ipcR.send(responseChannel, { success: false, error: errorMessage });
+        }
+      };
+      ipcR.on('canvas:add-url-request-from-main', urlAddHandler);
+
+      return () => {
+        if (ipcR && urlAddHandler) {
+          console.log("[RendererIPC] Cleaning up listener for 'canvas:add-url-request-from-main'");
+          ipcR.off('canvas:add-url-request-from-main', urlAddHandler);
+        }
+      };
+    } else {
+      console.error("[RendererIPC] window.electron.ipcRenderer not available to set up canvas add URL listener.");
+    }
+    return undefined;
+  }, [canvasReady, window.electron?.ipcRenderer]);
+
+  // New useEffect to process queued URL add requests when canvas becomes ready
+  useEffect(() => {
+    if (canvasReady && editorRef.current) {
+      const queue = queuedUrlAddsRef.current;
+      if (queue.length > 0) {
+        console.log(`[RendererIPC] Canvas is ready. Processing ${queue.length} queued URL add requests.`);
+        const requestsToProcess = [...queue];
+        queuedUrlAddsRef.current = []; // Clear queue
+
+        requestsToProcess.forEach(requestItem => {
+          const { args } = requestItem;
+          const { url, position, options, requestId } = args;
+          const responseChannel = `canvas:add-url-response-from-renderer-${requestId}`;
+          try {
+            const canvasInteractionInstance = CanvasInteraction.getInstance();
+            if (!canvasInteractionInstance.isEditorReady()) {
+                 console.error('[RendererIPC] Queued URL: Editor still not ready!');
+                 window.electron.ipcRenderer.send(responseChannel, { success: false, error: 'Editor not ready even after queue for URL' });
+                 return;
+            }
+            console.log('[RendererIPC] Processing queued add-URL request:', requestId);
+            const canvasElement = canvasInteractionInstance.addURLToCanvas(url, position, options?.title, options?.description);
+            window.electron.ipcRenderer.send(responseChannel, { success: true, data: canvasElement });
+          } catch (error) {
+            console.error('[RendererIPC] Error processing queued URL add:', requestId, error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error processing queued URL';
+            window.electron.ipcRenderer.send(responseChannel, { success: false, error: errorMessage });
+          }
+        });
+      }
+    }
+  }, [canvasReady]);
+
+  // IPC Listener for canvas add embed requests from the main process
+  useEffect(() => {
+    let embedAddHandler: ((_event: unknown, args: QueuedEmbedAddArgs) => Promise<void>) | null = null;
+
+    if (window.electron && window.electron.ipcRenderer) {
+      console.log("[RendererIPC] Setting up listener for 'canvas:add-embed-request-from-main'");
+      const ipcR = window.electron.ipcRenderer;
+      embedAddHandler = async (_event: unknown, args: QueuedEmbedAddArgs) => {
+        const { requestId } = args;
+        const responseChannel = `canvas:add-embed-response-from-renderer-${requestId}`;
+        const canvasInteractionInstance = CanvasInteraction.getInstance();
+
+        if (!canvasReady || !canvasInteractionInstance.isEditorReady()) {
+          console.log('[RendererIPC] Add embed request received, but canvas not fully ready. Queueing:', args.requestId);
+          queuedEmbedAddsRef.current.push({ args });
+          return;
+        }
+
+        console.log('[RendererIPC] Processing add-embed request immediately:', args.requestId);
+        try {
+          const canvasElement = canvasInteractionInstance.addEmbedToCanvas(
+            args.position,
+            args.options
+          );
+          ipcR.send(responseChannel, { success: true, data: canvasElement });
+        } catch (error) {
+          console.error('Error adding embed to canvas in renderer (direct processing):', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error in renderer while adding embed';
+          ipcR.send(responseChannel, { success: false, error: errorMessage });
+        }
+      };
+      ipcR.on('canvas:add-embed-request-from-main', embedAddHandler);
+
+      return () => {
+        if (ipcR && embedAddHandler) {
+          console.log("[RendererIPC] Cleaning up listener for 'canvas:add-embed-request-from-main'");
+          ipcR.off('canvas:add-embed-request-from-main', embedAddHandler);
+        }
+      };
+    } else {
+      console.error("[RendererIPC] window.electron.ipcRenderer not available to set up canvas add embed listener.");
+    }
+    return undefined;
+  }, [canvasReady, window.electron?.ipcRenderer]);
+
+  // New useEffect to process queued embed add requests when canvas becomes ready
+  useEffect(() => {
+    if (canvasReady && editorRef.current) {
+      const queue = queuedEmbedAddsRef.current;
+      if (queue.length > 0) {
+        console.log(`[RendererIPC] Canvas is ready. Processing ${queue.length} queued embed add requests.`);
+        const requestsToProcess = [...queue];
+        queuedEmbedAddsRef.current = []; // Clear queue
+
+        requestsToProcess.forEach(requestItem => {
+          const { args } = requestItem;
+          const { position, options, requestId } = args;
+          const responseChannel = `canvas:add-embed-response-from-renderer-${requestId}`;
+          try {
+            const canvasInteractionInstance = CanvasInteraction.getInstance();
+            if (!canvasInteractionInstance.isEditorReady()) {
+                 console.error('[RendererIPC] Queued embed: Editor still not ready!');
+                 window.electron.ipcRenderer.send(responseChannel, { success: false, error: 'Editor not ready even after queue for embed' });
+                 return;
+            }
+            console.log('[RendererIPC] Processing queued add-embed request:', requestId);
+            const canvasElement = canvasInteractionInstance.addEmbedToCanvas(position, options);
+            window.electron.ipcRenderer.send(responseChannel, { success: true, data: canvasElement });
+          } catch (error) {
+            console.error('[RendererIPC] Error processing queued embed add:', requestId, error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error processing queued embed';
+            window.electron.ipcRenderer.send(responseChannel, { success: false, error: errorMessage });
+          }
+        });
+      }
+    }
+  }, [canvasReady]);
 
   const tldrawKey = currentChatId
     ? `chat-${currentChatId}`

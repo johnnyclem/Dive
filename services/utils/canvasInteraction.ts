@@ -6,7 +6,7 @@
  * Now connected to TLDraw for actual functionality.
  */
 
-import { Editor, TLShape, createShapeId, TLGeoShape, TLImageShape, TLArrowShape, TLImageAsset, TLDefaultColorStyle, TLAssetId, TLBookmarkShape } from '@tldraw/tldraw';
+import { Editor, TLShape, createShapeId, TLGeoShape, TLImageShape, TLArrowShape, TLImageAsset, TLDefaultColorStyle, TLAssetId, TLBookmarkShape, TLEmbedShape } from '@tldraw/tldraw';
 
 export interface CanvasPosition {
   x: number;
@@ -32,6 +32,16 @@ export interface CanvasPrimitive {
   points?: CanvasPosition[]; // For polygons/lines
 }
 
+export interface CanvasTextOptions {
+  fontSize?: number;
+  fontFamily?: string;
+  color?: string;
+  align?: 'start' | 'middle' | 'end';
+  rotation?: number;
+  width?: number; // Optional width for the text box
+  height?: number; // Optional height for the text box
+}
+
 export interface CanvasImage {
   src: string;
   position: CanvasPosition;
@@ -48,6 +58,13 @@ export interface CanvasURL {
   text?: string;
 }
 
+export interface CanvasEmbedOptions {
+  url: string;
+  width?: number;
+  height?: number;
+  description?: string;
+}
+
 // Define interfaces for richText structure
 interface RichTextContentItem {
   type: string;
@@ -59,14 +76,6 @@ interface RichTextContentItem {
 interface RichTextRoot {
   type: string;
   content?: RichTextContentItem[];
-}
-
-interface TLBookmarkProps {
-  src?: string;
-  title?: string;
-  description?: string;
-  assetId?: TLAssetId;
-  url?:string;
 }
 
 export interface CanvasElement {
@@ -514,36 +523,39 @@ export class CanvasInteraction {
    */
   public addURLToCanvas(
     url: string,
-    position: CanvasPosition,
+    positionInput: CanvasPosition | undefined,
     title?: string,
     description?: string
   ): CanvasElement {
-    const editor = this.getEditor();
-    const id = createShapeId();
-    
-    // Create a note with URL
-    editor.createShape({
-      id,
-      type: 'note',
-      x: position.x,
-      y: position.y,
-      props: {
-        color: 'yellow',
-        size: 'l',
-        text: `${title || 'Link'}\n${url}\n${description || ''}`,
-      },
-    });
+    let actualPosition: CanvasPosition;
 
-    return {
-      id: id.toString(),
-      type: 'url',
-      data: {
-        url,
-        position,
-        title,
-        description
+    if (positionInput && typeof positionInput.x === 'number' && typeof positionInput.y === 'number') {
+      actualPosition = positionInput;
+    } else {
+      try {
+        const editor = this.getEditor(); // Get editor only if needed for viewport
+        const viewport = editor.getViewportPageBounds();
+        actualPosition = { x: viewport.midX, y: viewport.midY };
+        console.log('[CanvasInteraction] No/invalid position provided for URL, defaulting to viewport center:', actualPosition);
+      } catch (e) {
+        console.warn('[CanvasInteraction] Could not get viewport center, defaulting URL position to (150,150). Error:', e);
+        actualPosition = { x: 150, y: 150 }; 
       }
-    };
+    }
+
+    const textContent = `${title ? title + '\n' : ''}${url}${description ? '\n' + description : ''}`;
+
+    // Call drawPrimitiveOnCanvas to create a text element
+    // This returns a CanvasElement, so we can return it directly.
+    return this.drawPrimitiveOnCanvas(
+      'text',
+      actualPosition,
+      {
+        text: textContent,
+        color: 'blue', // Or a specific color for URLs, or make it an option
+        // size: { width: 300, height: 50} // Optional: initial size, text shapes often auto-size
+      }
+    );
   }
 
   /**
@@ -677,56 +689,66 @@ export class CanvasInteraction {
       };
     } else if (shape.type === 'bookmark' && typeof shape.props === 'object' && shape.props !== null) {
       type = 'url'; // Treat bookmarks primarily as URLs
-      const bookmarkShapeProps = shape.props as TLBookmarkShape['props']; // Standard tldraw props
-      const customBookmarkProps = shape.props as TLBookmarkProps; // Our extended/expected direct props
+      // Cast to a more specific type that includes potential metadata tldraw might add
+      const bookmarkProps = shape.props as TLBookmarkShape['props'] & { 
+        title?: string; 
+        description?: string; 
+        image?: string; // tldraw often uses 'image' for the preview src
+        url?: string; // Sometimes URL is directly on props
+      };
       
-      const asset = bookmarkShapeProps.assetId ? this.editorRef?.getAsset(bookmarkShapeProps.assetId) : undefined;
+      const asset = bookmarkProps.assetId ? this.editorRef?.getAsset(bookmarkProps.assetId) : undefined;
       
-      let url = 'unknown_url';
-      let title = '';
-      let description = '';
-      let assetImageSrc: string | undefined = undefined;
+      let urlValue = 'unknown_url';
+      let titleValue = '';
+      let descriptionValue = '';
+      let imageSrcValue: string | undefined = undefined;
 
       if (asset && asset.type === 'bookmark') {
-        url = asset.props.src || url;
-        title = asset.props.title || title;
-        description = asset.props.description || description;
-        assetImageSrc = asset.props.image;
+        urlValue = asset.props.src || urlValue;
+        titleValue = asset.props.title || titleValue;
+        descriptionValue = asset.props.description || descriptionValue;
+        imageSrcValue = asset.props.image || imageSrcValue;
       }
 
-      // Override with direct props from shape if they exist (custom or convenience)
-      url = customBookmarkProps.url || url;
-      title = customBookmarkProps.title || title;
-      description = customBookmarkProps.description || description;
-
-      const imageSrcFromDirectProps = customBookmarkProps.src; // Might be on customBookmarkProps
-      // If asset itself was an image type (e.g. linked image instead of bookmark asset, less common for a bookmark shape)
-      const imageSrcFromImageAsset = (asset && asset.type === 'image' ? asset.props.src : undefined);
+      // Override with direct props from shape if they exist and are more specific
+      urlValue = bookmarkProps.url || urlValue; // Direct prop for URL
+      titleValue = bookmarkProps.title || titleValue; // Direct prop for title
+      descriptionValue = bookmarkProps.description || descriptionValue; // Direct prop for description
+      imageSrcValue = bookmarkProps.image || imageSrcValue; // Direct prop for image preview
 
       data = {
-        url,
+        url: urlValue,
         position,
-        title,
-        description,
-        imageSrc: imageSrcFromDirectProps || assetImageSrc || imageSrcFromImageAsset,
-        text: description || title || '', // Populate CanvasURL.text from description or title
+        title: titleValue || urlValue, // Default title to URL if not present
+        description: descriptionValue,
+        imageSrc: imageSrcValue,
+        text: urlValue, // Ensure text field is populated with the URL
       };
-    } else if (shape.type === 'note' && typeof shape.props === 'object' && shape.props !== null) {
-      type = 'url'; // Assuming notes with URLs are the primary use case for 'note' to 'url'
-      let noteText = '';
-      if ('text' in shape.props && typeof shape.props.text === 'string') {
-        noteText = shape.props.text;
-      }
-      const urlMatch = noteText.match(/https?:\/\/[^\s]+/);
-      const url = urlMatch ? urlMatch[0] : 'https://example.com';
+    } else if (shape.type === 'embed' && typeof shape.props === 'object' && shape.props !== null) {
+      type = 'url'; // Treat embeds as URLs in our CanvasElement system
+      // Cast to TLEmbedShape props, and include potential metadata tldraw might add
+      const embedProps = shape.props as TLEmbedShape['props'] & {
+        title?: string;
+        description?: string;
+        image?: string; // tldraw might store a preview image URL here
+      };
+
+      const urlValue = embedProps.url;
+
       data = {
-        url,
+        url: urlValue,
         position,
-        title: noteText.split('\n')[0] || '',
-        description: noteText.substring(noteText.indexOf('\n') + 1) || '', // Text after the first line as description
+        title: embedProps.title || urlValue, // Default title to URL
+        description: embedProps.description || '',
+        imageSrc: embedProps.image, // Use 'image' if tldraw populates it
+        text: urlValue, // Populate text field with the URL
+        // Optional: include width/height if CanvasURL definition is extended
+        // width: embedProps.w,
+        // height: embedProps.h,
       };
     } else if (shape.type === 'text' && typeof shape.props === 'object' && shape.props !== null) {
-      type = 'primitive';
+      type = 'primitive'; // Ensure CanvasElement.type is 'primitive'
       // More specific cast based on tldraw's typical text props
       const textProps = shape.props as {
         text: string; // Expect text to be a string
@@ -772,16 +794,21 @@ export class CanvasInteraction {
     }
      else { // Handles 'geo', 'line', 'arrow', and other potential primitives
       type = 'primitive';
-      let primitiveType: string = 'rectangle'; // Default, will be overridden by geo
+      let primitiveType: string = 'rectangle'; // Default
       
-      if (shape.type === 'geo' && typeof shape.props === 'object' && shape.props !== null && 'geo' in shape.props) {
-        primitiveType = shape.props.geo as string; // Use the actual geo type (star, heart, etc.)
+      if (shape.type === 'geo' && typeof shape.props === 'object' && shape.props !== null) {
+        // If it's a geo shape with text content (from writeText), classify its data.type as 'text'
+        if ('text' in shape.props && typeof shape.props.text === 'string' && (shape.props.text as string).length > 0) {
+          primitiveType = 'text';
+        } else if ('geo' in shape.props) {
+          primitiveType = shape.props.geo as string; // Otherwise, use the actual geo type
+        }
       } else if (shape.type === 'line') {
         primitiveType = 'line';
       } else if (shape.type === 'arrow') {
         primitiveType = 'arrow';
       }
-      // Note: 'text' type is handled in its own block now.
+      // Note: 'text' (tldraw native text shape) and 'embed' types are handled in their own blocks now.
       
       let textContent = '';
       let colorValue = '#000000';
@@ -817,6 +844,110 @@ export class CanvasInteraction {
       id: shape.id,
       type,
       data,
+    };
+  }
+
+  /**
+   * Write text on the canvas
+   */
+  public writeText(
+    text: string,
+    position: CanvasPosition,
+    options: CanvasTextOptions = {}
+  ): CanvasElement {
+    const editor = this.getEditor();
+    const id = createShapeId();
+
+    const shapeProps: Partial<TLGeoShape['props']> & { text: string } = {
+      text: text,
+      color: this.mapColor(options.color || 'black'),
+      size: 'm', // Default size, can be adjusted or made configurable
+      font: options.fontFamily === 'serif' ? 'serif' : options.fontFamily === 'monospace' ? 'mono' : 'draw', // map to tldraw font
+      align: options.align || 'middle',
+      w: options.width, // Use provided width or allow tldraw to auto-size
+      h: options.height, // Use provided height or allow tldraw to auto-size
+    };
+    
+    // Note: Tldraw's 'text' shape is very basic.
+    // For more complex text with background/border, a 'geo' shape with text is often better.
+    // Or a 'note' shape. For this initial implementation, we'll use 'geo' with text.
+    editor.createShape({
+      id,
+      type: 'geo', // Using 'geo' shape to hold text, allows for background and more styling
+      x: position.x,
+      y: position.y,
+      props: shapeProps,
+      rotation: options.rotation || 0,
+    });
+
+    editor.select(id); // Optionally select the newly created shape
+
+    return {
+      id: id.toString(),
+      type: 'primitive', // Representing as a primitive for now
+      data: {
+        type: 'text', // Custom type differentiation within CanvasPrimitive
+        position,
+        text,
+        color: options.color,
+        // Potentially map other options to CanvasPrimitive fields if needed
+      },
+    };
+  }
+
+  /**
+   * Add an Embed (e.g. Iframe) to the canvas
+   */
+  public addEmbedToCanvas(
+    positionInput: CanvasPosition | undefined, // Allow undefined
+    options: CanvasEmbedOptions
+  ): CanvasElement {
+    const editor = this.getEditor();
+    const id = createShapeId();
+    let actualPosition: CanvasPosition;
+
+    if (!options.url) {
+      throw new Error('URL is required for an embed');
+    }
+
+    if (positionInput && typeof positionInput.x === 'number' && typeof positionInput.y === 'number') {
+      actualPosition = positionInput;
+    } else {
+      try {
+        const viewport = editor.getViewportPageBounds();
+        actualPosition = { x: viewport.midX, y: viewport.midY };
+        console.log('[CanvasInteraction] No/invalid position provided for embed, defaulting to viewport center:', actualPosition);
+      } catch (e) {
+        console.warn('[CanvasInteraction] Could not get viewport center for embed, defaulting position to (200,200). Error:', e);
+        actualPosition = { x: 200, y: 200 }; // Fallback
+      }
+    }
+
+    editor.createShape<TLEmbedShape>({
+      id,
+      type: 'embed',
+      x: actualPosition.x,
+      y: actualPosition.y,
+      props: {
+        w: options.width || 500,
+        h: options.height || 400,
+        url: options.url,
+      },
+    });
+
+    editor.select(id);
+
+    return {
+      id: id.toString(),
+      type: 'url', 
+      data: {
+        url: options.url,
+        position: actualPosition,
+        title: options.description || options.url, // Consistent with previous logic, example shows URL here
+        description: options.description || '', // Ensure empty string if undefined
+        // imageSrc: undefined, // Cannot determine at creation, tldraw handles this async
+        text: options.url, // Example shows URL here for the text field
+      },
     };
   }
 } 
