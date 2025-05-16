@@ -6,7 +6,7 @@
  * Now connected to TLDraw for actual functionality.
  */
 
-import { Editor, TLShape, createShapeId, TLGeoShape, TLImageShape, TLArrowShape, TLImageAsset, TLDefaultColorStyle, TLEventMap, TLNoteShape, TLAssetId, TLBookmarkShape } from '@tldraw/tldraw';
+import { Editor, TLShape, createShapeId, TLGeoShape, TLImageShape, TLArrowShape, TLImageAsset, TLDefaultColorStyle, TLAssetId, TLBookmarkShape } from '@tldraw/tldraw';
 
 export interface CanvasPosition {
   x: number;
@@ -52,7 +52,7 @@ export interface CanvasURL {
 interface RichTextContentItem {
   type: string;
   text?: string;
-  attrs?: any; // Can be further specified if needed
+  attrs?: Record<string, unknown>; // Can be further specified if needed
   content?: RichTextContentItem[];
 }
 
@@ -93,9 +93,6 @@ const COLOR_MAP: Record<string, TLDefaultColorStyle> = {
   'teal': 'green',
   'lime': 'light-green'
 };
-
-// Placeholder for actual TLDraw color type - replace with official if known
-type TLDRAW_COLOR_TYPE = 'black' | 'blue' | 'green' | 'grey' | 'orange' | 'pink' | 'violet' | 'red' | 'yellow' | 'light-violet' | 'light-blue' | 'light-green';
 
 // Implementation that now connects to TLDraw editor
 export class CanvasInteraction {
@@ -302,7 +299,6 @@ export class CanvasInteraction {
           h: options.size?.height || 100,
           fill: options.fillOpacity === 0 ? 'none' : 'solid',
           dash: 'draw',
-          text: type === 'rectangle' || type === 'circle' || type === 'triangle' ? (options.text || '') : undefined
         },
       });
     } else if (shapeType === 'line') {
@@ -326,8 +322,8 @@ export class CanvasInteraction {
         props: {
           color: colorValue,
           size: 'l',
-          start: { type: 'point', x: 0, y: 0 },
-          end: { type: 'point', x: options.size?.width || 100, y: options.size?.height || 0 },
+          start: { x: 0, y: 0 },
+          end: { x: options.size?.width || 100, y: options.size?.height || 0 },
         },
       });
     } else if (shapeType === 'text') {
@@ -407,6 +403,108 @@ export class CanvasInteraction {
         position,
         size,
         rotation
+      }
+    };
+  }
+
+  /**
+   * Add an image to the canvas using a data URL (e.g., base64 encoded string)
+   */
+  public insertGeneratedImage(
+    imageDataUrl: string, // Can be a full data URI, a regular web URL, or raw base64 data
+    positionInput: CanvasPosition | undefined, // Changed parameter name and type
+    options: {
+      size?: CanvasSize;
+      rotation?: number;
+      fileName?: string;
+      mimeType?: string; // Important if imageDataUrl is raw base64
+    } = {}
+  ): CanvasElement {
+    const editor = this.getEditor();
+    let actualPosition: CanvasPosition;
+
+    if (positionInput && typeof positionInput.x === 'number' && typeof positionInput.y === 'number') {
+      actualPosition = positionInput;
+    } else {
+      try {
+        const viewport = editor.getViewportPageBounds();
+        actualPosition = { x: viewport.midX, y: viewport.midY };
+        console.log('[CanvasInteraction] No/invalid position provided for image, defaulting to viewport center:', actualPosition);
+      } catch (e) {
+        console.warn('[CanvasInteraction] Could not get viewport center, defaulting image position to (100,100). Error:', e);
+        actualPosition = { x: 100, y: 100 }; // Fallback default
+      }
+    }
+
+    const imageShapeId = createShapeId();
+    const assetId = `asset:${createShapeId()}` as TLAssetId;
+
+    const fileName = options.fileName || 'generated_image.png';
+    let effectiveMimeType = options.mimeType;
+    let imageSrcForAsset: string;
+
+    if (imageDataUrl.startsWith('data:')) {
+      // Input is already a data URI
+      imageSrcForAsset = imageDataUrl;
+      if (!effectiveMimeType) {
+        // Try to parse mimeType from the data URI if not provided in options
+        const match = imageDataUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,/);
+        if (match && match[1]) {
+          effectiveMimeType = match[1];
+        }
+      }
+    } else if (imageDataUrl.startsWith('http://') || imageDataUrl.startsWith('https://')) {
+      // Input is a regular web URL
+      imageSrcForAsset = imageDataUrl;
+      // For web URLs, mimeType can often be inferred by the browser or tldraw;
+      // options.mimeType will be used if provided.
+    } else {
+      // Assume input is raw base64 data
+      // Use options.mimeType or default to 'image/png'
+      effectiveMimeType = effectiveMimeType || 'image/png';
+      imageSrcForAsset = `data:${effectiveMimeType};base64,${imageDataUrl}`;
+    }
+    
+    // Ensure a mimeType is set for the asset properties, defaulting if necessary
+    effectiveMimeType = effectiveMimeType || 'image/png';
+
+    const imageAsset: TLImageAsset = {
+      id: assetId,
+      type: 'image',
+      typeName: 'asset',
+      props: {
+        name: fileName,
+        src: imageSrcForAsset, // Use the correctly formatted src
+        w: options.size?.width || 200,
+        h: options.size?.height || 200,
+        mimeType: effectiveMimeType,
+        isAnimated: false, // Assume not animated for generated images
+      },
+      meta: {},
+    };
+    editor.createAssets([imageAsset]);
+
+    editor.createShape<TLImageShape>({
+      id: imageShapeId,
+      type: 'image',
+      x: actualPosition.x, // Use actualPosition
+      y: actualPosition.y, // Use actualPosition
+      props: {
+        w: options.size?.width || 200,
+        h: options.size?.height || 200,
+        assetId: assetId,
+      },
+      rotation: options.rotation || 0,
+    });
+
+    return {
+      id: imageShapeId.toString(),
+      type: 'image',
+      data: {
+        src: imageDataUrl, // Store the original imageDataUrl
+        position: actualPosition, // Return the actual position used
+        size: options.size,
+        rotation: options.rotation,
       }
     };
   }

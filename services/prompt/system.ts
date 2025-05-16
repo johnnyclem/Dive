@@ -101,6 +101,7 @@ export const systemPrompt = (customRules: string) => {
       - Tool Usage:
         * Only use MCP tools when the task requires advanced processing (e.g., image transformation, specific measurements)
         * Otherwise, always use the provided base64 image or image URL when it can fulfill the user's request
+        * **Canvas Integration**: If you generate an image (e.g., using 'create_image') and the user asks to "see the image", "put it on the canvas", or similar, you SHOULD use the \`add_image_to_canvas\` tool to place the generated image onto the active canvas. Provide the \`image_source\` (which might be a file path from \`create_image\`, or a data URI if you have it) to this tool. You can also use this tool if the user provides an image and asks for it to be placed on the canvas.
     </Image_Handling>
 
     <Local_File_Handling>
@@ -178,7 +179,7 @@ export const taskManagementTools: ToolDefinition[] = [
 ];
 
 // Add this before combinedTools definition
-export const canvasTools = [
+export const canvasTools: ToolDefinition[] = [
   {
     type: "function" as const,
     function: {
@@ -188,6 +189,58 @@ export const canvasTools = [
         type: "object",
         properties: {},
         required: []
+      }
+    }
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "add_image_to_canvas",
+      description: "Adds an image to the active canvas. Use this after an image has been generated (e.g., by 'create_image' tool which returns a file path) or provided by the user. The image source can be a local file path, a data URI, or a web URL.",
+      parameters: {
+        type: "object",
+        properties: {
+          image_source: {
+            type: "string",
+            description: "The source of the image. This can be a local file path (which will be converted to a data URI), a full data URI (e.g., 'data:image/png;base64,...'), or a web URL (e.g., 'https://example.com/image.png')."
+          },
+          position: {
+            type: "object",
+            properties: {
+              x: { type: "number" },
+              y: { type: "number" }
+            },
+            required: ["x", "y"],
+            description: "Optional. The x and y coordinates where the top-left corner of the image should be placed on the canvas. If not provided, a default position will be used."
+          },
+          options: {
+            type: "object",
+            properties: {
+              size: {
+                type: "object",
+                properties: {
+                  width: { type: "number" },
+                  height: { type: "number" }
+                },
+                description: "Optional. The desired width and height of the image on the canvas."
+              },
+              rotation: {
+                type: "number",
+                description: "Optional. The rotation angle of the image in degrees."
+              },
+              file_name: {
+                type: "string",
+                description: "Optional. A file name for the image asset, e.g., 'generated-image.png'."
+              },
+              mime_type: {
+                type: "string",
+                description: "Optional. The MIME type of the image (e.g., 'image/png', 'image/jpeg'). Important if providing raw base64 data or if it cannot be inferred from image_source."
+              }
+            },
+            description: "Optional. Additional options for image placement like size, rotation, file name, and MIME type."
+          }
+        },
+        required: ["image_source"]
       }
     }
   }

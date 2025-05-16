@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Tldraw, Editor, createShapeId } from '@tldraw/tldraw';
+import { Tldraw, Editor, createShapeId, TLShape, TLNoteShapeProps } from '@tldraw/tldraw';
 import '@tldraw/tldraw/tldraw.css';
 import { CanvasContentData } from './CanvasStore';
 import { useAtomValue } from 'jotai';
@@ -7,10 +7,26 @@ import { currentChatIdAtom } from '../../atoms/chatState';
 import useCanvasStore from './CanvasStore';
 import { debounce } from 'lodash';
 import { CanvasToolHandler } from '../../../services/utils/canvasToolHandler';
-import { CanvasInteraction } from '../../../services/utils/canvasInteraction';
+import { CanvasInteraction, CanvasPosition, CanvasSize } from '../../../services/utils/canvasInteraction';
 
 interface InfiniteCanvasComponentProps {
   data: CanvasContentData;
+}
+
+// Define a type for image add options
+interface ImageAddOptions {
+  size?: CanvasSize;
+  rotation?: number;
+  fileName?: string;
+  mimeType?: string;
+}
+
+// Define a type for the queued image arguments
+interface QueuedImageAddArgs {
+  imageDataUrl: string;
+  position?: CanvasPosition; // Updated type
+  options?: ImageAddOptions;  // Updated type
+  requestId: string;
 }
 
 const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
@@ -27,6 +43,7 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
 
   const [canvasReady, setCanvasReady] = useState(false);
   const queuedDropRef = useRef<{ text: string; timestamp: number } | null>(null);
+  const queuedImageAddsRef = useRef<Array<{ args: QueuedImageAddArgs }>>([]); // Queue for image add requests
 
   useEffect(() => {
     if (previousChatIdRef.current !== currentChatId) {
@@ -54,42 +71,124 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
     };
   }, [canvasInteraction]);
 
-  // IPC Listener for canvas read requests from the main process
+  // Original IPC Listener for canvas read requests - separated for clarity and correct lifecycle
   useEffect(() => {
-    const handleIPCReadRequest = (_event, args: { requestId: string }) => {
+    const handleIPCReadRequest = (_event: unknown, args: { requestId: string }) => {
       console.log(`[RendererIPC] Received canvas:read-contents-request-from-main for ID: ${args.requestId}`);
       const responseChannel = `canvas-read-response-${args.requestId}`;
       try {
-        const ciInstance = CanvasInteraction.getInstance(); // Ensure we use the singleton
+        const ciInstance = CanvasInteraction.getInstance();
         if (!ciInstance.isEditorReady()) {
           console.error('[RendererIPC] Canvas editor not ready when read request received.');
-          throw new Error('Canvas editor not ready in renderer.');
+          throw new Error('Canvas editor not ready in renderer for read.');
         }
         const contents = ciInstance.readCanvasContents();
         console.log(`[RendererIPC] Sending success response on ${responseChannel} with ${contents.length} elements.`);
         window.electron.ipcRenderer.send(responseChannel, { success: true, data: contents });
       } catch (error) {
         console.error('[RendererIPC] Error reading canvas contents for IPC request:', error);
-        window.electron.ipcRenderer.send(responseChannel, { success: false, error: error.message });
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error reading canvas in renderer.';
+        window.electron.ipcRenderer.send(responseChannel, { success: false, error: errorMessage });
       }
     };
 
     if (window.electron && window.electron.ipcRenderer) {
       console.log("[RendererIPC] Setting up listener for 'canvas:read-contents-request-from-main'");
-      window.electron.ipcRenderer.on('canvas:read-contents-request-from-main', handleIPCReadRequest);
+      const ipcR = window.electron.ipcRenderer; // Capture ipcRenderer instance
+      ipcR.on('canvas:read-contents-request-from-main', handleIPCReadRequest);
+      
+      return () => {
+        if (ipcR) { // Check if ipcR was defined before trying to use it
+          console.log("[RendererIPC] Cleaning up listener for 'canvas:read-contents-request-from-main'");
+          ipcR.off('canvas:read-contents-request-from-main', handleIPCReadRequest);
+        }
+      };
     } else {
-      console.error("[RendererIPC] window.electron.ipcRenderer not available to set up canvas read listener.");
+      console.error("[RendererIPC] window.electron.ipcRenderer not available to set up canvas read listener at this time.");
     }
+    return undefined; // Explicitly return undefined if listener not set up, consistent with no cleanup needed
+  }, [window.electron?.ipcRenderer]); // Dependency added here
 
-    return () => {
-      if (window.electron && window.electron.ipcRenderer) {
-        console.log("[RendererIPC] Cleaning up listener for 'canvas:read-contents-request-from-main'");
-        window.electron.ipcRenderer.off('canvas:read-contents-request-from-main', handleIPCReadRequest);
-        // Note: For 'off' to work correctly with named functions, the exact same function reference must be passed.
-        // If handleIPCReadRequest was defined inline in .on(), this .off() wouldn't work as expected without storing the ref.
+  // IPC Listener for canvas add image requests from the main process
+  useEffect(() => {
+    // IPC Listener for canvas add image requests from the main process
+    let imageAddHandler: ((_event: unknown, args: QueuedImageAddArgs) => Promise<void>) | null = null;
+
+    if (window.electron && window.electron.ipcRenderer) {
+      console.log("[RendererIPC] Setting up listener for 'canvas:add-image-request-from-main'");
+      const ipcR = window.electron.ipcRenderer; // Capture for cleanup
+      imageAddHandler = async (_event: unknown, args: QueuedImageAddArgs) => {
+        const { requestId } = args;
+        const responseChannel = `canvas:add-image-response-from-renderer-${requestId}`;
+        const canvasInteraction = CanvasInteraction.getInstance();
+
+        if (!canvasReady || !canvasInteraction.isEditorReady()) {
+          console.log('[RendererIPC] Add image request received, but canvas not fully ready. Queueing:', args.requestId);
+          queuedImageAddsRef.current.push({ args });
+          return;
+        }
+
+        console.log('[RendererIPC] Processing add-image request immediately:', args.requestId);
+        try {
+          const canvasElement = canvasInteraction.insertGeneratedImage(
+            args.imageDataUrl,
+            args.position,
+            args.options
+          );
+          ipcR.send(responseChannel, { success: true, data: canvasElement });
+        } catch (error) {
+          console.error('Error adding image to canvas in renderer (direct processing):', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error in renderer while adding image';
+          ipcR.send(responseChannel, { success: false, error: errorMessage });
+        }
+      };
+      ipcR.on('canvas:add-image-request-from-main', imageAddHandler);
+
+      return () => {
+        if (ipcR && imageAddHandler) {
+          console.log("[RendererIPC] Cleaning up listener for 'canvas:add-image-request-from-main'");
+          ipcR.off('canvas:add-image-request-from-main', imageAddHandler);
+        }
+      };
+    } else {
+      console.error("[RendererIPC] window.electron.ipcRenderer not available to set up canvas add image listener.");
+    }
+    return undefined;
+  }, [window.electron?.ipcRenderer]); // Dependency added here
+
+  // New useEffect to process queued image add requests when canvas becomes ready
+  useEffect(() => {
+    if (canvasReady && editorRef.current) { // editorRef.current check ensures Tldraw onMount has run
+      const queue = queuedImageAddsRef.current;
+      if (queue.length > 0) {
+        console.log(`[RendererIPC] Canvas is ready. Processing ${queue.length} queued image add requests.`);
+        const requestsToProcess = [...queue];
+        queuedImageAddsRef.current = []; // Clear queue immediately
+
+        requestsToProcess.forEach(requestItem => {
+          const { args } = requestItem;
+          const { imageDataUrl, position, options, requestId } = args;
+          const responseChannel = `canvas:add-image-response-from-renderer-${requestId}`;
+          try {
+            const canvasInteraction = CanvasInteraction.getInstance();
+            // Double check readiness, though it should be true here
+            if (!canvasInteraction.isEditorReady()) {
+                 console.error('[RendererIPC] Queued image: Editor still not ready! This should not happen.');
+                 window.electron.ipcRenderer.send(responseChannel, { success: false, error: 'Editor not ready even after queue' });
+                 return; // Skip this request
+            }
+            console.log('[RendererIPC] Processing queued add-image request:', requestId);
+            const canvasElement = canvasInteraction.insertGeneratedImage(imageDataUrl, position, options);
+            window.electron.ipcRenderer.send(responseChannel, { success: true, data: canvasElement });
+          } catch (error) {
+            console.error('[RendererIPC] Error processing queued image add:', requestId, error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error processing queued image';
+            window.electron.ipcRenderer.send(responseChannel, { success: false, error: errorMessage });
+          }
+        });
       }
-    };
-  }, []); // Empty dependency array: setup on mount, cleanup on unmount
+    }
+  }, [canvasReady]); // Dependency: runs when canvasReady changes
 
   useEffect(() => {
     if (
@@ -215,7 +314,7 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
       try {
         console.log("ATTEMPT #1: Creating note with text IN props");
         const id1 = createShapeId();
-        const noteWithTextInProps: any = { // Reverted 'as any' for linter, use proper typing if possible
+        const noteWithTextInProps: Partial<TLShape> & { type: 'note', props: Partial<TLNoteShapeProps> & { text: string } } = {
           id: id1,
           type: 'note',
           x: point.x,
@@ -234,24 +333,24 @@ const InfiniteCanvasComponent: React.FC<InfiniteCanvasComponentProps> = () => {
         editor.complete();
         console.log("Note with text IN props created successfully!");
         
-        console.log("ATTEMPT #2: Creating note with text at TOP level");
+        console.log("ATTEMPT #2: Creating note with text at TOP level (corrected to be in props)");
         const id2 = createShapeId();
-        const noteWithTextAtTopLevel: any = { // Reverted 'as any' for linter, use proper typing if possible
+        const noteWithTextAlsoInProps: Partial<TLShape> & { type: 'note', props: Partial<TLNoteShapeProps> & { text: string } } = {
           id: id2,
           type: 'note',
           x: point.x + 300, 
           y: point.y,
-          text: text, 
           props: {
+            text: text, 
             color: isUrl ? 'yellow' : 'light-blue',
             size: 'm'
           }
         }; 
         
-        console.log("Creating note shape (text at TOP level):", JSON.stringify(noteWithTextAtTopLevel));
-        editor.mark('creating note - text at TOP level');
-        editor.createShape(noteWithTextAtTopLevel);
-        console.log("Note with text at TOP level created successfully!");
+        console.log("Creating note shape (text also IN props):", JSON.stringify(noteWithTextAlsoInProps));
+        editor.mark('creating note - text also IN props');
+        editor.createShape(noteWithTextAlsoInProps);
+        console.log("Note with text also IN props created successfully!");
       } catch (err) {
         console.error("Error creating notes:", err);
       }
