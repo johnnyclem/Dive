@@ -44,7 +44,7 @@
       }
     ],
     "hardenedRuntime": true,
-    "gatekeeperAssess": false,
+    "gatekeeperAssess": true,
     "entitlements": "resources/mac/entitlements.mac.plist",
     "entitlementsInherit": "resources/mac/entitlements.mac.plist",
     "darkModeSupport": true,
